@@ -1,0 +1,15 @@
+# *
+User-agent: *
+Allow: /
+
+# *
+User-agent: *
+Disallow: /dat-hoa
+Disallow: /gio-hang
+Disallow: /my-account
+
+# Host
+Host: https://vuonhoatuoi.vn
+
+# Sitemaps
+Sitemap: https://vuonhoatuoi.vn/sitemap.xml
