@@ -1,11 +1,14 @@
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, CONTACT } from "./constants";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "./constants";
 import type { Product, Category } from "./types";
+import type { SiteContact } from "./settings";
+import { getImageUrl } from "./media";
 
 export function getProductImageUrl(
-  product: Product,
+  collectionId: string,
+  recordId: string,
   filename: string
 ): string {
-  return `${process.env.NEXT_PUBLIC_POCKETBASE_URL}/api/files/${product.collectionId}/${product.id}/${filename}`;
+  return getImageUrl(collectionId, recordId, filename);
 }
 
 export function getBannerImageUrl(
@@ -13,10 +16,10 @@ export function getBannerImageUrl(
   recordId: string,
   filename: string
 ): string {
-  return `${process.env.NEXT_PUBLIC_POCKETBASE_URL}/api/files/${collectionId}/${recordId}/${filename}`;
+  return getImageUrl(collectionId, recordId, filename);
 }
 
-export function organizationSchema() {
+export function organizationSchema(contact: SiteContact) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -25,26 +28,25 @@ export function organizationSchema() {
     logo: `${SITE_URL}/logo.png`,
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: CONTACT.phone,
+      telephone: contact.phone,
       contactType: "customer service",
     },
-    address: CONTACT.addresses.map((a) => ({
+    address: contact.addresses.map((a) => ({
       "@type": "PostalAddress",
       streetAddress: a,
     })),
-    sameAs: [CONTACT.zalo],
+    sameAs: [contact.zalo],
   };
 }
 
-export function localBusinessSchema() {
+export function localBusinessSchema(contact: SiteContact) {
   return {
     "@context": "https://schema.org",
     "@type": "Florist",
     name: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
-    telephone: CONTACT.phone,
-    email: CONTACT.email,
+    telephone: contact.phone,
     priceRange: "₫₫",
     servesCuisine: "Hoa tươi",
     openingHoursSpecification: {
@@ -61,7 +63,7 @@ export function localBusinessSchema() {
       opens: "08:00",
       closes: "21:00",
     },
-    location: CONTACT.addresses.map((a, i) => ({
+    location: contact.addresses.map((a, i) => ({
       "@type": "Place",
       "@id": `${SITE_URL}/#location-${i}`,
       address: { "@type": "PostalAddress", streetAddress: a },
@@ -72,7 +74,7 @@ export function localBusinessSchema() {
 export function productSchema(product: Product) {
   const price = product.sale_price ?? product.price;
   const imageUrl = product.thumbnail
-    ? getProductImageUrl(product, product.thumbnail)
+    ? getProductImageUrl(product.collectionId, product.id, product.thumbnail)
     : "";
 
   return {

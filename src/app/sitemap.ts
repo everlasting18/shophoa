@@ -36,11 +36,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const products = await pb.collection("products").getFullList<Product>({
       filter: "is_active=true",
-      fields: "slug,updated",
+      fields: "slug,updated,created",
     });
     productRoutes = products.map((p) => ({
       url: `${BASE_URL}/san-pham/${p.slug}`,
-      lastModified: p.created ? new Date(p.created) : undefined,
+      lastModified: p.updated ? new Date(p.updated) : new Date(p.created),
       changeFrequency: "weekly",
       priority: 0.7,
     }));

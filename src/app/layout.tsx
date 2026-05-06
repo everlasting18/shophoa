@@ -5,6 +5,7 @@ import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import ZaloFloat from "@/components/layout/zalo-float";
+import { ToastProvider } from "@/components/ui/toast";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -54,10 +55,12 @@ export default function RootLayout({
       className={`${inter.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <ZaloFloat />
+        <ToastProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <ZaloFloat />
+        </ToastProvider>
       </body>
     </html>
   );

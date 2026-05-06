@@ -3,12 +3,10 @@ export interface Category {
   name: string;
   slug: string;
   description: string;
-  parent: string;
   image: string;
-  type: "occasion" | "style" | "recipient" | "flower_type";
+  parent: string;
+  category_type: string;
   sort_order: number;
-  seo_title: string;
-  seo_description: string;
   is_active: boolean;
   collectionId: string;
   collectionName: string;
@@ -29,10 +27,8 @@ export interface Product {
   is_featured: boolean;
   is_best_seller: boolean;
   is_active: boolean;
-  seo_title: string;
-  seo_description: string;
-  view_count: number;
   created: string;
+  updated: string;
   collectionId: string;
   collectionName: string;
   expand?: {
@@ -45,7 +41,7 @@ export interface Order {
   order_code: string;
   customer_name: string;
   customer_phone: string;
-  customer_email: string;
+  customer_email?: string;
   recipient_name: string;
   recipient_phone: string;
   recipient_address: string;
@@ -55,8 +51,8 @@ export interface Order {
   subtotal: number;
   total: number;
   note: string;
-  status: "pending" | "confirmed" | "delivering" | "completed" | "cancelled";
-  payment_method: "cod" | "bank_transfer" | "momo";
+  status: "pending" | "confirmed" | "cancelled";
+  payment_method: "bank_transfer";
   created: string;
 }
 
@@ -65,7 +61,7 @@ export interface OrderItem {
   name: string;
   price: number;
   quantity: number;
-  thumbnail: string;
+  thumbnail?: string;
 }
 
 export interface Banner {
@@ -76,19 +72,6 @@ export interface Banner {
   sort_order: number;
   is_active: boolean;
   position: "hero" | "promo" | "category";
-  collectionId: string;
-  collectionName: string;
-}
-
-export interface Review {
-  id: string;
-  product: string;
-  customer_name: string;
-  rating: number;
-  comment: string;
-  images: string[];
-  is_approved: boolean;
-  created: string;
   collectionId: string;
   collectionName: string;
 }

@@ -53,6 +53,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   function handleLogout() {
     pb.authStore.clear();
+    fetch("/api/auth/admin/logout", { method: "POST" });
     logout();
     router.push("/admin/login");
   }

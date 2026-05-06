@@ -5,8 +5,7 @@ import Image from "next/image";
 import pb from "@/lib/pocketbase";
 import { Plus, Trash2, ToggleLeft, ToggleRight, Upload } from "lucide-react";
 import type { Banner } from "@/lib/types";
-
-const PB_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL;
+import { getImageUrl } from "@/lib/media";
 
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<Banner[] | null>(null);
@@ -103,7 +102,7 @@ export default function AdminBannersPage() {
         ) : (
           <div className="divide-y divide-zinc-800">
             {banners.map((banner) => {
-              const imgUrl = `${PB_URL}/api/files/${banner.collectionId}/${banner.id}/${banner.image}?thumb=300x100`;
+              const imgUrl = getImageUrl(banner.collectionId, banner.id, banner.image, 300);
               return (
                 <div key={banner.id} className="flex items-center gap-4 px-5 py-3">
                   <div className="relative w-24 h-12 rounded-lg overflow-hidden bg-zinc-800 shrink-0">

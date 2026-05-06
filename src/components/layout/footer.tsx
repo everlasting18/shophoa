@@ -1,48 +1,53 @@
 import Link from "next/link";
-import { MapPin, Phone, Mail, Clock } from "lucide-react";
-import { SITE_NAME, CONTACT, NAV_ITEMS } from "@/lib/constants";
+import { MapPin, Phone, Mail, Clock, Flower2, Heart } from "lucide-react";
+import { SITE_NAME } from "@/lib/constants";
+import { getNavItems } from "@/lib/navigation";
+import { socialLinks } from "./social-icons";
+import { getSiteSettings } from "@/lib/settings";
 
-export default function Footer() {
+export default async function Footer() {
+  const [navItems, contact] = await Promise.all([getNavItems(), getSiteSettings()]);
+
   return (
-    <footer className="bg-stone-900 text-stone-300 pt-12 pb-6">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+    <footer className="bg-stone-950 text-stone-300">
+      <div className="container mx-auto px-4 pt-14 pb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 mb-12">
           {/* Brand col */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <Link href="/" className="inline-block mb-4">
+          <div className="lg:col-span-4">
+            <Link href="/" className="inline-flex items-center gap-2 mb-5">
+              <Flower2 className="w-6 h-6 text-primary" />
               <span className="text-xl font-heading font-bold text-white">
-                🌸 {SITE_NAME}
+                {SITE_NAME}
               </span>
             </Link>
-            <p className="text-sm leading-relaxed text-stone-400 mb-4">
+            <p className="text-sm leading-relaxed text-stone-400 mb-6 max-w-sm">
               Shop hoa tươi TPHCM phong cách hiện đại. Mỗi cành hoa trao đi là
-              một tấm lòng chân thành gửi gắm.
+              một tấm lòng chân thành gửi gắm. Hơn 10 năm kinh nghiệm phục vụ
+              hàng ngàn khách hàng.
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-2.5">
+              {socialLinks.map((s) => (
               <a
-                href={CONTACT.zalo}
+                key={s.label}
+                href={s.label === "Zalo" ? contact.zalo : s.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 rounded-full bg-[#0068FF] text-white text-xs font-semibold hover:bg-[#0068FF]/90 transition-colors"
+                aria-label={s.label}
+                className="w-9 h-9 rounded-full bg-stone-900 border border-stone-800 flex items-center justify-center text-stone-400 hover:text-white hover:border-primary/40 hover:bg-stone-800 transition-all"
               >
-                Zalo
+                {s.icon}
               </a>
-              <a
-                href={`tel:${CONTACT.phone}`}
-                className="px-4 py-2 rounded-full bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
-              >
-                Gọi ngay
-              </a>
+              ))}
             </div>
           </div>
 
           {/* Danh mục */}
-          <div>
-            <h3 className="font-heading font-semibold text-white mb-4 text-sm uppercase tracking-wide">
+          <div className="lg:col-span-3">
+            <h3 className="font-heading font-semibold text-white mb-5 text-sm uppercase tracking-wider">
               Danh Mục
             </h3>
-            <ul className="space-y-2">
-              {NAV_ITEMS.slice(0, 6).map((item) => (
+            <ul className="space-y-2.5">
+              {navItems.slice(0, 6).map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
@@ -56,80 +61,72 @@ export default function Footer() {
           </div>
 
           {/* Chính sách */}
-          <div>
-            <h3 className="font-heading font-semibold text-white mb-4 text-sm uppercase tracking-wide">
+          <div className="lg:col-span-2">
+            <h3 className="font-heading font-semibold text-white mb-5 text-sm uppercase tracking-wider">
               Hỗ Trợ
             </h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/gioi-thieu" className="text-sm text-stone-400 hover:text-white transition-colors">
-                  Về Vườn Hoa Tươi
-                </Link>
-              </li>
-              <li>
-                <Link href="/chinh-sach-bao-mat" className="text-sm text-stone-400 hover:text-white transition-colors">
-                  Chính sách bảo mật
-                </Link>
-              </li>
-              <li>
-                <Link href="/chinh-sach-giao-hang" className="text-sm text-stone-400 hover:text-white transition-colors">
-                  Chính sách giao hàng
-                </Link>
-              </li>
-              <li>
-                <Link href="/chinh-sach-doi-tra" className="text-sm text-stone-400 hover:text-white transition-colors">
-                  Chính sách đổi trả
-                </Link>
-              </li>
-              <li>
-                <Link href="/lien-he" className="text-sm text-stone-400 hover:text-white transition-colors">
-                  Liên hệ
-                </Link>
-              </li>
+            <ul className="space-y-2.5">
+              {[
+                { label: "Về Vườn Hoa Tươi", href: "/gioi-thieu" },
+                { label: "Chính sách bảo mật", href: "/chinh-sach-bao-mat" },
+                { label: "Chính sách giao hàng", href: "/chinh-sach-giao-hang" },
+                { label: "Chính sách đổi trả", href: "/chinh-sach-doi-tra" },
+                { label: "Liên hệ", href: "/lien-he" },
+              ].map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="text-sm text-stone-400 hover:text-white transition-colors">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Liên hệ */}
-          <div>
-            <h3 className="font-heading font-semibold text-white mb-4 text-sm uppercase tracking-wide">
+          <div className="lg:col-span-3">
+            <h3 className="font-heading font-semibold text-white mb-5 text-sm uppercase tracking-wider">
               Liên Hệ
             </h3>
-            <ul className="space-y-3">
-              {CONTACT.addresses.map((addr, i) => (
-                <li key={i} className="flex gap-2 text-sm text-stone-400">
+            <ul className="space-y-3.5">
+              {contact.addresses.map((addr, i) => (
+                <li key={i} className="flex gap-2.5 text-sm text-stone-400">
                   <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
                   <span>{addr}</span>
                 </li>
               ))}
               <li>
                 <a
-                  href={`tel:${CONTACT.phone}`}
-                  className="flex gap-2 text-sm text-stone-400 hover:text-white transition-colors"
+                  href={`tel:${contact.phone}`}
+                  className="flex gap-2.5 text-sm text-stone-400 hover:text-white transition-colors"
                 >
                   <Phone className="w-4 h-4 shrink-0 text-primary" />
-                  {CONTACT.phoneDisplay}
+                  {contact.phoneDisplay}
                 </a>
               </li>
               <li>
                 <a
-                  href={`mailto:${CONTACT.email}`}
-                  className="flex gap-2 text-sm text-stone-400 hover:text-white transition-colors"
+                  href={`mailto:${contact.email}`}
+                  className="flex gap-2.5 text-sm text-stone-400 hover:text-white transition-colors"
                 >
                   <Mail className="w-4 h-4 shrink-0 text-primary" />
-                  {CONTACT.email}
+                  {contact.email}
                 </a>
               </li>
-              <li className="flex gap-2 text-sm text-stone-400">
+              <li className="flex gap-2.5 text-sm text-stone-400">
                 <Clock className="w-4 h-4 shrink-0 text-primary" />
-                <span>Mở cửa 08:00 – 21:00 mỗi ngày</span>
+                <span>{contact.openingHours}</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-stone-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-500">
+        {/* Bottom bar */}
+        <div className="border-t border-stone-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-500">
           <p>© {new Date().getFullYear()} {SITE_NAME}. MST: 031541764</p>
-          <p>Công ty TNHH Thương Mại Dịch Vụ Vườn Hoa Tươi</p>
+          <div className="flex items-center gap-1">
+            <Heart className="w-3 h-3 text-primary" />
+            <span>Công ty TNHH Thương Mại Dịch Vụ Vườn Hoa Tươi</span>
+          </div>
         </div>
       </div>
     </footer>

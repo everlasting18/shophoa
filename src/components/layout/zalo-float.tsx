@@ -1,36 +1,41 @@
 "use client";
 
-import Image from "next/image";
-import { Phone } from "lucide-react";
-import { CONTACT } from "@/lib/constants";
+import { Phone, MessageCircle } from "lucide-react";
+import { useSettings } from "@/hooks/use-settings";
 
 export default function ZaloFloat() {
+  const contact = useSettings();
+
   return (
-    <div className="fixed bottom-6 right-4 z-50 flex flex-col gap-3">
+    <div className="fixed bottom-5 right-4 z-50 flex flex-col gap-3 items-end">
       {/* Zalo button */}
       <a
-        href={CONTACT.zalo}
+        href={contact.zalo}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat Zalo"
-        className="flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95 overflow-hidden"
+        className="group flex items-center gap-2"
       >
-        <Image
-          src="/icons/zalo.svg"
-          alt="Zalo"
-          width={48}
-          height={48}
-          className="w-full h-full object-cover"
-        />
+        <span className="text-xs font-medium text-foreground bg-white px-3 py-1.5 rounded-full shadow-md border border-border/60 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden sm:block">
+          Chat Zalo
+        </span>
+        <span className="flex items-center justify-center w-12 h-12 rounded-full bg-[#0068FF] text-white shadow-lg shadow-blue-500/20 transition-transform hover:scale-110 active:scale-95">
+          <MessageCircle className="w-6 h-6" />
+        </span>
       </a>
 
       {/* Hotline button */}
       <a
-        href={`tel:${CONTACT.phone}`}
-        aria-label={`Gọi ${CONTACT.phoneDisplay}`}
-        className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-110 active:scale-95 animate-pulse"
+        href={`tel:${contact.phone}`}
+        aria-label={`Gọi ${contact.phoneDisplay}`}
+        className="group flex items-center gap-2"
       >
-        <Phone className="w-5 h-5" />
+        <span className="text-xs font-medium text-foreground bg-white px-3 py-1.5 rounded-full shadow-md border border-border/60 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden sm:block">
+          Gọi ngay
+        </span>
+        <span className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white shadow-lg shadow-rose-900/20 transition-transform hover:scale-110 active:scale-95 animate-pulse">
+          <Phone className="w-5 h-5" />
+        </span>
       </a>
     </div>
   );

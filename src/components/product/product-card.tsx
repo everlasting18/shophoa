@@ -6,63 +6,74 @@ import { ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PriceDisplay from "@/components/product/price-display";
 import { useCartStore } from "@/stores/cart-store";
+import { useToast } from "@/components/ui/toast";
 import type { Product } from "@/lib/types";
+import { getThumbUrl } from "@/lib/media";
+import { hasSale } from "@/lib/product-utils";
 
 interface ProductCardProps {
   product: Product;
 }
 
-function getThumbUrl(product: Product) {
-  if (!product.thumbnail || typeof product.thumbnail !== "string") return "/images/placeholder-flower.svg";
-  return `${process.env.NEXT_PUBLIC_POCKETBASE_URL}/api/files/${product.collectionId}/${product.id}/${product.thumbnail}?thumb=480x480`;
-}
-
 export default function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
-  const hasSale = product.sale_price !== null && product.sale_price !== undefined && product.sale_price < product.price;
+  const { addToast } = useToast();
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     addItem(product, 1);
+    addToast(`Đã thêm "${product.name}" vào giỏ hàng`, "success");
   }
 
   return (
     <Link
       href={`/san-pham/${product.slug}`}
-      className="group block bg-white rounded-xl border border-border overflow-hidden hover:shadow-md transition-shadow duration-200"
+      className="group block bg-white rounded-2xl border border-border/60 overflow-hidden hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300"
     >
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-muted">
         <Image
-          src={getThumbUrl(product)}
+          src={getThumbUrl(product.collectionId, product.id, product.thumbnail)}
           alt={product.name}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        {hasSale && (
-          <Badge className="absolute top-2 left-2 bg-primary text-white text-[10px] px-1.5 py-0.5">
-            Sale
-          </Badge>
-        )}
+        {/* Overlay on hover */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+
+        {/* Badges */}
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
+          {hasSale(product.price, product.sale_price) && (
+            <Badge className="bg-primary text-white text-[10px] px-2 py-0.5 font-semibold shadow-sm">
+              Sale
+            </Badge>
+          )}
+        </div>
         {product.is_best_seller && (
-          <Badge className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] px-1.5 py-0.5">
-            Bán chạy
-          </Badge>
+          <div className="absolute top-2.5 right-2.5">
+            <Badge className="bg-amber-500 text-white text-[10px] px-2 py-0.5 font-semibold shadow-sm">
+              Bán chạy
+            </Badge>
+          </div>
         )}
-        <button
-          onClick={handleAddToCart}
-          aria-label="Thêm vào giỏ hàng"
-          className="absolute bottom-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 hover:bg-primary hover:text-white"
-        >
-          <ShoppingCart className="w-4 h-4" />
-        </button>
+
+        {/* Quick actions */}
+        <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+          <button
+            onClick={handleAddToCart}
+            aria-label="Thêm vào giỏ hàng"
+            className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-colors"
+          >
+            <ShoppingCart className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Info */}
-      <div className="p-3">
-        <h3 className="font-medium text-sm leading-snug line-clamp-2 mb-1.5 group-hover:text-primary transition-colors">
+      <div className="p-3.5">
+        <h3 className="font-medium text-sm leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors">
           {product.name}
         </h3>
         <PriceDisplay price={product.price} salePrice={product.sale_price} />

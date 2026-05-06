@@ -36,25 +36,29 @@
 }
 
 :root {
-  /* Rose/Pink brand theme */
-  --background: oklch(0.99 0.003 15);
-  --foreground: oklch(0.18 0.01 20);
+  /* Luxury Rose & Warm Cream palette */
+  --background: oklch(0.985 0.003 15);
+  --foreground: oklch(0.16 0.012 20);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.01 20);
+  --card-foreground: oklch(0.16 0.012 20);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.01 20);
-  --primary: oklch(0.59 0.215 10.2);
+  --popover-foreground: oklch(0.16 0.012 20);
+  /* Deep elegant rose */
+  --primary: oklch(0.52 0.195 12);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.96 0.012 15);
-  --secondary-foreground: oklch(0.25 0.01 20);
-  --muted: oklch(0.96 0.008 15);
-  --muted-foreground: oklch(0.52 0.02 20);
-  --accent: oklch(0.95 0.025 15);
-  --accent-foreground: oklch(0.59 0.215 10.2);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.015 15);
-  --input: oklch(0.91 0.015 15);
-  --ring: oklch(0.59 0.215 10.2);
+  /* Warm cream secondary */
+  --secondary: oklch(0.96 0.015 18);
+  --secondary-foreground: oklch(0.25 0.015 20);
+  --muted: oklch(0.95 0.01 15);
+  --muted-foreground: oklch(0.48 0.02 22);
+  /* Soft rose accent */
+  --accent: oklch(0.94 0.03 18);
+  --accent-foreground: oklch(0.52 0.195 12);
+  --destructive: oklch(0.55 0.22 27);
+  /* Warm borders */
+  --border: oklch(0.89 0.018 20);
+  --input: oklch(0.89 0.018 20);
+  --ring: oklch(0.52 0.195 12);
   --radius: 0.625rem;
 }
 
@@ -62,10 +66,29 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+    letter-spacing: -0.015em;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .text-balance {
+    text-wrap: balance;
   }
 }

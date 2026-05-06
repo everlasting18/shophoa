@@ -5,8 +5,10 @@ import pb from "@/lib/pocketbase";
 import type { Category, Product } from "@/lib/types";
 import ProductGrid from "@/components/product/product-grid";
 import Pagination from "@/components/category/pagination";
+import SortSelect from "@/components/category/sort-select";
 import { breadcrumbSchema, categoryItemListSchema } from "@/lib/seo";
 import { SITE_NAME } from "@/lib/constants";
+import { Home, ChevronRight, Flower2 } from "lucide-react";
 
 export const revalidate = 3600;
 
@@ -28,6 +30,18 @@ async function getCategory(slug: string): Promise<Category | null> {
   }
 }
 
+async function getSubcategories(parentId: string): Promise<Category[]> {
+  try {
+    const res = await pb.collection("categories").getList<Category>(1, 20, {
+      filter: `parent="${parentId}" && is_active=true`,
+      sort: "sort_order",
+    });
+    return res.items;
+  } catch {
+    return [];
+  }
+}
+
 async function getProducts(
   categoryId: string,
   page: number,
@@ -37,13 +51,12 @@ async function getProducts(
     newest: "-created",
     price_asc: "price",
     price_desc: "-price",
-    popular: "-view_count",
   };
   const sortField = sortMap[sort] || "-created";
 
   try {
     const res = await pb.collection("products").getList<Product>(page, PER_PAGE, {
-      filter: `categories~"${categoryId}" && is_active=true`,
+      filter: `categories?="${categoryId}" && is_active=true`,
       sort: sortField,
     });
     return {
@@ -61,8 +74,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = await getCategory(slug);
   if (!category) return { title: "Không tìm thấy" };
 
-  const title = category.seo_title || `${category.name} | ${SITE_NAME}`;
-  const description = category.seo_description || category.description;
+  const title = `${category.name} | ${SITE_NAME}`;
+  const description = category.description;
 
   return {
     title,
@@ -80,7 +93,10 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const category = await getCategory(slug);
   if (!category) notFound();
 
-  const { items, totalPages, totalItems } = await getProducts(category.id, page, sort);
+  const [subcategories, { items, totalPages, totalItems }] = await Promise.all([
+    getSubcategories(category.id),
+    getProducts(category.id, page, sort),
+  ]);
 
   const breadcrumbs = [
     { name: "Trang chủ", href: "/" },
@@ -101,17 +117,33 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       />
 
       {/* Header */}
-      <section className="bg-accent/50 py-8 border-b border-border">
+      <section className="bg-gradient-to-b from-accent/40 to-background py-10 border-b border-border/40">
         <div className="container mx-auto px-4">
           {/* Breadcrumb */}
-          <nav className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5">
-            <Link href="/" className="hover:text-primary transition-colors">Trang chủ</Link>
-            <span>/</span>
+          <nav className="text-xs text-muted-foreground mb-4 flex items-center gap-1 flex-wrap">
+            <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
+              <Home className="w-3.5 h-3.5" />
+              Trang chủ
+            </Link>
+            <ChevronRight className="w-3 h-3" />
             <span className="text-foreground font-medium">{category.name}</span>
           </nav>
-          <h1 className="font-heading text-2xl sm:text-3xl font-bold mb-2">{category.name}</h1>
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold mb-2 tracking-tight">{category.name}</h1>
           {category.description && (
-            <p className="text-muted-foreground text-sm max-w-2xl">{category.description}</p>
+            <p className="text-muted-foreground text-sm max-w-2xl leading-relaxed">{category.description}</p>
+          )}
+          {subcategories.length > 0 && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {subcategories.map((sub) => (
+                <Link
+                  key={sub.id}
+                  href={`/${sub.slug}`}
+                  className="px-3.5 py-1.5 text-xs font-medium rounded-full border border-border bg-white hover:border-primary/40 hover:bg-accent hover:text-primary transition-colors shadow-sm"
+                >
+                  {sub.name}
+                </Link>
+              ))}
+            </div>
           )}
         </div>
       </section>
@@ -122,13 +154,16 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           <p className="text-sm text-muted-foreground">
             {totalItems} sản phẩm
           </p>
-          <SortSelect current={sort} slug={slug} page={page} />
+          <SortSelect current={sort} slug={slug} />
         </div>
 
         {items.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            <div className="text-4xl mb-4">🌸</div>
-            <p>Chưa có sản phẩm trong danh mục này.</p>
+          <div className="text-center py-24">
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+              <Flower2 className="w-8 h-8 text-muted-foreground/40" />
+            </div>
+            <p className="text-muted-foreground font-medium mb-1">Chưa có sản phẩm</p>
+            <p className="text-muted-foreground text-sm">Danh mục này đang được cập nhật. Vui lòng quay lại sau nhé!</p>
           </div>
         ) : (
           <>
@@ -143,39 +178,12 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
         {/* SEO description */}
         {category.description && (
-          <div className="mt-12 pt-8 border-t border-border max-w-3xl">
+          <div className="mt-14 pt-8 border-t border-border max-w-3xl">
             <h2 className="font-heading text-lg font-semibold mb-3">{category.name} – {SITE_NAME}</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">{category.description}</p>
           </div>
         )}
       </div>
     </>
-  );
-}
-
-function SortSelect({ current, slug }: { current: string; slug: string; page?: number }) {
-  const options = [
-    { value: "newest", label: "Mới nhất" },
-    { value: "popular", label: "Bán chạy" },
-    { value: "price_asc", label: "Giá thấp → cao" },
-    { value: "price_desc", label: "Giá cao → thấp" },
-  ];
-
-  return (
-    <form method="GET">
-      <select
-        name="sort"
-        defaultValue={current}
-        onChange={(e) => {
-          const url = `/${slug}?sort=${e.target.value}&page=1`;
-          if (typeof window !== "undefined") window.location.href = url;
-        }}
-        className="text-sm border border-border rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
-    </form>
   );
 }

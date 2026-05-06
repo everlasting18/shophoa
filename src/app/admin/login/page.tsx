@@ -18,11 +18,23 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError("");
     try {
-      await pb.admins.authWithPassword(email, password);
-      login(email);
+      const res = await fetch("/api/auth/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Đăng nhập thất bại");
+      }
+
+      const data = await res.json();
+      pb.authStore.save(data.token, null);
+      login(data.adminEmail);
       router.push("/admin");
-    } catch {
-      setError("Email hoặc mật khẩu không đúng.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
     } finally {
       setLoading(false);
     }

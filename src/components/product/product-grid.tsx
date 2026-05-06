@@ -15,7 +15,7 @@ const colClass = {
 
 export default function ProductGrid({ products, columns = 4 }: ProductGridProps) {
   return (
-    <div className={`grid ${colClass[columns]} gap-3 sm:gap-4`}>
+    <div className={`grid ${colClass[columns]} gap-4 sm:gap-5`}>
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
@@ -25,12 +25,12 @@ export default function ProductGrid({ products, columns = 4 }: ProductGridProps)
 
 export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-border overflow-hidden">
+        <div key={i} className="rounded-2xl border border-border/60 overflow-hidden bg-white">
           <Skeleton className="aspect-square w-full" />
-          <div className="p-3 space-y-2">
-            <Skeleton className="h-4 w-3/4" />
+          <div className="p-3.5 space-y-2.5">
+            <Skeleton className="h-4 w-4/5" />
             <Skeleton className="h-4 w-1/2" />
           </div>
         </div>
