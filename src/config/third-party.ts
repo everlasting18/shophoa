@@ -7,7 +7,7 @@ export const IS_PROD = process.env.NODE_ENV === "production";
 export const PB_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.1:8090";
 
 // --- Cloudflare Image Resizing ---
-export const CF_IMAGE_BASE = "https://fitchy.shop/cdn-cgi/image";
+export const CF_IMAGE_BASE = "/cdn-cgi/image";
 
 // --- Zalo ---
 const ZALO_BASE = "https://zalo.me";
