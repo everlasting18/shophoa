@@ -9,6 +9,9 @@ export const PB_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.
 // --- Cloudflare Image Resizing ---
 export const CF_IMAGE_BASE = "/cdn-cgi/image";
 
+// --- Photo CDN (PocketBase file proxy) ---
+export const PHOTO_BASE = "https://photo.fitchy.shop";
+
 // --- Zalo ---
 const ZALO_BASE = "https://zalo.me";
 export const ZALO_PHONE = "0976491322";

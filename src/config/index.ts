@@ -2,6 +2,7 @@ export {
   IS_PROD,
   PB_URL,
   CF_IMAGE_BASE,
+  PHOTO_BASE,
   ZALO_PHONE,
   zaloLink,
   SOCIAL,
