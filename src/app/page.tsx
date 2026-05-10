@@ -1,12 +1,12 @@
 import Link from "next/link";
-import pb from "@/lib/pocketbase";
-import type { Product, Banner } from "@/lib/types";
+import pb from "@/services/pocketbase";
+import type { Product, Banner } from "@/schema";
 import ProductSection from "@/components/home/product-section";
 import WhyChooseUs from "@/components/home/why-choose-us";
-import OccasionTabs from "@/components/home/occasion-tabs";
+
 import HeroBanner from "@/components/home/hero-banner";
-import { localBusinessSchema, organizationSchema } from "@/lib/seo";
-import { getSiteSettings } from "@/lib/settings";
+import { localBusinessSchema, organizationSchema } from "@/services/seo";
+import { getSiteSettings } from "@/services/settings";
 import { ArrowRight, Flower2 } from "lucide-react";
 
 export const revalidate = 3600;
@@ -68,9 +68,6 @@ export default async function HomePage() {
 
       {/* Hero */}
       <HeroBanner banners={banners} />
-
-      {/* Occasion Tabs */}
-      <OccasionTabs />
 
       {/* Best Sellers */}
       {bestSellers.length > 0 && (

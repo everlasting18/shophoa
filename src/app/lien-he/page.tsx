@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MapPin, Phone, Mail, Clock, MessageCircle, Home, ChevronRight } from "lucide-react";
-import { SITE_NAME } from "@/lib/constants";
-import { getSiteSettings } from "@/lib/settings";
+import { SITE_NAME } from "@/config";
+import { getSiteSettings } from "@/services/settings";
+import { googleMapsLink } from "@/config";
 
 export const metadata: Metadata = {
   title: `Liên Hệ | ${SITE_NAME}`,
@@ -111,7 +112,7 @@ export default async function ContactPage() {
               <div>
                 <p className="text-sm font-medium">{addr}</p>
                 <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(addr)}`}
+                  href={googleMapsLink(addr)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1"

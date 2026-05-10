@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { MapPin, Phone, Mail, Clock, Flower2, Heart } from "lucide-react";
-import { SITE_NAME } from "@/lib/constants";
-import { getNavItems } from "@/lib/navigation";
+import { SITE_NAME } from "@/config";
+import { getNavItems } from "@/services/navigation";
 import { socialLinks } from "./social-icons";
-import { getSiteSettings } from "@/lib/settings";
+import { getSiteSettings } from "@/services/settings";
 
 export default async function Footer() {
   const [navItems, contact] = await Promise.all([getNavItems(), getSiteSettings()]);
@@ -21,9 +21,7 @@ export default async function Footer() {
               </span>
             </Link>
             <p className="text-sm leading-relaxed text-stone-400 mb-6 max-w-sm">
-              Shop hoa tươi TPHCM phong cách hiện đại. Mỗi cành hoa trao đi là
-              một tấm lòng chân thành gửi gắm. Hơn 10 năm kinh nghiệm phục vụ
-              hàng ngàn khách hàng.
+              Shop hoa tươi TPHCM, giao hoa nhanh trong ngày, mẫu mã đa dạng, giá cả phải chăng.
             </p>
             <div className="flex gap-2.5">
               {socialLinks.map((s) => (

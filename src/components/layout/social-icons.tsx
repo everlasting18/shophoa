@@ -1,8 +1,9 @@
-import { CONTACT } from "@/lib/constants";
+import { CONTACT } from "@/config";
+import { SOCIAL } from "@/config";
 
 export const socialLinks = [
   {
-    href: "https://facebook.com/vuonhoatuoi",
+    href: SOCIAL.facebook,
     label: "Facebook",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
@@ -11,7 +12,7 @@ export const socialLinks = [
     ),
   },
   {
-    href: "https://instagram.com/vuonhoatuoi",
+    href: SOCIAL.instagram,
     label: "Instagram",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">

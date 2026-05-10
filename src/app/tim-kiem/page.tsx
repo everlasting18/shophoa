@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Search, Home, ChevronRight, Flower2, X } from "lucide-react";
-import pb from "@/lib/pocketbase";
-import type { Product } from "@/lib/types";
+import pb from "@/services/pocketbase";
+import type { Product } from "@/schema";
 import ProductGrid from "@/components/product/product-grid";
 
 export const dynamic = "force-dynamic";
@@ -21,9 +21,10 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 async function searchProducts(query: string): Promise<Product[]> {
   if (!query.trim()) return [];
+  const safe = query.replace(/"/g, '\\"');
   try {
     const res = await pb.collection("products").getList<Product>(1, 48, {
-      filter: `(name~"${query}" || short_description~"${query}") && is_active=true`,
+      filter: `(name~"${safe}" || short_description~"${safe}") && is_active=true`,
       sort: "-is_best_seller,-created",
     });
     return res.items;

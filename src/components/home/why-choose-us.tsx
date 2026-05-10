@@ -9,7 +9,7 @@ const features = [
   {
     icon: Star,
     title: "Mẫu Đa Dạng",
-    desc: "Giá cả niêm yết công khai. Hoa tươi nhập mới mỗi ngày, nói không với hoa héo.",
+    desc: "Giá cả niêm yết công khai. Hoa tươi nhập mới mỗi ngày.",
   },
   {
     icon: ShieldCheck,

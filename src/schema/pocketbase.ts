@@ -1,3 +1,5 @@
+// Types mirroring PocketBase collection schemas
+
 export interface Category {
   id: string;
   name: string;
@@ -80,9 +82,4 @@ export interface Settings {
   id: string;
   key: string;
   value: string;
-}
-
-export interface CartItem {
-  product: Product;
-  quantity: number;
 }

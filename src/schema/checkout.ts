@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SHIPPING_ZONES } from "./shipping-config";
+import { SHIPPING_ZONES } from "@/config";
 
 export const checkoutSchema = z
   .object({
@@ -13,7 +13,7 @@ export const checkoutSchema = z
     recipientDistrict: z.string(),
     deliveryDate: z.string(),
     deliveryTime: z.string().min(1, "Vui lòng chọn giờ giao"),
-    shippingIdx: z.number().min(0),
+    shippingIdx: z.number().min(0).max(SHIPPING_ZONES.length - 1),
     sameAsBuyer: z.boolean(),
     note: z.string(),
   })

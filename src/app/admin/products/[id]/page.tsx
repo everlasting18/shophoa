@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import pb from "@/lib/pocketbase";
+import pb from "@/services/pocketbase";
 import { formatPrice } from "@/lib/utils";
 import { ChevronLeft, Upload, ImageIcon, Plus, X, Check } from "lucide-react";
 import { getThumbUrl, getImageUrl } from "@/lib/media";
 import RichEditor from "@/components/ui/rich-editor";
-import type { Product, Category } from "@/lib/types";
+import type { Product, Category } from "@/schema";
 
 const OCCASIONS = ["Sinh nhật", "Khai trương", "Tốt nghiệp", "Tình yêu", "Chia buồn", "Sự kiện", "Chúc mừng", "Valentine", "8/3", "20/10", "20/11"];
 
@@ -37,6 +37,8 @@ export default function AdminProductFormPage() {
       setForm({ name: p.name, slug: p.slug, price: String(p.price), sale_price: p.sale_price ? String(p.sale_price) : "", short_description: p.short_description || "", description: p.description || "", is_featured: p.is_featured, is_best_seller: p.is_best_seller, is_active: p.is_active, categories: p.categories || [], occasions: p.occasions || [] });
       if (p.thumbnail) setThumbnailPreview(getThumbUrl(p.collectionId, p.id, p.thumbnail, "200x200"));
       if (Array.isArray(p.images)) setExistingImages(p.images.map((img: string) => ({ filename: img, url: getImageUrl(p.collectionId, p.id, img, 200) })));
+    }).catch(() => {
+      setError("Không tìm thấy sản phẩm.");
     });
   }, [id, creating]);
 
@@ -56,7 +58,7 @@ export default function AdminProductFormPage() {
       data.append("short_description", form.short_description); data.append("description", form.description);
       data.append("is_featured", String(form.is_featured)); data.append("is_best_seller", String(form.is_best_seller));
       data.append("is_active", String(form.is_active));
-      data.append("occasions", JSON.stringify(form.occasions));
+      form.occasions.forEach((o) => data.append("occasions", o));
       form.categories.forEach((c) => data.append("categories", c));
       if (thumbnailFile) data.append("thumbnail", thumbnailFile);
       galleryFiles.forEach((f) => data.append("images", f));

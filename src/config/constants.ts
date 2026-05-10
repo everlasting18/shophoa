@@ -1,13 +1,21 @@
-import { cache } from "react";
-import type { Category } from "@/lib/types";
+import { ZALO_PHONE, zaloLink } from "./third-party";
 
-export interface NavItem {
-  label: string;
-  href: string;
-  children?: NavItem[];
-}
+export const SITE_NAME = "Vườn Hoa Tươi";
+export const SITE_DESCRIPTION =
+  "Shop hoa tươi TPHCM phong cách hiện đại. Chuyên đặt hoa tươi sinh nhật, khai trương. Dịch vụ điện hoa hỏa tốc 60p.";
 
-const FALLBACK_NAV_ITEMS: NavItem[] = [
+export const CONTACT = {
+  phone: ZALO_PHONE,
+  phoneDisplay: "0976.491.322",
+  zalo: zaloLink(ZALO_PHONE),
+  email: "cskh@vuonhoatuoi.vn",
+  addresses: [
+    "183/37 Đường 3 Tháng 2, Phường Vườn Lài, TPHCM",
+    "704/19 Nguyễn Đình Chiểu, Phường 1, Quận 3, TPHCM",
+  ],
+};
+
+export const NAV_ITEMS = [
   {
     label: "Hoa Sinh Nhật",
     href: "/hoa-sinh-nhat",
@@ -65,56 +73,3 @@ const FALLBACK_NAV_ITEMS: NavItem[] = [
     ],
   },
 ];
-
-function buildTree(records: Category[]): NavItem[] {
-  const childrenMap = new Map<string, Category[]>();
-  const parents: Category[] = [];
-
-  for (const cat of records) {
-    if (cat.parent) {
-      const list = childrenMap.get(cat.parent) ?? [];
-      list.push(cat);
-      childrenMap.set(cat.parent, list);
-    } else {
-      parents.push(cat);
-    }
-  }
-
-  parents.sort((a, b) => a.sort_order - b.sort_order);
-
-  const items: NavItem[] = [];
-  for (const parent of parents) {
-    const kids = childrenMap.get(parent.id);
-    if (kids && kids.length > 0) {
-      items.push({
-        label: parent.name,
-        href: `/${parent.slug}`,
-        children: kids
-          .sort((a, b) => a.sort_order - b.sort_order)
-          .map((k) => ({ label: k.name, href: `/${k.slug}` })),
-      });
-    } else {
-      items.push({ label: parent.name, href: `/${parent.slug}` });
-    }
-  }
-
-  return items;
-}
-
-export const getNavItems = cache(async (): Promise<NavItem[]> => {
-  try {
-    const { default: pb } = await import("./pocketbase");
-    const records = await pb.collection("categories").getFullList<Category>({
-      sort: "sort_order",
-      filter: "is_active=true",
-    });
-
-    if (records.length === 0) return FALLBACK_NAV_ITEMS;
-    const tree = buildTree(records);
-    if (tree.length === 0) return FALLBACK_NAV_ITEMS;
-    return tree;
-  } catch (e) {
-    console.error("getNavItems failed:", e);
-    return FALLBACK_NAV_ITEMS;
-  }
-});

@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import pb from "@/lib/pocketbase";
+import pb from "@/services/pocketbase";
 import { Plus, Trash2, ToggleLeft, ToggleRight, Upload } from "lucide-react";
-import type { Banner } from "@/lib/types";
+import type { Banner } from "@/schema";
 import { getImageUrl } from "@/lib/media";
 
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<Banner[] | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [form, setForm] = useState({ title: "", link: "", position: "hero" as "hero" | "promo", sort_order: "0" });
+  const [form, setForm] = useState({ title: "", link: "", position: "hero" as "hero" | "promo" | "category", sort_order: 0 });
   const [file, setFile] = useState<File | null>(null);
   const [showForm, setShowForm] = useState(false);
 
@@ -23,18 +23,18 @@ export default function AdminBannersPage() {
     if (!file) return;
     setUploading(true);
     try {
-      const data = new FormData();
-      data.append("title", form.title);
-      data.append("link", form.link);
-      data.append("position", form.position);
-      data.append("sort_order", form.sort_order);
-      data.append("is_active", "true");
-      data.append("image", file);
-      const created = await pb.collection("banners").create<Banner>(data);
+      const created = await pb.collection("banners").create<Banner>({
+        title: form.title || "Banner",
+        link: form.link || undefined,
+        position: form.position,
+        sort_order: form.sort_order,
+        is_active: true,
+        image: file,
+      });
       setBanners((prev) => [...(prev ?? []), created]);
       setShowForm(false);
       setFile(null);
-      setForm({ title: "", link: "", position: "hero", sort_order: "0" });
+      setForm({ title: "", link: "", position: "hero", sort_order: 0 });
     } finally {
       setUploading(false);
     }
@@ -73,13 +73,13 @@ export default function AdminBannersPage() {
             <div><label className="text-xs text-zinc-400 mb-1 block">Link (tuỳ chọn)</label>
               <input value={form.link} onChange={(e) => setForm((f) => ({ ...f, link: e.target.value }))} className={iCls} placeholder="/hoa-sinh-nhat" /></div>
             <div><label className="text-xs text-zinc-400 mb-1 block">Vị trí</label>
-              <select value={form.position} onChange={(e) => setForm((f) => ({ ...f, position: e.target.value as "hero" | "promo" }))} className={iCls}>
+              <select value={form.position} onChange={(e) => setForm((f) => ({ ...f, position: e.target.value as "hero" | "promo" | "category" }))} className={iCls}>
                 <option value="hero">Hero (trang chủ)</option>
                 <option value="promo">Promo banner</option>
                 <option value="category">Danh mục</option>
               </select></div>
             <div><label className="text-xs text-zinc-400 mb-1 block">Thứ tự</label>
-              <input type="number" value={form.sort_order} onChange={(e) => setForm((f) => ({ ...f, sort_order: e.target.value }))} className={iCls} /></div>
+              <input type="number" value={form.sort_order} onChange={(e) => setForm((f) => ({ ...f, sort_order: Number(e.target.value) }))} className={iCls} /></div>
           </div>
           <div>
             <label className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg text-sm text-zinc-300 cursor-pointer w-fit">

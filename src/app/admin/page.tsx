@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import pb from "@/lib/pocketbase";
+import pb from "@/services/pocketbase";
 import { ShoppingBag, TrendingUp, Clock, AlertCircle, Package, FolderOpen, ArrowRight } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import type { Order } from "@/lib/types";
+import type { Order } from "@/schema";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Chờ xác nhận",

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import pb from "@/lib/pocketbase";
-import type { Product } from "@/lib/types";
+import pb from "@/services/pocketbase";
+import type { Product } from "@/schema";
 import ProductGrid from "@/components/product/product-grid";
 import Pagination from "@/components/category/pagination";
 import SortSelect from "@/components/category/sort-select";

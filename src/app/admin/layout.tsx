@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAdminStore } from "@/stores/admin-store";
-import pb from "@/lib/pocketbase";
+import pb from "@/services/pocketbase";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -32,7 +32,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const { isLoggedIn, adminEmail, logout } = useAdminStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!mounted) return;

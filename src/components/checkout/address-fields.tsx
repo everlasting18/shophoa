@@ -3,7 +3,7 @@
 import { useRef, useEffect } from "react";
 import { MapPin } from "lucide-react";
 import type { UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-form";
-import type { CheckoutForm } from "@/lib/checkout-schema";
+import type { CheckoutForm } from "@/schema";
 import InputIcon from "@/components/ui/input-icon";
 import { useProvinces } from "@/hooks/use-provinces";
 

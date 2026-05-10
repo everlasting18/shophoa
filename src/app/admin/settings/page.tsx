@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import pb from "@/lib/pocketbase";
+import pb from "@/services/pocketbase";
 import { Check } from "lucide-react";
-import type { Settings } from "@/lib/types";
+import type { Settings } from "@/schema";
 
 const SETTING_LABELS: Record<string, string> = {
   phone: "Số điện thoại",

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { SiteContact } from "@/lib/settings";
+import type { SiteContact } from "@/schema";
+import { CONTACT } from "@/config";
 
 const FALLBACK = {
-  phone: "0976491322",
-  phoneDisplay: "0976.491.322",
-  zalo: "https://zalo.me/0976491322",
+  phone: CONTACT.phone,
+  phoneDisplay: CONTACT.phoneDisplay,
+  zalo: CONTACT.zalo,
 };
 
 export function useSettings() {

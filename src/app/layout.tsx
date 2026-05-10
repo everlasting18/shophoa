@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
+import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from "@/config";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import ZaloFloat from "@/components/layout/zalo-float";

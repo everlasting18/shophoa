@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import pb from "@/lib/pocketbase";
-import type { Category, Product } from "@/lib/types";
+import pb from "@/services/pocketbase";
+import type { Category, Product } from "@/schema";
 import ProductGrid from "@/components/product/product-grid";
 import Pagination from "@/components/category/pagination";
 import SortSelect from "@/components/category/sort-select";
-import { breadcrumbSchema, categoryItemListSchema } from "@/lib/seo";
-import { SITE_NAME } from "@/lib/constants";
+import { breadcrumbSchema, categoryItemListSchema } from "@/services/seo";
+import { SITE_NAME } from "@/config";
 import { Home, ChevronRight, Flower2 } from "lucide-react";
 
 export const revalidate = 3600;

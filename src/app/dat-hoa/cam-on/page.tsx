@@ -9,8 +9,7 @@ import { useSettings } from "@/hooks/use-settings";
 function ThanksContent() {
   const contact = useSettings();
   const params = useSearchParams();
-  const id = params.get("id") ?? "";
-  const orderCode = id ? `VHT${id.slice(-6).toUpperCase()}` : "";
+  const orderCode = params.get("code") ?? "";
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-lg">

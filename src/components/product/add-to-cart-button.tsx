@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { useCartStore } from "@/stores/cart-store";
 import { useToast } from "@/components/ui/toast";
-import type { Product } from "@/lib/types";
+import type { Product } from "@/schema";
 import { formatPrice } from "@/lib/utils";
 import { getDisplayPrice } from "@/lib/product-utils";
 import QuantityInput from "@/components/ui/quantity-input";

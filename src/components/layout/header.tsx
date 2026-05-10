@@ -5,10 +5,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { ShoppingCart, Search, Menu, Phone, ChevronDown, ChevronRight, Flower2, Clock, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { SITE_NAME, NAV_ITEMS } from "@/lib/constants";
-import type { NavItem } from "@/lib/navigation";
+import { SITE_NAME, NAV_ITEMS } from "@/config";
+import type { NavItem } from "@/schema";
 import { useCartStore } from "@/stores/cart-store";
-import type { CartStore } from "@/stores/cart-store";
+import type { CartStore } from "@/schema";
 import SearchDialog from "@/components/layout/search-dialog";
 import { useSettings } from "@/hooks/use-settings";
 

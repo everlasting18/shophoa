@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import pb from "@/lib/pocketbase";
+import pb from "@/services/pocketbase";
 import { formatPrice } from "@/lib/utils";
 import { getThumbUrl } from "@/lib/media";
 import { Plus, Pencil, Trash2, Search, ToggleLeft, ToggleRight, ImageIcon, Package, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { Product } from "@/lib/types";
+import type { Product } from "@/schema";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[] | null>(null);

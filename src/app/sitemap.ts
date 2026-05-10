@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
-import pb from "@/lib/pocketbase";
-import type { Product, Category } from "@/lib/types";
+import pb from "@/services/pocketbase";
+import type { Product, Category } from "@/schema";
+import { SITE_URL } from "@/config";
 
-const BASE_URL = "https://vuonhoatuoi.vn";
+const BASE_URL = SITE_URL;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [

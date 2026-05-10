@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import ProductGrid, { ProductGridSkeleton } from "@/components/product/product-grid";
-import type { Product } from "@/lib/types";
+import type { Product } from "@/schema";
 
 interface ProductSectionProps {
   title: string;

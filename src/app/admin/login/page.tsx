@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminStore } from "@/stores/admin-store";
-import pb from "@/lib/pocketbase";
+import pb from "@/services/pocketbase";
 
 export default function AdminLoginPage() {
   const router = useRouter();

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MapPin, Phone, Mail, Clock, Award, Truck, Heart, Home, ChevronRight, Flower2 } from "lucide-react";
-import { SITE_NAME } from "@/lib/constants";
-import { getSiteSettings } from "@/lib/settings";
+import { SITE_NAME } from "@/config";
+import { getSiteSettings } from "@/services/settings";
 
 export const metadata: Metadata = {
   title: `Giới Thiệu | ${SITE_NAME}`,

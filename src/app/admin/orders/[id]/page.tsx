@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import pb from "@/lib/pocketbase";
+import pb from "@/services/pocketbase";
 import { formatPrice } from "@/lib/utils";
+import { zaloLink } from "@/config";
 import { ChevronLeft, Phone, User, MapPin, Calendar, Clock, Package, FileText, Copy, Check, MessageCircle, Gift, CreditCard } from "lucide-react";
-import type { Order } from "@/lib/types";
+import type { Order } from "@/schema";
 
 const STATUSES = [
   { value: "pending", label: "Chờ xác nhận", color: "bg-amber-500", text: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
@@ -27,7 +28,7 @@ export default function AdminOrderDetailPage() {
   const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
-    pb.collection("orders").getOne<Order>(id).then(setOrder);
+    pb.collection("orders").getOne<Order>(id).then(setOrder).catch(() => {});
   }, [id]);
 
   async function updateStatus(status: string) {
@@ -245,13 +246,13 @@ export default function AdminOrderDetailPage() {
 
       {/* Zalo button */}
       <div className="flex gap-2">
-        <a href={`https://zalo.me/${order.customer_phone}`} target="_blank" rel="noopener noreferrer"
+        <a href={zaloLink(order.customer_phone)} target="_blank" rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors">
           <MessageCircle className="w-4 h-4" />
           Nhắn Zalo người đặt
         </a>
         {order.recipient_phone && order.recipient_phone !== order.customer_phone && (
-          <a href={`https://zalo.me/${order.recipient_phone}`} target="_blank" rel="noopener noreferrer"
+          <a href={zaloLink(order.recipient_phone)} target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 flex-1 py-2.5 bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 text-sm font-medium rounded-xl transition-colors border border-blue-500/30">
             <MessageCircle className="w-4 h-4" />
             Nhắn Zalo người nhận

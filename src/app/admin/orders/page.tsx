@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import pb from "@/lib/pocketbase";
+import pb from "@/services/pocketbase";
 import { formatPrice } from "@/lib/utils";
+import { zaloLink } from "@/config";
 import { Search, Calendar, Clock, Phone, User, Package, X, MapPin, Gift, FileText, CreditCard, MessageCircle, Copy, Check, ChevronDown, PhoneCall } from "lucide-react";
-import type { Order } from "@/lib/types";
+import type { Order } from "@/schema";
 
 const STATUSES = [
   { value: "", label: "Tất cả", icon: Package },
@@ -33,7 +34,10 @@ export default function AdminOrdersPage() {
     let cancelled = false;
     const filters: string[] = [];
     if (statusFilter) filters.push(`status="${statusFilter}"`);
-    if (search) filters.push(`(customer_name~"${search}" || customer_phone~"${search}" || order_code~"${search}")`);
+    if (search) {
+      const safe = search.replace(/"/g, '\\"');
+      filters.push(`(customer_name~"${safe}" || customer_phone~"${safe}" || order_code~"${safe}")`);
+    }
     if (dateFrom) filters.push(`created>="${dateFrom} 00:00:00"`);
     if (dateTo) filters.push(`created<="${dateTo} 23:59:59"`);
 
@@ -45,6 +49,8 @@ export default function AdminOrdersPage() {
         setOrders(result.items);
         setTotal(result.totalItems);
       }
+    }).catch(() => {
+      if (!cancelled) setOrders([]);
     });
 
     return () => { cancelled = true; };
@@ -272,13 +278,13 @@ export default function AdminOrdersPage() {
 
                     {/* Zalo actions */}
                     <div className="flex gap-2 mt-4">
-                      <a href={`https://zalo.me/${order.customer_phone}`} target="_blank" rel="noopener noreferrer"
+                      <a href={zaloLink(order.customer_phone)} target="_blank" rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
                         className="flex items-center justify-center gap-1.5 flex-1 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-medium rounded-lg transition-colors border border-blue-500/20">
                         <MessageCircle className="w-3.5 h-3.5" />Zalo người đặt
                       </a>
                       {order.recipient_phone && order.recipient_phone !== order.customer_phone && (
-                        <a href={`https://zalo.me/${order.recipient_phone}`} target="_blank" rel="noopener noreferrer"
+                        <a href={zaloLink(order.recipient_phone)} target="_blank" rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           className="flex items-center justify-center gap-1.5 flex-1 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400/80 text-xs font-medium rounded-lg transition-colors border border-blue-500/10">
                           <MessageCircle className="w-3.5 h-3.5" />Zalo người nhận

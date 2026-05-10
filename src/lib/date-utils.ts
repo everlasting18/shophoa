@@ -1,4 +1,4 @@
-import { DAY_NAMES } from "./shipping-config";
+import { DAY_NAMES } from "@/config";
 
 export function isoToDisplay(iso: string) {
   const [y, m, d] = iso.split("-").map(Number);

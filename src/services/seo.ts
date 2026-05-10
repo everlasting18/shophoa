@@ -1,17 +1,9 @@
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "./constants";
-import type { Product, Category } from "./types";
-import type { SiteContact } from "./settings";
-import { getImageUrl } from "./media";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "@/config";
+import type { Product, Category } from "@/schema";
+import type { SiteContact } from "@/schema";
+import { getImageUrl } from "@/lib/media";
 
 export function getProductImageUrl(
-  collectionId: string,
-  recordId: string,
-  filename: string
-): string {
-  return getImageUrl(collectionId, recordId, filename);
-}
-
-export function getBannerImageUrl(
   collectionId: string,
   recordId: string,
   filename: string

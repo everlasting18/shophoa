@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import PriceDisplay from "@/components/product/price-display";
 import { useCartStore } from "@/stores/cart-store";
 import { useToast } from "@/components/ui/toast";
-import type { Product } from "@/lib/types";
+import type { Product } from "@/schema";
 import { getThumbUrl } from "@/lib/media";
 import { hasSale } from "@/lib/product-utils";
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
-import type { Banner } from "@/lib/types";
+import type { Banner } from "@/schema";
 import { useSettings } from "@/hooks/use-settings";
 import { getImageUrl } from "@/lib/media";
 import { Flower2 } from "lucide-react";
@@ -67,7 +67,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
         <Carousel className="w-full" setApi={setApi} opts={{ loop: true }}>
           <CarouselContent>
             {banners.map((banner) => {
-              const imgUrl = getImageUrl(banner.collectionId, banner.id, banner.image, 1200);
+              const imgUrl = getImageUrl(banner.collectionId, banner.id, banner.image, 2400);
               return (
                 <CarouselItem key={banner.id}>
                   <Link href={banner.link || "/"} className="block">
@@ -80,7 +80,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                         className="object-cover hover:scale-[1.02] transition-transform duration-700"
                         sizes="100vw"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
                     </div>
                   </Link>
                 </CarouselItem>

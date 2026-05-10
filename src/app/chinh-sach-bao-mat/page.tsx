@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE_NAME } from "@/lib/constants";
-import { getSiteSettings } from "@/lib/settings";
+import { SITE_NAME } from "@/config";
+import { getSiteSettings } from "@/services/settings";
 import { Home, ChevronRight, Shield } from "lucide-react";
 
 export const metadata: Metadata = {

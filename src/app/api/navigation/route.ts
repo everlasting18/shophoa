@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getNavItems } from "@/lib/navigation";
+import { getNavItems } from "@/services/navigation";
 
 export async function GET() {
   const items = await getNavItems();

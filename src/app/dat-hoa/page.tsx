@@ -8,9 +8,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, Info, CreditCard, Package, ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/stores/cart-store";
 import { useToast } from "@/components/ui/toast";
-import pb from "@/lib/pocketbase";
-import { checkoutSchema, type CheckoutForm } from "@/lib/checkout-schema";
-import { SHIPPING_ZONES } from "@/lib/shipping-config";
+import pb from "@/services/pocketbase";
+import { checkoutSchema, type CheckoutForm } from "@/schema";
+import { SHIPPING_ZONES } from "@/config";
 import { todayISO } from "@/lib/date-utils";
 import { formatPrice } from "@/lib/utils";
 import ProgressSteps from "@/components/checkout/progress-steps";
@@ -180,7 +180,7 @@ export default function CheckoutPage() {
       sessionStorage.removeItem(STORAGE_KEY);
       clearCart();
       addToast("Đặt hoa thành công!", "success");
-      router.push(`/dat-hoa/cam-on?id=${record.id}`);
+      router.push(`/dat-hoa/cam-on?code=${encodeURIComponent(orderCode)}`);
     } catch {
       setSubmitError("Có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ Zalo.");
       addToast("Đặt hàng thất bại, vui lòng thử lại", "error");

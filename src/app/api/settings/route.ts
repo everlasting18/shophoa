@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSiteSettings } from "@/lib/settings";
+import { getSiteSettings } from "@/services/settings";
 
 export const runtime = "nodejs";
 

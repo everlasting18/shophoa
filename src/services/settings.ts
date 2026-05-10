@@ -1,25 +1,13 @@
 import { cache } from "react";
-import type { Settings } from "./types";
-
-export interface SiteContact {
-  phone: string;
-  phoneDisplay: string;
-  zalo: string;
-  email: string;
-  addresses: string[];
-  openingHours: string;
-  freeShippingNote: string;
-}
+import type { Settings, SiteContact } from "@/schema";
+import { CONTACT } from "@/config";
 
 const FALLBACK: SiteContact = {
-  phone: "0976491322",
-  phoneDisplay: "0976.491.322",
-  zalo: "https://zalo.me/0976491322",
-  email: "cskh@vuonhoatuoi.vn",
-  addresses: [
-    "183/37 Đường 3 Tháng 2, Phường Vườn Lài, TPHCM",
-    "704/19 Nguyễn Đình Chiểu, Phường 1, Quận 3, TPHCM",
-  ],
+  phone: CONTACT.phone,
+  phoneDisplay: CONTACT.phoneDisplay,
+  zalo: CONTACT.zalo,
+  email: CONTACT.email,
+  addresses: CONTACT.addresses,
   openingHours: "08:00 – 21:00 mỗi ngày",
   freeShippingNote: "",
 };

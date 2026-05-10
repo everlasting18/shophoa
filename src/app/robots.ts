@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/config";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -9,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/dat-hoa", "/gio-hang", "/my-account"],
       },
     ],
-    sitemap: "https://vuonhoatuoi.vn/sitemap.xml",
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

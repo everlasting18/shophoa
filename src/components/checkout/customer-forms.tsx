@@ -2,7 +2,7 @@
 
 import { User, Phone, Truck, MapPin, Gift } from "lucide-react";
 import type { UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-form";
-import type { CheckoutForm } from "@/lib/checkout-schema";
+import type { CheckoutForm } from "@/schema";
 import CardSection from "./card-section";
 import InputIcon from "@/components/ui/input-icon";
 import AddressFields from "./address-fields";

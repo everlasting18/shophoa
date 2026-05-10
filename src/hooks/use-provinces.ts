@@ -1,19 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-
-export interface District {
-  code: number;
-  name: string;
-}
-
-export interface Ward {
-  code: number;
-  name: string;
-}
-
-const API = "https://provinces.open-api.vn/api";
-const HCMC_CODE = 79;
+import { PROVINCES_API, HCMC_CODE } from "@/config";
+import type { District, Ward } from "@/schema";
 
 export function useProvinces() {
   const [districts, setDistricts] = useState<District[]>([]);
@@ -21,7 +10,7 @@ export function useProvinces() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch(`${API}/p/${HCMC_CODE}?depth=2`)
+    fetch(`${PROVINCES_API}/p/${HCMC_CODE}?depth=2`)
       .then((r) => r.json())
       .then((data: { districts: District[] }) => {
         setDistricts(data.districts || []);
@@ -33,7 +22,7 @@ export function useProvinces() {
     setLoading(true);
     setWards([]);
     try {
-      const r = await fetch(`${API}/d/${districtCode}?depth=2`);
+      const r = await fetch(`${PROVINCES_API}/d/${districtCode}?depth=2`);
       const data: { wards: Ward[] } = await r.json();
       setWards(data.wards || []);
     } catch {

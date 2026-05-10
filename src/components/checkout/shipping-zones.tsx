@@ -2,9 +2,9 @@
 
 import { Truck } from "lucide-react";
 import type { UseFormSetValue } from "react-hook-form";
-import type { CheckoutForm } from "@/lib/checkout-schema";
+import type { CheckoutForm } from "@/schema";
 import CardSection from "./card-section";
-import { SHIPPING_ZONES } from "@/lib/shipping-config";
+import { SHIPPING_ZONES } from "@/config";
 import { formatPrice } from "@/lib/utils";
 
 interface Props {

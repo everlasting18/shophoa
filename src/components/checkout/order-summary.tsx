@@ -7,7 +7,7 @@ import { formatPrice } from "@/lib/utils";
 import { getThumbUrl } from "@/lib/media";
 import { getDisplayPrice } from "@/lib/product-utils";
 import QuantityInput from "@/components/ui/quantity-input";
-import type { CartItem } from "@/lib/types";
+import type { CartItem } from "@/schema";
 
 interface Props {
   items: { product: CartItem["product"]; quantity: number }[];

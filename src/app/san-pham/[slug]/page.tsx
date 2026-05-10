@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import pb from "@/lib/pocketbase";
-import type { Product } from "@/lib/types";
+import pb from "@/services/pocketbase";
+import type { Product } from "@/schema";
 import ProductGallery from "@/components/product/product-gallery";
 import AddToCartButton from "@/components/product/add-to-cart-button";
 import ProductGrid from "@/components/product/product-grid";
 import PriceDisplay from "@/components/product/price-display";
-import { productSchema, breadcrumbSchema, getProductImageUrl } from "@/lib/seo";
+import { productSchema, breadcrumbSchema, getProductImageUrl } from "@/services/seo";
 import { getImageUrl } from "@/lib/media";
-import { SITE_NAME } from "@/lib/constants";
+import { SITE_NAME } from "@/config";
 import { Home, ChevronRight, Truck, ShieldCheck, Gift, Lock } from "lucide-react";
 
 export const revalidate = 3600;

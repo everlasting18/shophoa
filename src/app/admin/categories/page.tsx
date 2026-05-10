@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import pb from "@/lib/pocketbase";
+import pb from "@/services/pocketbase";
 import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Check, GripVertical, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { Category } from "@/lib/types";
+import type { Category } from "@/schema";
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[] | null>(null);

@@ -3,8 +3,15 @@ import PocketBase from "pocketbase";
 const PB_URL = "https://rfmzqjlurgw0s6i.fbjc.pocketbasecloud.com";
 const pb = new PocketBase(PB_URL);
 
+const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD;
+
 async function main() {
-  await pb.admins.authWithPassword("trantanphat2002@gmail.com", "MayB_@wsxBac");
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+    console.error("❌ Set PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD env vars");
+    process.exit(1);
+  }
+  await pb.admins.authWithPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
   console.log("✅ Auth OK\n");
 
   const allCols = await pb.collections.getFullList();
