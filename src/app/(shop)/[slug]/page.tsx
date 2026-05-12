@@ -172,6 +172,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               totalPages={totalPages}
               currentPage={page}
               basePath={`/${slug}`}
+              sort={sort}
             />
           </>
         )}

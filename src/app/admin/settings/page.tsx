@@ -28,15 +28,20 @@ export default function AdminSettingsPage() {
       const vals: Record<string, string> = {};
       list.forEach((s) => { vals[s.id] = s.value; });
       setValues(vals);
-    });
+    }).catch(console.error);
   }, []);
 
   async function saveSetting(setting: Settings) {
     setSaving(setting.id);
-    await pb.collection("settings").update(setting.id, { value: values[setting.id] });
-    setSaving(null);
-    setSaved(setting.id);
-    setTimeout(() => setSaved(null), 2000);
+    try {
+      await pb.collection("settings").update(setting.id, { value: values[setting.id] });
+      setSaved(setting.id);
+      setTimeout(() => setSaved(null), 2000);
+    } catch (e) {
+      console.error("Save setting failed:", e);
+    } finally {
+      setSaving(null);
+    }
   }
 
   return (

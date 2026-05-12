@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import pb from "@/services/pocketbase";
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Check, GripVertical, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, GripVertical, ChevronRight } from "lucide-react";
+import { revalidatePage } from "@/lib/revalidate";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Category } from "@/schema";
 
@@ -11,7 +12,7 @@ export default function AdminCategoriesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Category | null>(null);
-  const [form, setForm] = useState({ name: "", slug: "", sort_order: "0", is_active: true, parent: "" });
+  const [form, setForm] = useState({ name: "", is_active: true, parent: "" });
   const [saving, setSaving] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
@@ -25,24 +26,30 @@ export default function AdminCategoriesPage() {
     setCategories(list);
   }
 
-  function openCreate() { setForm({ name: "", slug: "", sort_order: "0", is_active: true, parent: "" }); setEditing(null); setDialogOpen(true); }
+  function openCreate() { setForm({ name: "", is_active: true, parent: "" }); setEditing(null); setDialogOpen(true); }
 
   function generateSlug(name: string) {
     return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-");
   }
 
   function openEdit(cat: Category) {
-    setForm({ name: cat.name, slug: cat.slug, sort_order: String(cat.sort_order), is_active: cat.is_active, parent: cat.parent || "" });
+    setForm({ name: cat.name, is_active: cat.is_active, parent: cat.parent || "" });
     setEditing(cat); setDialogOpen(true);
   }
 
   function closeDialog() { setDialogOpen(false); setEditing(null); }
 
   async function saveForm() {
-    if (!form.name || !form.slug) return;
+    if (!form.name) return;
+    const slug = generateSlug(form.name);
     setSaving(true);
     try {
-      const payload = { name: form.name, slug: form.slug, sort_order: Number(form.sort_order), is_active: form.is_active, parent: form.parent || "" };
+      let sort_order = editing ? editing.sort_order : 0;
+      if (!editing && categories) {
+        const siblings = categories.filter((c) => c.parent === (form.parent || ""));
+        sort_order = siblings.length > 0 ? Math.max(...siblings.map((s) => s.sort_order)) + 1 : 0;
+      }
+      const payload = { name: form.name, slug, sort_order, is_active: form.is_active, parent: form.parent || "" };
       if (editing) {
         await pb.collection("categories").update(editing.id, payload);
       } else {
@@ -50,6 +57,7 @@ export default function AdminCategoriesPage() {
       }
       closeDialog();
       await refresh();
+      revalidatePage().catch(console.error);
     } catch (e) { console.error("Save failed:", e); }
     finally { setSaving(false); }
   }
@@ -58,12 +66,13 @@ export default function AdminCategoriesPage() {
     try {
       await pb.collection("categories").update(cat.id, { is_active: !cat.is_active });
       setCategories((prev) => prev?.map((c) => c.id === cat.id ? { ...c, is_active: !cat.is_active } : c) ?? prev);
+      revalidatePage().catch(console.error);
     } catch (e) { console.error("Toggle failed:", e); }
   }
 
   async function deleteCategory() {
     if (!deleteId) return;
-    try { await pb.collection("categories").delete(deleteId); setDeleteId(null); await refresh(); }
+    try { await pb.collection("categories").delete(deleteId); setDeleteId(null); await refresh(); revalidatePage(); }
     catch (e) { console.error("Delete failed:", e); setDeleteId(null); }
   }
 
@@ -77,6 +86,7 @@ export default function AdminCategoriesPage() {
       try {
         await pb.collection("categories").update(draggedId, { parent: target.parent });
         setCategories((prev) => prev?.map((c) => c.id === draggedId ? { ...c, parent: target.parent } : c) ?? prev);
+        revalidatePage().catch(console.error);
       } catch (e) { console.error("Move parent failed:", e); }
       return;
     }
@@ -94,21 +104,21 @@ export default function AdminCategoriesPage() {
       const updates = reordered.map((c, i) => pb.collection("categories").update(c.id, { sort_order: i }));
       await Promise.all(updates);
       setCategories((prev) => prev?.map((c) => { const idx = reordered.findIndex((r) => r.id === c.id); return idx !== -1 ? { ...c, sort_order: idx } : c; }) ?? prev);
+      revalidatePage().catch(console.error);
     } catch (e) { console.error("Reorder failed:", e); }
   }
 
-  function getParentOptions() {
+  function buildParentTree(): { id: string; label: string }[] {
     if (!categories) return [];
     const exclude = new Set<string>();
     if (editing) {
       exclude.add(editing.id);
-      const stack = [editing.id];
-      while (stack.length) {
-        const pid = stack.pop()!;
-        for (const c of categories) if (c.parent === pid && !exclude.has(c.id)) { exclude.add(c.id); stack.push(c.id); }
-      }
+      for (const c of categories) if (c.parent === editing.id) exclude.add(c.id);
     }
-    return categories.filter((c) => !exclude.has(c.id));
+    return categories
+      .filter((c) => !c.parent && !exclude.has(c.id))
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((c) => ({ id: c.id, label: c.name }));
   }
 
   function handleDragStart(e: React.DragEvent, id: string) { setDragId(id); e.dataTransfer.effectAllowed = "move"; }
@@ -137,24 +147,18 @@ export default function AdminCategoriesPage() {
           </div>
           <div className="p-5 space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <div>
+              <div className="col-span-2">
                 <label className="text-[11px] text-zinc-500 mb-1.5 block">Tên *</label>
-                <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value, slug: !editing ? generateSlug(e.target.value) : f.slug }))} className={iCls} placeholder="Hoa Sinh Nhật" />
+                <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={iCls} placeholder="Hoa Sinh Nhật" />
               </div>
-              <div>
-                <label className="text-[11px] text-zinc-500 mb-1.5 block">Slug *</label>
-                <input value={form.slug} onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))} className={iCls} placeholder="hoa-sinh-nhat" />
-              </div>
-              <div>
+              <div className="col-span-2">
                 <label className="text-[11px] text-zinc-500 mb-1.5 block">Danh mục cha</label>
                 <select value={form.parent} onChange={(e) => setForm((f) => ({ ...f, parent: e.target.value }))} className={iCls}>
                   <option value="">— Gốc —</option>
-                  {getParentOptions().map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
+                  {buildParentTree().map((opt) => (
+                    <option key={opt.id} value={opt.id}>{opt.label}</option>
+                  ))}
                 </select>
-              </div>
-              <div>
-                <label className="text-[11px] text-zinc-500 mb-1.5 block">Thứ tự</label>
-                <input type="number" value={form.sort_order} onChange={(e) => setForm((f) => ({ ...f, sort_order: e.target.value }))} className={iCls} />
               </div>
             </div>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -228,9 +232,22 @@ function CategoryRow({ cat, depth, getChildren, dragId, dropTarget, onEdit, onTo
           <p className="text-xs text-zinc-500">/{cat.slug}</p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <button onClick={() => onToggle(cat)} className={`p-1.5 rounded-lg transition-colors ${cat.is_active ? "text-green-400 hover:bg-green-400/10" : "text-zinc-500 hover:bg-zinc-700"}`}>{cat.is_active ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}</button>
-          <button onClick={() => onEdit(cat)} className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"><Pencil className="w-4 h-4" /></button>
-          <button onClick={() => onDelete(cat.id)} className="p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-400/10 transition-colors"><Trash2 className="w-4 h-4" /></button>
+          <button onClick={() => onToggle(cat)}
+            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${
+              cat.is_active
+                ? "bg-green-500/15 text-green-400 hover:bg-green-500/25 border border-green-500/30"
+                : "bg-zinc-800 text-zinc-400 hover:text-zinc-300 hover:bg-zinc-700 border border-zinc-700"
+            }`}>
+            {cat.is_active ? "Hiển thị" : "Ẩn"}
+          </button>
+          <button onClick={() => onEdit(cat)}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-zinc-400 bg-zinc-800 hover:text-white hover:bg-zinc-700 border border-zinc-700 transition-colors">
+            <Pencil className="w-3 h-3" /> Sửa
+          </button>
+          <button onClick={() => onDelete(cat.id)}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-zinc-400 bg-zinc-800 hover:text-red-400 hover:bg-red-400/10 border border-zinc-700 hover:border-red-500/30 transition-colors">
+            <Trash2 className="w-3 h-3" /> Xoá
+          </button>
         </div>
       </div>
       {children.map((child) => (

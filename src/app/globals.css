@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -36,30 +37,31 @@
 }
 
 :root {
-  /* Luxury Rose & Warm Cream palette */
-  --background: oklch(0.985 0.003 15);
-  --foreground: oklch(0.16 0.012 20);
+  --background: oklch(0.97 0.012 95);
+  --foreground: oklch(0.22 0.02 70);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0.012 20);
+  --card-foreground: oklch(0.22 0.02 70);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0.012 20);
-  /* Deep elegant rose */
-  --primary: oklch(0.52 0.195 12);
+  --popover-foreground: oklch(0.22 0.02 70);
+  --primary: oklch(0.6 0.08 135);
   --primary-foreground: oklch(1 0 0);
-  /* Warm cream secondary */
-  --secondary: oklch(0.96 0.015 18);
-  --secondary-foreground: oklch(0.25 0.015 20);
-  --muted: oklch(0.95 0.01 15);
-  --muted-foreground: oklch(0.48 0.02 22);
-  /* Soft rose accent */
-  --accent: oklch(0.94 0.03 18);
-  --accent-foreground: oklch(0.52 0.195 12);
-  --destructive: oklch(0.55 0.22 27);
-  /* Warm borders */
-  --border: oklch(0.89 0.018 20);
-  --input: oklch(0.89 0.018 20);
-  --ring: oklch(0.52 0.195 12);
-  --radius: 0.625rem;
+  --secondary: oklch(0.88 0.11 90);
+  --secondary-foreground: oklch(0.22 0.02 70);
+  --muted: oklch(0.95 0.01 95);
+  --muted-foreground: oklch(0.45 0.02 85);
+  --accent: oklch(0.93 0.025 100);
+  --accent-foreground: oklch(0.22 0.02 70);
+  --destructive: oklch(0.55 0.22 20);
+  --border: oklch(0.9 0.01 95);
+  --input: oklch(0.9 0.01 95);
+  --ring: oklch(0.6 0.08 135);
+  --radius: 0.5rem;
+
+  --color-cream: #F9F6EE;
+  --color-sage: #7A9468;
+  --color-sage-hover: #6B8460;
+  --color-yellow: #F5D98B;
+  --color-brown: #2E2418;
 }
 
 @layer base {
@@ -80,6 +82,35 @@
   }
 }
 
+/* CKEditor editing area */
+.ck-editor__editable {
+  min-height: 480px !important;
+}
+
+.ck-editor__editable ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.ck-editor__editable ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.ck-editor__editable li {
+  margin: 0.2rem 0;
+}
+
+.ck-editor__editable ul ul {
+  list-style-type: circle;
+}
+
+.ck-editor__editable ul ul ul {
+  list-style-type: square;
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -87,8 +118,5 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
-  }
-  .text-balance {
-    text-wrap: balance;
   }
 }

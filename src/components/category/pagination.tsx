@@ -8,9 +8,10 @@ interface PaginationProps {
   totalPages: number;
   currentPage: number;
   basePath: string;
+  sort?: string;
 }
 
-export default function Pagination({ totalPages, currentPage, basePath }: PaginationProps) {
+export default function Pagination({ totalPages, currentPage, basePath, sort }: PaginationProps) {
   if (totalPages <= 1) return null;
 
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -19,7 +20,9 @@ export default function Pagination({ totalPages, currentPage, basePath }: Pagina
   );
 
   function pageHref(page: number) {
-    return `${basePath}?page=${page}`;
+    const params = new URLSearchParams({ page: String(page) });
+    if (sort && sort !== "newest") params.set("sort", sort);
+    return `${basePath}?${params}`;
   }
 
   return (

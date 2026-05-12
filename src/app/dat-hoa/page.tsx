@@ -160,7 +160,7 @@ export default function CheckoutPage() {
 
       const orderCode = `VHT${Date.now().toString(36).slice(-6).toUpperCase()}`;
 
-      const record = await pb.collection("orders").create({
+      await pb.collection("orders").create({
         order_code: orderCode,
         customer_name: data.customerName,
         customer_phone: data.customerPhone,
@@ -180,6 +180,23 @@ export default function CheckoutPage() {
       sessionStorage.removeItem(STORAGE_KEY);
       clearCart();
       addToast("Đặt hoa thành công!", "success");
+
+      fetch("/api/notify/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderCode,
+          customerName: data.customerName,
+          customerPhone: data.customerPhone,
+          recipientAddress: finalAddress,
+          deliveryDate: data.deliveryDate,
+          deliveryTime: data.deliveryTime,
+          items: orderItems,
+          total,
+          note: data.note,
+        }),
+      }).catch(console.error);
+
       router.push(`/dat-hoa/cam-on?code=${encodeURIComponent(orderCode)}`);
     } catch {
       setSubmitError("Có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ Zalo.");

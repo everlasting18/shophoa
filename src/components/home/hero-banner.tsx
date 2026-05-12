@@ -1,175 +1,131 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import type { Banner } from "@/schema";
-import { useSettings } from "@/hooks/use-settings";
 import { getImageUrl } from "@/lib/media";
-import { Flower2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface HeroBannerProps {
   banners: Banner[];
 }
 
-const FALLBACK_SLIDES = [
-  {
-    title: "Tulip Hà Lan",
-    subtitle: "Gửi Trọn Vẹn Yêu Thương",
-    desc: "Những bó tulip tươi thắm được nhập khẩu trực tiếp, thiết kế tinh tế cho mọi dịp đặc biệt.",
-    href: "/bo-hoa-tulip",
-    bg: "bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50",
-    accent: "text-rose-700",
-    btn: "bg-rose-700 hover:bg-rose-800",
-  },
-  {
-    title: "Hoa Hồng Sophia",
-    subtitle: "Ngọt Ngào Mỗi Ngày",
-    desc: "Hồng Ohara & Sophia nhập cao cấp, bó hoa sang trọng dành tặng ngườithương.",
-    href: "/hoa-hong-sophia",
-    bg: "bg-gradient-to-br from-pink-50 via-rose-50 to-red-50",
-    accent: "text-pink-700",
-    btn: "bg-pink-700 hover:bg-pink-800",
-  },
-  {
-    title: "Hộp Hoa Mica",
-    subtitle: "Xinh Xắn Nhẹ Nhàng",
-    desc: "Hộp hoa acrylic sang trọng, bảo quản hoa tươi lâu – món quà đầy ý nghĩa.",
-    href: "/hop-hoa-mica",
-    bg: "bg-gradient-to-br from-orange-50 via-rose-50 to-pink-50",
-    accent: "text-orange-700",
-    btn: "bg-orange-700 hover:bg-orange-800",
-  },
+const FALLBACK = [
+  { label: "Tulip Hà Lan · Gửi Trọn Vẹn Yêu Thương", href: "/bo-hoa-tulip" },
+  { label: "Hoa Hồng Sophia · Ngọt Ngào Mỗi Ngày", href: "/hoa-hong-sophia" },
+  { label: "Hộp Hoa Mica · Xinh Xắn Nhẹ Nhàng", href: "/hop-hoa-mica" },
 ];
 
+const INTERVAL = 5000;
+
 export default function HeroBanner({ banners }: HeroBannerProps) {
-  const contact = useSettings();
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [current, setCurrent] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasBanners = banners.length > 0;
+  const total = hasBanners ? banners.length : FALLBACK.length;
+
+  const start = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => api?.scrollNext(), INTERVAL);
+  }, [api]);
 
   useEffect(() => {
     if (!api) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCurrent(api.selectedScrollSnap());
-    api.on("select", () => setCurrent(api.selectedScrollSnap()));
-  }, [api]);
+    const on = () => { setCurrent(api.selectedScrollSnap()); start(); };
+    on();
+    api.on("select", on);
+    api.on("pointerDown", () => timerRef.current && clearInterval(timerRef.current));
+    api.on("pointerUp", start);
+    return () => { api.off("select", on); if (timerRef.current) clearInterval(timerRef.current); };
+  }, [api, start]);
 
-  const scrollTo = useCallback(
-    (index: number) => api?.scrollTo(index),
-    [api]
-  );
+  const go = (i: number) => { api?.scrollTo(i); start(); };
 
   if (hasBanners) {
     return (
-      <section className="relative overflow-hidden">
+      <section className="relative bg-stone-950">
         <Carousel className="w-full" setApi={setApi} opts={{ loop: true }}>
           <CarouselContent>
-            {banners.map((banner) => {
-              const imgUrl = getImageUrl(banner.collectionId, banner.id, banner.image, 2400);
-              return (
-                <CarouselItem key={banner.id}>
-                  <Link href={banner.link || "/"} className="block">
-                    <div className="relative w-full aspect-[21/9] sm:aspect-[21/7] bg-muted overflow-hidden">
-                      <Image
-                        src={imgUrl}
-                        alt={banner.title}
-                        fill
-                        priority
-                        className="object-cover hover:scale-[1.02] transition-transform duration-700"
-                        sizes="100vw"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
-                    </div>
-                  </Link>
-                </CarouselItem>
-              );
-            })}
-          </CarouselContent>
-          {banners.length > 1 && (
-            <>
-              <CarouselPrevious className="left-4 hidden sm:flex bg-white/90 hover:bg-white border-0 shadow-lg" />
-              <CarouselNext className="right-4 hidden sm:flex bg-white/90 hover:bg-white border-0 shadow-lg" />
-              {/* Dots */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                {banners.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => scrollTo(i)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === current ? "w-6 bg-white shadow-sm" : "w-1.5 bg-white/50 hover:bg-white/70"
-                    }`}
-                    aria-label={`Go to slide ${i + 1}`}
+            {banners.map((b, i) => (
+              <CarouselItem key={b.id}>
+                <Link href={b.link || "/"} className="block relative w-full aspect-[2] sm:aspect-[2.5] overflow-hidden">
+                  <Image
+                    src={getImageUrl(b.collectionId, b.id, b.image, 2400)}
+                    alt=""
+                    fill
+                    priority={i === 0}
+                    className="object-cover"
+                    sizes="100vw"
                   />
-                ))}
-              </div>
-            </>
-          )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950/40 via-transparent to-transparent" />
+                </Link>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
         </Carousel>
+
+        {total > 1 && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2.5">
+            {banners.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => go(i)}
+                aria-label={`Go to slide ${i + 1}`}
+                className={`h-[2px] rounded-full transition-all duration-500 ${
+                  i === current ? "w-7 bg-white" : "w-2 bg-white/30 hover:bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </section>
     );
   }
 
   return (
-    <section className="overflow-hidden">
+    <section className="bg-background">
       <Carousel className="w-full" setApi={setApi} opts={{ loop: true }}>
         <CarouselContent>
-          {FALLBACK_SLIDES.map((slide) => (
-            <CarouselItem key={slide.href}>
-              <div className={`${slide.bg} min-h-[340px] sm:min-h-[460px] flex items-center`}>
-                <div className="container mx-auto px-4 py-14 sm:py-16 flex flex-col items-center text-center gap-5">
-                  <div className="w-14 h-14 rounded-2xl bg-white/80 flex items-center justify-center shadow-sm mb-1">
-                    <Flower2 className={`w-7 h-7 ${slide.accent}`} />
-                  </div>
-                  <div className="space-y-2">
-                    <p className={`text-sm font-semibold uppercase tracking-widest ${slide.accent} opacity-80`}>
-                      {slide.subtitle}
-                    </p>
-                    <h1 className={`font-heading text-3xl sm:text-5xl lg:text-6xl font-bold ${slide.accent} tracking-tight`}>
-                      {slide.title}
-                    </h1>
-                  </div>
-                  <p className="text-muted-foreground max-w-md text-sm sm:text-base leading-relaxed">
-                    {slide.desc}
-                  </p>
-                  <div className="flex gap-3 mt-1">
+          {FALLBACK.map((s) => (
+            <CarouselItem key={s.href}>
+              <div className="min-h-[420px] sm:min-h-[520px] flex items-center">
+                <div className="container mx-auto px-6 max-w-3xl text-center">
+                  <h1 className="font-heading text-3xl sm:text-5xl lg:text-6xl font-medium text-foreground tracking-tight leading-[1.15]">
+                    {s.label}
+                  </h1>
+                  <div className="mt-8">
                     <Link
-                      href={slide.href}
-                      className={`px-7 py-3 rounded-full text-white font-semibold shadow-lg shadow-rose-900/10 transition-all hover:shadow-xl hover:-translate-y-0.5 ${slide.btn}`}
+                      href={s.href}
+                      className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
                     >
-                      Xem Ngay
+                      Khám phá
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                     </Link>
-                    <a
-                      href={contact.zalo}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-7 py-3 rounded-full border border-foreground/10 bg-white/70 backdrop-blur-sm text-foreground font-semibold hover:bg-white transition-all hover:-translate-y-0.5 shadow-sm"
-                    >
-                      Đặt Qua Zalo
-                    </a>
                   </div>
                 </div>
               </div>
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="left-4 hidden sm:flex bg-white/90 hover:bg-white border-0 shadow-lg" />
-        <CarouselNext className="right-4 hidden sm:flex bg-white/90 hover:bg-white border-0 shadow-lg" />
-        {/* Dots */}
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-          {FALLBACK_SLIDES.map((_, i) => (
+      </Carousel>
+
+      {total > 1 && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex gap-2.5">
+          {FALLBACK.map((_, i) => (
             <button
               key={i}
-              onClick={() => scrollTo(i)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === current ? "w-6 bg-foreground/60" : "w-1.5 bg-foreground/20 hover:bg-foreground/30"
-              }`}
+              onClick={() => go(i)}
               aria-label={`Go to slide ${i + 1}`}
+              className={`h-[2px] rounded-full transition-all duration-500 ${
+                i === current ? "w-7 bg-foreground/40" : "w-2 bg-foreground/10 hover:bg-foreground/25"
+              }`}
             />
           ))}
         </div>
-      </Carousel>
+      )}
     </section>
   );
 }

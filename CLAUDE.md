@@ -19,63 +19,80 @@ No test suite is configured.
 
 ```
 NEXT_PUBLIC_POCKETBASE_URL=   # PocketBase backend URL (required for all data fetching)
+ZALO_OA_ACCESS_TOKEN=         # Zalo OA access token (server-only); expires ~90 days
+ZALO_ADMIN_USER_ID=           # Zalo user_id of the shop owner (must follow the OA)
 ```
+
+`ZALO_*` vars are optional. In development, if absent, `/api/notify/order` logs the message to terminal instead of calling Zalo. In production, the route returns 503 and checkout continues normally (fire-and-forget).
+
+## Stack
+
+- **Next.js 16** (App Router) + **React 19** — RSC for server pages, `"use client"` for interactive components
+- **Tailwind v4** — configured via PostCSS (`postcss.config.mjs`), plugins declared with `@plugin` in `globals.css` (not `tailwind.config.ts`)
+- **PocketBase 0.26.8** — BaaS; admin auth uses `pb.collection("_superusers").authWithPassword()` (not the deprecated `pb.admins` API)
+- **CKEditor 5** (GPL) — rich text editor in admin, configured in `src/components/ui/rich-editor.tsx`
+- **Zustand 5** — cart (`src/stores/cart-store.ts`) and admin auth (`src/stores/admin-store.ts`)
+- **React Hook Form + Zod** — checkout form validation (`src/schema/checkout.ts`)
 
 ## Architecture Overview
 
-This is a Vietnamese flower shop e-commerce site ("Vườn Hoa Tươi") built on **Next.js 16** with **PocketBase** as the backend/database. The app is primarily Vietnamese-language.
+This is a Vietnamese flower shop e-commerce site ("Vườn Hoa Tươi"). The app is primarily Vietnamese-language.
 
 ### Routing Layout
 
-- `src/app/(shop)/[slug]/page.tsx` — Dynamic category pages. Every category URL (`/hoa-sinh-nhat`, `/bo-hoa-tuoi`, etc.) routes here; the slug is looked up in PocketBase `categories` collection.
-- `src/app/san-pham/[slug]/page.tsx` — Individual product detail pages.
-- `src/app/gio-hang/page.tsx` — Cart page.
-- `src/app/dat-hoa/page.tsx` — Checkout page (client component, multi-step form).
-- `src/app/dat-hoa/cam-on/page.tsx` — Order confirmation page.
-- `src/app/admin/` — Admin panel (protected by `useAdminStore` + cookie `vht_admin_token`).
-- `src/app/api/` — Route handlers: admin auth (login/logout), navigation, settings, and file upload.
+- `src/app/(shop)/[slug]/page.tsx` — Category pages; slug is looked up in PocketBase `categories`
+- `src/app/san-pham/[slug]/page.tsx` — Product detail pages
+- `src/app/tim-kiem/page.tsx` — Search page (`force-dynamic`, full-text regex filter)
+- `src/app/gio-hang/page.tsx` — Cart page
+- `src/app/dat-hoa/page.tsx` — Checkout (client component, multi-step, persists to `localStorage` key `checkout-form`)
+- `src/app/dat-hoa/cam-on/page.tsx` — Order confirmation page
+- `src/app/admin/` — Admin panel (protected by `vht_admin_token` httpOnly cookie)
+- `src/app/api/` — Route handlers: `auth/admin/{login,logout}`, `upload`, `navigation`, `settings`, `revalidate`, `notify/order` (Zalo notification)
 
 ### Data Layer
 
-All data fetching goes through the singleton PocketBase client at `src/lib/pocketbase.ts` (`NEXT_PUBLIC_POCKETBASE_URL`). Server components call it directly. The main collections are: `products`, `categories`, `banners`, `orders`, `settings`.
+- Singleton PocketBase client: `src/services/pocketbase.ts` — `autoCancellation(false)` is set
+- Server-side services: `src/services/settings.ts`, `src/services/navigation.ts`, `src/services/seo.ts` — all use React `cache()` for request deduplication and fall back gracefully if PocketBase is unreachable
+- Type definitions: `src/schema/` — `pocketbase.ts` (collection types), `app.ts` (app-level types), `checkout.ts` (Zod form schema)
+- Config: `src/config/` (`constants.ts`, `shipping.ts`, `third-party.ts`) exported from `src/config/index.ts`
+- Main PocketBase collections: `products`, `categories`, `banners`, `orders`, `settings`, `media`
 
-**Key patterns:**
-- Server pages set `export const revalidate = 3600` for ISR.
-- `src/lib/settings.ts` — `getSiteSettings()` fetches the `settings` collection (key/value pairs) and falls back to hardcoded constants if PocketBase is unreachable.
-- `src/lib/navigation.ts` — `getNavItems()` builds the nav tree from `categories`; falls back to the static list in `src/lib/constants.ts`.
-- Both use React `cache()` for request deduplication.
+Server pages use `export const revalidate = 3600` for ISR. Cache can be purged via `/api/revalidate`.
 
 ### Media URLs
 
-`src/lib/media.ts` exports `getThumbUrl` and `getImageUrl`. In production these are prefixed with `/cdn-cgi/image/format=auto,...` (Cloudflare Image Resizing). In dev the raw PocketBase file URL is used.
+`src/lib/media.ts` exports `getThumbUrl` and `getImageUrl`. In dev: raw PocketBase file URL. In prod: prefixed with `/cdn-cgi/image/format=auto,...` (Cloudflare Image Resizing).
+
+File upload flow: browser → `/api/upload` route handler → PocketBase `media` collection → returns CDN URL.
 
 ### State Management
 
-- **Cart** — `src/stores/cart-store.ts` (Zustand + `persist`, localStorage key `vuonhoatuoi-cart`).
-- **Admin auth** — `src/stores/admin-store.ts` (Zustand + `persist`, localStorage key `vht-admin-auth`). Login also sets an `httpOnly` cookie (`vht_admin_token`) via the `/api/auth/admin/login` route handler. The admin layout uses `useSyncExternalStore` to detect hydration and redirects unauthenticated users client-side.
-
-### Checkout Flow
-
-`src/app/dat-hoa/page.tsx` is a client component using `react-hook-form` + Zod (`src/lib/checkout-schema.ts`). On submit it creates a record in the PocketBase `orders` collection directly from the browser. Shipping zones are defined in `src/lib/shipping-config.ts`; district-to-zone mapping happens in the checkout page. Form state is saved to `localStorage` (`checkout-form`) so it survives navigation.
+- **Cart** — Zustand + persist, localStorage key `vuonhoatuoi-cart`
+- **Admin auth** — Zustand + persist, localStorage key `vht-admin-auth`. Login sets `httpOnly` cookie `vht_admin_token` used by API routes. Client-side `pb.authStore` is populated via `pb.authStore.save(token, null)` after login.
 
 ### Admin Panel
 
-`/admin` is a fully client-side SPA panel. Auth guard lives in `src/app/admin/layout.tsx`. Product images are uploaded via `/api/upload` (route handler) which creates a temporary product record in PocketBase to host the file, then returns the URL.
+Fully client-side SPA under `/admin`. Auth guard in `src/app/admin/layout.tsx`. Products, categories, orders, banners, settings — all CRUD. Rich editor uses CKEditor 5 with custom upload adapter pointing to `/api/upload`.
+
+### Custom Hooks
+
+- `src/hooks/use-settings.ts` — reads site settings (phone, address, etc.) from PocketBase
+- `src/hooks/use-provinces.ts` — fetches Vietnam provinces/districts for checkout address form
 
 ### UI Components
 
-- `src/components/ui/` — shadcn/ui primitives plus custom additions (`toast.tsx`, `rich-editor.tsx` using Tiptap, `quantity-input.tsx`).
-- `src/components/product/` — product card, grid, gallery, price display, add-to-cart button.
-- `src/components/checkout/` — decomposed checkout sub-forms.
-- `src/components/home/` — homepage sections (hero banner with Embla carousel, occasion tabs, product section).
-- `cn()` utility in `src/lib/utils.ts` for conditional Tailwind classes.
+- `src/components/ui/` — shadcn/ui primitives + `toast.tsx` (Context-based, `ToastProvider` in root layout), `rich-editor.tsx` (CKEditor 5), `quantity-input.tsx`, `form-error.tsx`, `input-icon.tsx`
+- `src/components/product/` — product card, grid, gallery, price display, add-to-cart button
+- `src/components/checkout/` — decomposed checkout sub-forms
+- `src/components/home/` — homepage sections (hero banner with Embla carousel, occasion tabs, product section)
+- `cn()` utility: `src/lib/utils.ts`
 
 ### SEO
 
-- `src/lib/seo.ts` — structured data helpers (JSON-LD): `localBusinessSchema`, `organizationSchema`, `breadcrumbSchema`, `productSchema`, `categoryItemListSchema`.
-- `src/app/sitemap.ts` — dynamic sitemap fed from PocketBase.
-- `next-sitemap.config.js` + `postbuild` script generates `public/sitemap-0.xml`.
+- `src/services/seo.ts` — JSON-LD structured data helpers (`localBusinessSchema`, `productSchema`, etc.)
+- `src/app/sitemap.ts` — dynamic sitemap from PocketBase
+- `next-sitemap.config.js` runs on postbuild
 
 ### Scripts
 
-`scripts/` contains one-off PocketBase migration/seeding scripts (`.mjs`), run with `node scripts/<name>.mjs`.
+`scripts/` — one-off PocketBase migration/seeding scripts (`.mjs`), run with `node scripts/<name>.mjs`

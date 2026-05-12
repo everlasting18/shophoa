@@ -9,9 +9,9 @@ import type { Order } from "@/schema";
 
 const STATUSES = [
   { value: "", label: "Tất cả", icon: Package },
-  { value: "pending", label: "Chờ xác nhận", icon: Clock, bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
-  { value: "confirmed", label: "Đã xác nhận", icon: Package, bg: "bg-green-50", text: "text-green-700", border: "border-green-200" },
-  { value: "cancelled", label: "Đã huỷ", icon: X, bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
+  { value: "pending", label: "Chờ xác nhận", icon: Clock, bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/20" },
+  { value: "confirmed", label: "Đã xác nhận", icon: Package, bg: "bg-green-500/10", text: "text-green-400", border: "border-green-500/20" },
+  { value: "cancelled", label: "Đã huỷ", icon: X, bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/20" },
 ];
 
 function statusConfig(status: string) {
@@ -126,7 +126,22 @@ export default function AdminOrdersPage() {
 
       {/* Order cards */}
       {orders === null ? (
-        <div className="py-16 text-center text-zinc-500 text-sm">Đang tải...</div>
+        <div className="grid gap-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-32 bg-zinc-800 rounded animate-pulse" />
+                  <div className="h-3 w-52 bg-zinc-800 rounded animate-pulse" />
+                </div>
+                <div className="space-y-2 text-right">
+                  <div className="h-4 w-24 bg-zinc-800 rounded animate-pulse ml-auto" />
+                  <div className="h-3 w-16 bg-zinc-800 rounded animate-pulse ml-auto" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : orders.length === 0 ? (
         <div className="py-16 text-center">
           <Package className="w-10 h-10 text-zinc-600 mx-auto mb-3" />
