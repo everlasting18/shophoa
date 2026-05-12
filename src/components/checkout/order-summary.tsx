@@ -6,6 +6,7 @@ import CardSection from "./card-section";
 import { formatPrice } from "@/lib/utils";
 import { getThumbUrl } from "@/lib/media";
 import { getDisplayPrice } from "@/lib/product-utils";
+import { isoToDisplay } from "@/lib/date-utils";
 import QuantityInput from "@/components/ui/quantity-input";
 import type { CartItem } from "@/schema";
 
@@ -17,6 +18,10 @@ interface Props {
   loading: boolean;
   submitError: string;
   onUpdateQuantity: (productId: string, qty: number) => void;
+  deliveryDate?: string;
+  deliveryTime?: string;
+  customerName?: string;
+  recipientName?: string;
 }
 
 export default function OrderSummary({
@@ -27,6 +32,10 @@ export default function OrderSummary({
   loading,
   submitError,
   onUpdateQuantity,
+  deliveryDate,
+  deliveryTime,
+  customerName,
+  recipientName,
 }: Props) {
   return (
     <div className="space-y-5">
@@ -42,6 +51,7 @@ export default function OrderSummary({
                     src={getThumbUrl(product.collectionId, product.id, product.thumbnail, "150x150")}
                     alt={product.name}
                     fill
+                    priority
                     sizes="56px"
                     className="object-cover"
                   />
@@ -65,6 +75,31 @@ export default function OrderSummary({
 
       {/* Total + bank + submit */}
       <CardSection>
+        {/* Compact Delivery Info */}
+        {(customerName || deliveryDate) && (
+          <div className="mb-4 pb-4 border-b border-border/40 space-y-1.5 text-[13px] text-muted-foreground">
+            {customerName && (
+              <p className="flex items-center gap-2 truncate">
+                <span className="text-primary font-medium shrink-0 flex justify-center">👤</span>
+                {recipientName && customerName !== recipientName ? (
+                  <span className="truncate">Đặt: <span className="font-medium text-foreground">{customerName}</span> → Nhận: <span className="font-medium text-foreground">{recipientName}</span></span>
+                ) : (
+                  <span className="truncate">Khách hàng: <span className="font-medium text-foreground">{customerName}</span></span>
+                )}
+              </p>
+            )}
+            {deliveryDate && (
+              <p className="flex items-center gap-2 truncate">
+                <span className="text-primary font-medium shrink-0 flex justify-center">🕒</span>
+                <span>
+                  Giao: <span className="font-medium text-foreground">{isoToDisplay(deliveryDate)}</span>
+                  {deliveryTime && <span className="font-medium text-foreground"> lúc {deliveryTime}</span>}
+                </span>
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="space-y-2 mb-5">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Tạm tính</span>

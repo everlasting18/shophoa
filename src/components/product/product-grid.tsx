@@ -16,8 +16,8 @@ const colClass = {
 export default function ProductGrid({ products, columns = 4 }: ProductGridProps) {
   return (
     <div className={`grid ${colClass[columns]} gap-4 sm:gap-5`}>
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+      {products.map((product, i) => (
+        <ProductCard key={product.id} product={product} priority={i < 8} />
       ))}
     </div>
   );

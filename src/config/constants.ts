@@ -1,8 +1,8 @@
 import { ZALO_PHONE, zaloLink } from "./third-party";
 
-export const SITE_NAME = "Vườn Hoa Tươi";
+export const SITE_NAME = "Tiệm hoa nhà tình";
 export const SITE_DESCRIPTION =
-  "Shop hoa tươi TPHCM phong cách hiện đại. Chuyên đặt hoa tươi sinh nhật, khai trương. Dịch vụ điện hoa hỏa tốc 60p.";
+  "Tiệm hoa nhà tình - Shop hoa tươi TPHCM phong cách hiện đại. Chuyên đặt hoa tươi sinh nhật, khai trương. Dịch vụ điện hoa hỏa tốc 60p.";
 
 export const CONTACT = {
   phone: ZALO_PHONE,

@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import pb from "@/services/pocketbase";
 import { checkoutSchema, type CheckoutForm } from "@/schema";
 import { SHIPPING_ZONES } from "@/config";
-import { todayISO } from "@/lib/date-utils";
+import { todayISO, isoToDisplay } from "@/lib/date-utils";
 import { formatPrice } from "@/lib/utils";
 import ProgressSteps from "@/components/checkout/progress-steps";
 import DeliveryTime from "@/components/checkout/delivery-time";
@@ -154,7 +154,7 @@ export default function CheckoutPage() {
       const orderItems = items.map(({ product, quantity }) => ({
         product_id: product.id,
         name: product.name,
-        price: product.sale_price ?? product.price,
+        price: product.sale_price > 0 ? product.sale_price : product.price,
         quantity,
       }));
 
@@ -204,7 +204,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/20 pb-24 lg:pb-0">
+    <div className="min-h-screen bg-muted/20 pb-40 lg:pb-0">
       <ProgressSteps />
 
       <div className="container mx-auto px-4 py-6 max-w-5xl">
@@ -218,7 +218,7 @@ export default function CheckoutPage() {
         <div className="flex gap-3 bg-emerald-50 border border-emerald-100 rounded-xl p-4 mb-6 text-sm text-emerald-800">
           <Info className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
           <div>
-            <p className="font-semibold">Vườn Hoa Tươi giao hoa tận nơi tại TP. Hồ Chí Minh.</p>
+            <p className="font-semibold">Tiệm hoa nhà tình giao hoa tận nơi tại TP. Hồ Chí Minh.</p>
             <p className="opacity-80 mt-0.5">
               Sau khi thanh toán thành công hãy nhắn đơn bạn đến Zalo để chúng mình check đơn nhanh nhất nhé!
             </p>
@@ -271,6 +271,10 @@ export default function CheckoutPage() {
                 loading={loading}
                 submitError={submitError}
                 onUpdateQuantity={updateQuantity}
+                deliveryDate={allFormValues.deliveryDate}
+                deliveryTime={allFormValues.deliveryTime}
+                customerName={allFormValues.customerName}
+                recipientName={allFormValues.sameAsBuyer ? allFormValues.customerName : allFormValues.recipientName}
               />
             </div>
           </div>
@@ -278,12 +282,30 @@ export default function CheckoutPage() {
       </div>
 
       {/* Mobile sticky bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border/60 px-4 py-3 lg:hidden">
-        <div className="flex items-center gap-3 max-w-lg mx-auto">
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground">Tổng cộng</p>
-            <p className="text-lg font-bold text-primary">{formatPrice(total)}</p>
-          </div>
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border/60 px-4 py-3 lg:hidden shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+        <div className="max-w-lg mx-auto">
+          {/* Compact Info Row */}
+          {(allFormValues.customerName || allFormValues.deliveryDate) && (
+            <div className="flex items-center gap-2 mb-2.5 text-[11px] text-muted-foreground bg-muted/40 border border-border/50 px-2.5 py-1.5 rounded-lg truncate">
+              {allFormValues.customerName && (
+                <span className="flex items-center gap-1 truncate shrink">
+                  <span className="shrink-0">👤</span> <span className="font-medium text-foreground truncate">{allFormValues.sameAsBuyer ? allFormValues.customerName : allFormValues.recipientName || allFormValues.customerName}</span>
+                </span>
+              )}
+              {allFormValues.customerName && allFormValues.deliveryDate && <span className="shrink-0 opacity-50">•</span>}
+              {allFormValues.deliveryDate && (
+                <span className="flex items-center gap-1 truncate shrink-0">
+                  <span className="shrink-0">🕒</span> <span className="font-medium text-foreground">{isoToDisplay(allFormValues.deliveryDate)}{allFormValues.deliveryTime && ` - ${allFormValues.deliveryTime}`}</span>
+                </span>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground">Tổng cộng</p>
+              <p className="text-lg font-bold text-primary">{formatPrice(total)}</p>
+            </div>
           <button
             type="button"
             disabled={loading}
@@ -299,6 +321,7 @@ export default function CheckoutPage() {
               </>
             )}
           </button>
+          </div>
         </div>
       </div>
     </div>

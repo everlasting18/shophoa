@@ -7,8 +7,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-heading: var(--font-playfair);
+  --font-sans: var(--font-baloo);
+  --font-heading: var(--font-baloo);
   --font-mono: var(--font-geist-mono);
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -36,29 +36,29 @@
 }
 
 :root {
-  /* Luxury Rose & Warm Cream palette */
-  --background: oklch(0.985 0.003 15);
-  --foreground: oklch(0.16 0.012 20);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0.012 20);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0.012 20);
-  /* Deep elegant rose */
-  --primary: oklch(0.52 0.195 12);
-  --primary-foreground: oklch(1 0 0);
-  /* Warm cream secondary */
-  --secondary: oklch(0.96 0.015 18);
-  --secondary-foreground: oklch(0.25 0.015 20);
-  --muted: oklch(0.95 0.01 15);
-  --muted-foreground: oklch(0.48 0.02 22);
-  /* Soft rose accent */
-  --accent: oklch(0.94 0.03 18);
-  --accent-foreground: oklch(0.52 0.195 12);
+  /* Sage Green & Warm Cream palette */
+  --background: #fcfdeb;
+  --foreground: #030400;
+  --card: #ffffff;
+  --card-foreground: #030400;
+  --popover: #ffffff;
+  --popover-foreground: #030400;
+  /* Sage green primary */
+  --primary: #5d714f;
+  --primary-foreground: #fcfdeb;
+  /* Warm peach secondary */
+  --secondary: #fceac6;
+  --secondary-foreground: #030400;
+  --muted: #fceac6;
+  --muted-foreground: #6b7a5c;
+  /* Sage accent */
+  --accent: #abb487;
+  --accent-foreground: #5d714f;
   --destructive: oklch(0.55 0.22 27);
-  /* Warm borders */
-  --border: oklch(0.89 0.018 20);
-  --input: oklch(0.89 0.018 20);
-  --ring: oklch(0.52 0.195 12);
+  /* Sage borders */
+  --border: #c9d4b8;
+  --input: #c9d4b8;
+  --ring: #5d714f;
   --radius: 0.625rem;
 }
 
@@ -76,7 +76,8 @@
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    letter-spacing: -0.015em;
+    font-weight: 800;
+    letter-spacing: -0.01em;
   }
 }
 

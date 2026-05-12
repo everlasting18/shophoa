@@ -5,6 +5,7 @@ import ProductSection from "@/components/home/product-section";
 import WhyChooseUs from "@/components/home/why-choose-us";
 
 import HeroBanner from "@/components/home/hero-banner";
+import CategorySlider from "@/components/home/category-slider";
 import { localBusinessSchema, organizationSchema } from "@/services/seo";
 import { getSiteSettings } from "@/services/settings";
 import { ArrowRight, Flower2 } from "lucide-react";
@@ -13,7 +14,7 @@ export const revalidate = 3600;
 
 async function getFeaturedProducts(): Promise<Product[]> {
   try {
-    const res = await pb.collection("products").getList<Product>(1, 8, {
+    const res = await pb.collection("products").getList<Product>(1, 12, {
       filter: "is_featured=true && is_active=true",
       sort: "-created",
     });
@@ -25,7 +26,7 @@ async function getFeaturedProducts(): Promise<Product[]> {
 
 async function getBestSellers(): Promise<Product[]> {
   try {
-    const res = await pb.collection("products").getList<Product>(1, 8, {
+    const res = await pb.collection("products").getList<Product>(1, 12, {
       filter: "is_best_seller=true && is_active=true",
       sort: "-is_best_seller,-created",
     });
@@ -68,6 +69,7 @@ export default async function HomePage() {
 
       {/* Hero */}
       <HeroBanner banners={banners} />
+      <CategorySlider />
 
       {/* Best Sellers */}
       {bestSellers.length > 0 && (
@@ -81,7 +83,7 @@ export default async function HomePage() {
 
       {/* Featured */}
       {featured.length > 0 && (
-        <div className="bg-muted/20">
+        <div>
           <ProductSection
             title="Sản Phẩm Nổi Bật"
             subtitle="Được yêu thích & đánh giá cao"
@@ -96,7 +98,7 @@ export default async function HomePage() {
 
       {/* CTA Banner */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary to-rose-700" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#5d714f] to-[#3d4f33]" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
         <div className="container relative mx-auto px-4 py-16 sm:py-20 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 text-white/90 text-xs font-medium mb-5">
@@ -131,20 +133,19 @@ export default async function HomePage() {
       </section>
 
       {/* SEO content */}
-      <section className="py-14 bg-white">
+      <section className="py-14 bg-background">
         <div className="container mx-auto px-4 max-w-3xl">
           <h2 className="font-heading text-xl sm:text-2xl font-bold mb-5 tracking-tight">
-            Vườn Hoa Tươi – Shop Hoa Tươi TPHCM & Đặt Hoa Online Uy Tín
+            Tiệm hoa nhà tình – Shop Hoa Tươi TPHCM & Đặt Hoa Online Uy Tín
           </h2>
-          <div className="prose prose-sm max-w-none text-muted-foreground space-y-4 text-sm leading-relaxed">
+          <div className="space-y-4 text-muted-foreground leading-relaxed text-sm">
             <p>
-              Chào mừng bạn đến với <strong className="text-foreground">Vườn Hoa Tươi</strong> – tiệm hoa tươi TPHCM phong
-              cách hiện đại toạ lạc tại Phường Vườn Lài và Quận 3. Với hơn 10 năm kinh nghiệm
-              và niềm đam mê bất tận với hoa lá, chúng mình tự hào là shop hoa tươi TPHCM được
-              khách hàng tin chọn để gửi gắm yêu thương.
+              Chào mừng bạn đến với <strong className="text-foreground">Tiệm hoa nhà tình</strong> – tiệm hoa tươi TPHCM phong
+              cách hiện đại, nơi mỗi bó hoa đều là một tác phẩm nghệ thuật truyền tải trọn vẹn cảm
+              xúc của người tặng.
             </p>
             <p>
-              Dịch vụ đặt hoa online tại Vườn Hoa Tươi mang đến sự tiện lợi tối đa: chỉ với vài
+              Dịch vụ đặt hoa online tại Tiệm hoa nhà tình mang đến sự tiện lợi tối đa: chỉ với vài
               thao tác, bó hoa tươi thắm sẽ được giao tận tay ngườithương trong vòng 60 phút tại
               tất cả các quận nội thành TPHCM.
             </p>

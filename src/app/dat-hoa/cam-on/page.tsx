@@ -23,7 +23,7 @@ function ThanksContent() {
           Đặt hoa thành công!
         </h1>
         <p className="text-muted-foreground mb-6 leading-relaxed">
-          Cảm ơn bạn đã tin tưởng Vườn Hoa Tươi! Chúng mình sẽ liên hệ xác nhận đơn hàng sớm nhất.
+          Cảm ơn bạn đã tin tưởng Tiệm hoa nhà tình! Chúng mình sẽ liên hệ xác nhận đơn hàng sớm nhất.
         </p>
 
         {orderCode && (

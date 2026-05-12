@@ -13,9 +13,10 @@ import { hasSale } from "@/lib/product-utils";
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
   const { addToast } = useToast();
 
@@ -37,6 +38,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           src={getThumbUrl(product.collectionId, product.id, product.thumbnail)}
           alt={product.name}
           fill
+          priority={priority}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover group-hover:scale-105 transition-transform duration-500"
         />
@@ -73,7 +75,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* Info */}
       <div className="p-3.5">
-        <h3 className="font-medium text-sm leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+        <h3 className="font-bold text-sm leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors">
           {product.name}
         </h3>
         <PriceDisplay price={product.price} salePrice={product.sale_price} />

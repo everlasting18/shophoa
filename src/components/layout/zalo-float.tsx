@@ -1,10 +1,16 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { Phone, MessageCircle } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
 
 export default function ZaloFloat() {
   const contact = useSettings();
+  const pathname = usePathname();
+
+  if (pathname?.startsWith("/dat-hoa")) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-5 right-4 z-50 flex flex-col gap-3 items-end">

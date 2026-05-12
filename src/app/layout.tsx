@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from "@/config";
 import Header from "@/components/layout/header";
@@ -7,14 +6,12 @@ import Footer from "@/components/layout/footer";
 import ZaloFloat from "@/components/layout/zalo-float";
 import { ToastProvider } from "@/components/ui/toast";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin", "vietnamese"],
-});
+import { Baloo_2 } from "next/font/google";
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const baloo = Baloo_2({
+  variable: "--font-baloo",
   subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -52,7 +49,8 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${inter.variable} ${playfair.variable} h-full antialiased`}
+      className={`${baloo.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ToastProvider>
