@@ -1,12 +1,15 @@
 import Link from "next/link";
-import { MapPin, Phone, Mail, Clock, Flower2, Heart } from "lucide-react";
 import { SITE_NAME } from "@/config";
-import { getNavItems } from "@/services/navigation";
-import { socialLinks } from "./social-icons";
 import { getSiteSettings } from "@/services/settings";
 
+const LINKS = [
+  { label: "ABOUT", href: "/gioi-thieu" },
+  { label: "CONTACT", href: "/lien-he" },
+  { label: "PRIVACY", href: "/chinh-sach-bao-mat" },
+];
+
 export default async function Footer() {
-  const [navItems, contact] = await Promise.all([getNavItems(), getSiteSettings()]);
+  const contact = await getSiteSettings();
 
   return (
     <footer className="relative bg-gradient-to-b from-[#4d5c43] to-[#2e3d27] text-white/80 overflow-hidden">

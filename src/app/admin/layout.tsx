@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAdminStore } from "@/stores/admin-store";
@@ -32,9 +32,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const { isLoggedIn, adminEmail, logout } = useAdminStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
 
   useEffect(() => {
     if (!mounted) return;
@@ -55,9 +53,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   function handleLogout() {
     pb.authStore.clear();
-    fetch("/api/auth/admin/logout", { method: "POST" });
     logout();
     router.push("/admin/login");
+    fetch("/api/auth/admin/logout", { method: "POST" }).catch(console.error);
   }
 
   function isActive(item: { href: string; exact?: boolean }) {

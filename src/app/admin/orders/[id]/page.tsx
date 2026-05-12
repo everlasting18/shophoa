@@ -58,7 +58,7 @@ export default function AdminOrderDetailPage() {
     );
   }
 
-  const current = STATUSES.find((s) => s.value === order.status)!;
+  const current = STATUSES.find((s) => s.value === order.status) ?? STATUSES[0];
   const items = Array.isArray(order.items) ? order.items : [];
   const next = NEXT_STATUS[order.status];
 

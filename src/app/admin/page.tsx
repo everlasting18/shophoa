@@ -98,9 +98,11 @@ export default function AdminDashboard() {
               <p className="text-xs text-zinc-400">{c.label}</p>
               <c.icon className={`w-4 h-4 ${c.iconColor}`} />
             </div>
-            <p className={`text-xl font-bold ${loading ? "text-zinc-600 animate-pulse" : "text-white"}`}>
-              {loading ? "—" : c.value}
-            </p>
+            {loading ? (
+              <div className="h-7 w-16 bg-zinc-800 rounded animate-pulse mt-1" />
+            ) : (
+              <p className="text-xl font-bold text-white">{c.value}</p>
+            )}
             <p className="text-[10px] text-zinc-500 mt-0.5">{c.sub}</p>
           </div>
         ))}

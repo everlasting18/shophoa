@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -81,6 +82,35 @@
   }
 }
 
+/* CKEditor editing area */
+.ck-editor__editable {
+  min-height: 480px !important;
+}
+
+.ck-editor__editable ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.ck-editor__editable ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.ck-editor__editable li {
+  margin: 0.2rem 0;
+}
+
+.ck-editor__editable ul ul {
+  list-style-type: circle;
+}
+
+.ck-editor__editable ul ul ul {
+  list-style-type: square;
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -88,8 +118,5 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
-  }
-  .text-balance {
-    text-wrap: balance;
   }
 }

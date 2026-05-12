@@ -179,7 +179,7 @@ export default async function ProductDetailPage({ params }: Props) {
               Mô tả sản phẩm
             </h2>
             <div
-              className="prose prose-sm max-w-none text-muted-foreground leading-relaxed"
+              className="prose prose-sm prose-rose max-w-none text-muted-foreground leading-relaxed"
               dangerouslySetInnerHTML={{ __html: product.description }}
             />
           </div>

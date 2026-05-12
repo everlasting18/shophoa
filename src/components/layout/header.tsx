@@ -8,13 +8,15 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { SITE_NAME, NAV_ITEMS } from "@/config";
 import type { NavItem } from "@/schema";
 import { useCartStore } from "@/stores/cart-store";
-import type { CartStore } from "@/schema";
 import SearchDialog from "@/components/layout/search-dialog";
-import { useSettings } from "@/hooks/use-settings";
+
+const NAV = [
+  { label: "SHOP", href: "/bo-hoa-tuoi" },
+  { label: "ABOUT", href: "/gioi-thieu" },
+  { label: "CONTACT", href: "/lien-he" },
+];
 
 export default function Header() {
-  const contact = useSettings();
-  const [openMegaMenu, setOpenMegaMenu] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState<Record<string, boolean>>({});
   const [navItems, setNavItems] = useState<NavItem[]>(NAV_ITEMS);
@@ -74,14 +76,13 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
-            {navItems.map((item) => (
-              <div
-                key={item.href}
-                className="relative"
-                onMouseEnter={() => handleMenuEnter(item.href)}
-                onMouseLeave={handleMenuLeave}
+          {/* Nav desktop */}
+          <nav className="hidden lg:flex items-center gap-8 mr-4">
+            {NAV.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="text-[11px] tracking-[0.2em] text-muted-foreground hover:text-foreground font-medium transition-colors relative after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-[1px] after:bg-foreground hover:after:w-full after:transition-all"
               >
                 <Link
                   href={item.href}
@@ -141,10 +142,10 @@ export default function Header() {
                 </span>
               )}
             </Link>
-
-            <a
-              href={`tel:${contact.phone}`}
-              className="hidden sm:flex items-center gap-1.5 ml-1.5 px-4 py-2 rounded-full bg-primary text-white text-xs font-semibold hover:bg-primary/90 active:scale-95 transition-all shadow-sm shadow-primary/15"
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Menu"
             >
               <Phone className="w-3 h-3" />
               {contact.phoneDisplay}
@@ -214,6 +215,32 @@ export default function Header() {
           </div>
         </div>
       </header>
+
+      {mobileOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/10 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
+          <div className="fixed top-0 right-0 h-full w-64 bg-background z-50 lg:hidden shadow-xl animate-in slide-in-from-right duration-200">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border/30">
+              <span className="font-heading tracking-[0.2em] font-medium">{SITE_NAME}</span>
+              <button onClick={() => setMobileOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <nav className="px-5 py-6 flex flex-col gap-5">
+              {NAV.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="text-sm tracking-[0.15em] text-muted-foreground hover:text-foreground font-medium transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </>
+      )}
 
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </>

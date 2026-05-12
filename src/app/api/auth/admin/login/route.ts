@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
   try {
     const pb = new PocketBase(PB_URL);
-    const authData = await pb.admins.authWithPassword(email, password);
+    const authData = await pb.collection("_superusers").authWithPassword(email, password);
 
     const response = NextResponse.json({
       token: authData.token,

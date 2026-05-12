@@ -7,7 +7,6 @@ export interface Category {
   description: string;
   image: string;
   parent: string;
-  category_type: string;
   sort_order: number;
   is_active: boolean;
   collectionId: string;
@@ -68,12 +67,12 @@ export interface OrderItem {
 
 export interface Banner {
   id: string;
-  title: string;
   image: string;
   link: string;
   sort_order: number;
   is_active: boolean;
-  position: "hero" | "promo" | "category";
+  created: string;
+  updated: string;
   collectionId: string;
   collectionName: string;
 }

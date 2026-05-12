@@ -1,6 +1,5 @@
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "@/config";
+import { SITE_NAME, SITE_URL } from "@/config";
 import type { Product, Category } from "@/schema";
-import type { SiteContact } from "@/schema";
 import { getImageUrl } from "@/lib/media";
 
 export function getProductImageUrl(
@@ -9,58 +8,6 @@ export function getProductImageUrl(
   filename: string
 ): string {
   return getImageUrl(collectionId, recordId, filename);
-}
-
-export function organizationSchema(contact: SiteContact) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: SITE_NAME,
-    url: SITE_URL,
-    logo: `${SITE_URL}/logo.png`,
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: contact.phone,
-      contactType: "customer service",
-    },
-    address: contact.addresses.map((a) => ({
-      "@type": "PostalAddress",
-      streetAddress: a,
-    })),
-    sameAs: [contact.zalo],
-  };
-}
-
-export function localBusinessSchema(contact: SiteContact) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Florist",
-    name: SITE_NAME,
-    description: SITE_DESCRIPTION,
-    url: SITE_URL,
-    telephone: contact.phone,
-    priceRange: "₫₫",
-    servesCuisine: "Hoa tươi",
-    openingHoursSpecification: {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-      ],
-      opens: "08:00",
-      closes: "21:00",
-    },
-    location: contact.addresses.map((a, i) => ({
-      "@type": "Place",
-      "@id": `${SITE_URL}/#location-${i}`,
-      address: { "@type": "PostalAddress", streetAddress: a },
-    })),
-  };
 }
 
 export function productSchema(product: Product) {

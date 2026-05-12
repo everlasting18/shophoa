@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import type { Banner } from "@/schema";
-import { useSettings } from "@/hooks/use-settings";
 import { getImageUrl } from "@/lib/media";
-import { Flower2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface HeroBannerProps {
   banners: Banner[];
@@ -46,19 +45,29 @@ const FALLBACK_SLIDES = [
   },
 ];
 
+const INTERVAL = 5000;
+
 export default function HeroBanner({ banners }: HeroBannerProps) {
-  const contact = useSettings();
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const hasBanners = banners.length > 0;
+  const total = hasBanners ? banners.length : FALLBACK.length;
+
+  const start = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => api?.scrollNext(), INTERVAL);
+  }, [api]);
 
   useEffect(() => {
     if (!api) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCurrent(api.selectedScrollSnap());
-    api.on("select", () => setCurrent(api.selectedScrollSnap()));
-  }, [api]);
+    const on = () => { setCurrent(api.selectedScrollSnap()); start(); };
+    on();
+    api.on("select", on);
+    api.on("pointerDown", () => timerRef.current && clearInterval(timerRef.current));
+    api.on("pointerUp", start);
+    return () => { api.off("select", on); if (timerRef.current) clearInterval(timerRef.current); };
+  }, [api, start]);
 
   useEffect(() => {
     if (!api || paused) return;
@@ -113,11 +122,27 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                       }`}
                     aria-label={`Go to slide ${i + 1}`}
                   />
-                ))}
-              </div>
-            </>
-          )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950/40 via-transparent to-transparent" />
+                </Link>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
         </Carousel>
+
+        {total > 1 && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2.5">
+            {banners.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => go(i)}
+                aria-label={`Go to slide ${i + 1}`}
+                className={`h-[2px] rounded-full transition-all duration-500 ${
+                  i === current ? "w-7 bg-white" : "w-2 bg-white/30 hover:bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </section>
     );
   }
@@ -151,7 +176,8 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                       href={slide.href}
                       className="px-5 py-2 sm:px-8 sm:py-3 rounded-full bg-primary text-white text-xs sm:text-base font-semibold shadow-lg shadow-primary/20 transition-all"
                     >
-                      Xem Ngay
+                      Khám phá
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                     </Link>
                     <a
                       href={contact.zalo}
@@ -177,10 +203,13 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
               className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-6 bg-foreground/60" : "w-1.5 bg-foreground/20 hover:bg-foreground/30"
                 }`}
               aria-label={`Go to slide ${i + 1}`}
+              className={`h-[2px] rounded-full transition-all duration-500 ${
+                i === current ? "w-7 bg-foreground/40" : "w-2 bg-foreground/10 hover:bg-foreground/25"
+              }`}
             />
           ))}
         </div>
-      </Carousel>
+      )}
     </section>
   );
 }

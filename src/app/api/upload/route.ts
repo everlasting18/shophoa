@@ -15,37 +15,22 @@ export async function POST(request: Request) {
 
     const cookieStore = await cookies();
     const adminToken = cookieStore.get("vht_admin_token")?.value;
-    if (adminToken) pb.authStore.save(adminToken, null);
+    if (!adminToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    let recordId: string | null = null;
-    const tempSlug = `_upload_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    pb.authStore.save(adminToken, null);
 
-    try {
-      const record = await pb.collection("products").create({
-        name: "_upload_temp",
-        slug: tempSlug,
-        price: 1,
-        is_active: false,
-      });
-      recordId = record.id;
+    const fd = new FormData();
+    fd.append("file", file);
+    const record = await pb.collection("media").create(fd);
 
-      const fd = new FormData();
-      fd.append("images", file);
-      const updated = await pb.collection("products").update(record.id, fd);
+    const filename = (record as Record<string, unknown>).file as string;
+    const url = getImageUrl(record.collectionId, record.id, filename);
 
-      const img = (updated as Record<string, unknown>).images as string[];
-      const collectionId = (updated as Record<string, unknown>).collectionId as string;
-      const imageFilename = img?.[0] ?? "";
-      const url = imageFilename ? getImageUrl(collectionId, updated.id, imageFilename) : "";
-
-      return NextResponse.json({ url, filename: imageFilename });
-    } finally {
-      if (recordId) {
-        try { await pb.collection("products").delete(recordId); } catch { /* temp record may already be gone */ }
-      }
-    }
-  } catch (e) {
-    console.error("Upload failed:", e);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    return NextResponse.json({ url });
+  } catch (e: unknown) {
+    const pbErr = e as { status?: number; data?: { message?: string } };
+    const msg = pbErr?.data?.message || (e instanceof Error ? e.message : "Upload failed");
+    console.error("Upload error:", pbErr?.status, msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

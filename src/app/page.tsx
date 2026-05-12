@@ -1,9 +1,6 @@
 import Link from "next/link";
 import pb from "@/services/pocketbase";
 import type { Product, Banner } from "@/schema";
-import ProductSection from "@/components/home/product-section";
-import WhyChooseUs from "@/components/home/why-choose-us";
-
 import HeroBanner from "@/components/home/hero-banner";
 import CategorySlider from "@/components/home/category-slider";
 import { localBusinessSchema, organizationSchema } from "@/services/seo";
@@ -19,9 +16,7 @@ async function getFeaturedProducts(): Promise<Product[]> {
       sort: "-created",
     });
     return res.items;
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
 async function getBestSellers(): Promise<Product[]> {
@@ -31,51 +26,66 @@ async function getBestSellers(): Promise<Product[]> {
       sort: "-is_best_seller,-created",
     });
     return res.items;
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
 async function getBanners(): Promise<Banner[]> {
   try {
     const res = await pb.collection("banners").getList<Banner>(1, 5, {
-      filter: "is_active=true && position='hero'",
+      filter: "is_active=true",
       sort: "sort_order",
     });
     return res.items;
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
+const HIGHLIGHTS = [
+  { icon: Flower2, title: "Hand-picked for you", desc: "Each stem is carefully selected for freshness and beauty." },
+  { icon: Award, title: "Unique arrangements", desc: "Designed by our florists with creativity and love." },
+  { icon: Heart, title: "Best way to say you care", desc: "The most thoughtful gift for every occasion." },
+];
+
 export default async function HomePage() {
-  const [featured, bestSellers, banners, contact] = await Promise.all([
+  const [featured, bestSellers, banners] = await Promise.all([
     getFeaturedProducts(),
     getBestSellers(),
     getBanners(),
-    getSiteSettings(),
   ]);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema(contact)) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema(contact)) }}
-      />
-
       {/* Hero */}
       <HeroBanner banners={banners} />
       <CategorySlider />
 
+      {/* Highlights */}
+      <section className="py-16 sm:py-20 bg-white">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <div className="text-center mb-12">
+            <p className="text-[11px] tracking-[0.25em] text-muted-foreground uppercase mb-3">Why choose us</p>
+            <h2 className="font-heading text-2xl sm:text-3xl font-medium tracking-tight text-foreground">
+              Handcrafted with care
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            {HIGHLIGHTS.map((h) => (
+              <div key={h.title} className="text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-accent inline-flex items-center justify-center mb-1">
+                  <h.icon className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-heading font-medium text-foreground text-sm">{h.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed max-w-[200px] mx-auto">{h.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Best Sellers */}
       {bestSellers.length > 0 && (
         <ProductSection
-          title="Bán Chạy Nhất"
-          subtitle="Được đặt nhiều nhất tuần này"
+          title="Best Sellers"
+          subtitle="Most loved this week"
           href="/bo-hoa-tuoi"
           products={bestSellers}
         />
@@ -85,8 +95,8 @@ export default async function HomePage() {
       {featured.length > 0 && (
         <div>
           <ProductSection
-            title="Sản Phẩm Nổi Bật"
-            subtitle="Được yêu thích & đánh giá cao"
+            title="Featured"
+            subtitle="Curated for you"
             href="/san-pham-noi-bat"
             products={featured}
           />
@@ -112,23 +122,13 @@ export default async function HomePage() {
             Liên hệ ngay qua Zalo hoặc gọi hotline để được tư vấn và đặt hoa nhanh nhất.
             Hoa tươi nhập mới mỗi ngày.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a
-              href={contact.zalo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-white text-primary font-bold hover:bg-white/95 transition-all shadow-xl shadow-black/10 hover:-translate-y-0.5"
-            >
-              Nhắn Zalo
-              <ArrowRight className="w-4 h-4" />
-            </a>
-            <a
-              href={`tel:${contact.phone}`}
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full border-2 border-white/40 text-white font-semibold hover:bg-white/10 transition-all"
-            >
-              {contact.phoneDisplay}
-            </a>
-          </div>
+          <Link
+            href="/gioi-thieu"
+            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors group"
+          >
+            Learn more
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
       </section>
 
