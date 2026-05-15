@@ -1,0 +1,122 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-baloo);
+  --font-heading: var(--font-baloo);
+  --font-mono: var(--font-geist-mono);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* Sage Green & Warm Cream palette */
+  --background: #fcfdeb;
+  --foreground: #030400;
+  --card: #ffffff;
+  --card-foreground: #030400;
+  --popover: #ffffff;
+  --popover-foreground: #030400;
+  /* Sage green primary */
+  --primary: #5d714f;
+  --primary-foreground: #fcfdeb;
+  /* Warm peach secondary */
+  --secondary: #fceac6;
+  --secondary-foreground: #030400;
+  --muted: #fceac6;
+  --muted-foreground: #6b7a5c;
+  /* Sage accent */
+  --accent: #abb487;
+  --accent-foreground: #5d714f;
+  --destructive: oklch(0.55 0.22 27);
+  /* Sage borders */
+  --border: #c9d4b8;
+  --input: #c9d4b8;
+  --ring: #5d714f;
+  --radius: 0.625rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* CKEditor editing area */
+.ck-editor__editable {
+  min-height: 480px !important;
+}
+
+.ck-editor__editable ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.ck-editor__editable ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.ck-editor__editable li {
+  margin: 0.2rem 0;
+}
+
+.ck-editor__editable ul ul {
+  list-style-type: circle;
+}
+
+.ck-editor__editable ul ul ul {
+  list-style-type: square;
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
