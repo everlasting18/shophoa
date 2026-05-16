@@ -26,9 +26,19 @@ NEXT_PUBLIC_POCKETBASE_URL=https://your-pocketbase-url.com
 
 # Tuỳ chọn — thông báo đơn mới qua Discord
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+
+# Tuỳ chọn — chống spam đơn hàng (Cloudflare Turnstile)
+# Dev: dùng test key bên dưới; Prod: dùng key thật từ Cloudflare dashboard
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+
+# Tuỳ chọn — Discord channel riêng nhận cảnh báo lỗi hệ thống
+DISCORD_ERROR_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
 > Nếu thiếu `DISCORD_WEBHOOK_URL`, khi có đơn mới: dev sẽ log ra terminal, production trả về 503 nhưng checkout vẫn hoạt động bình thường (fire-and-forget).
+
+> Nếu thiếu `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, Turnstile widget không render và bước verify bị bỏ qua hoàn toàn — checkout vẫn hoạt động bình thường.
 
 ---
 
@@ -159,8 +169,9 @@ Sự kiện, Chúc mừng, Valentine, 8/3, 20/10, 20/11
 2. Trang `/dat-hoa` là một client component duy nhất (không có step routing)
 3. Form tự động lưu vào `sessionStorage` mỗi 500ms (tránh mất dữ liệu khi back)
 4. Chọn tỉnh → quận: `DISTRICT_ZONE_MAP` tự tính phí ship theo zone
-5. Submit: tạo record `orders` trực tiếp qua PocketBase SDK, sau đó fire-and-forget `POST /api/notify/order` để gửi Discord
-6. Redirect đến `/dat-hoa/cam-on?code=<orderCode>`
+5. **Turnstile verify** (nếu có key): gọi `POST /api/verify-turnstile` với token — Cloudflare xác nhận người thật; nếu fail thì dừng, không tạo đơn
+6. Submit: tạo record `orders` trực tiếp qua PocketBase SDK, sau đó fire-and-forget `POST /api/notify/order` để gửi Discord
+7. Redirect đến `/dat-hoa/cam-on?code=<orderCode>`
 
 ### Phí giao hàng theo khu vực (TPHCM)
 
@@ -173,6 +184,69 @@ Sự kiện, Chúc mừng, Valentine, 8/3, 20/10, 20/11
 | Quận 2 | 50.000đ |
 | Quận 9, 12, Nhà Bè, Bình Chánh, Hóc Môn, Thủ Đức | 80.000đ |
 | Lấy tại cửa hàng | Miễn phí |
+
+---
+
+## Chống Spam — Cloudflare Turnstile
+
+Widget Turnstile nhúng vào form `/dat-hoa`, hiện checkbox "Verify you are human" trước khi submit.
+
+### Cách hoạt động
+
+1. Widget load ngầm khi user vào trang, Cloudflare phân tích browser fingerprint + hành vi
+2. User verify (click checkbox hoặc tự động pass) → Turnstile trả về token
+3. Khi submit form: `POST /api/verify-turnstile { token }` → server verify với Cloudflare
+4. Nếu pass → tạo đơn bình thường; nếu fail → báo lỗi, không tạo đơn
+
+### Keys
+
+| Môi trường | Cách lấy key |
+|---|---|
+| Dev | Dùng test key `1x00000000000000000000AA` — luôn pass, không cần domain |
+| Prod | Tạo widget tại Cloudflare Dashboard → Turnstile, chọn **Invisible** mode |
+
+Test key đặc biệt: `2x00000000000000000000AB` (luôn fail) để kiểm tra luồng bị chặn.
+
+### Deploy Cloudflare Pages
+
+Thêm 2 biến vào **Settings → Environment variables**:
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` — site key từ Cloudflare dashboard
+- `TURNSTILE_SECRET_KEY` — secret key từ Cloudflare dashboard
+
+---
+
+## Giám Sát Lỗi
+
+### Discord Error Alerts
+
+`src/lib/notify-error.ts` — utility gửi cảnh báo về Discord channel riêng khi có lỗi hệ thống.
+
+**Các điểm được monitor:**
+
+| Lỗi | Trigger |
+|---|---|
+| Discord order webhook fail sau 3 retry | `POST /api/notify/order` |
+| PocketBase không tạo được đơn hàng | `src/app/dat-hoa/page.tsx` → `POST /api/alert-error` |
+
+Nếu không set `DISCORD_ERROR_WEBHOOK_URL` → tất cả alert là no-op, không ảnh hưởng hệ thống.
+
+**Setup:**
+1. Discord → channel `#lỗi-hệ-thống` → Edit Channel → Integrations → Webhooks → New Webhook → Copy URL
+2. Thêm vào env: `DISCORD_ERROR_WEBHOOK_URL=<url>`
+
+**Test:**
+- Đổi `DISCORD_WEBHOOK_URL` thành URL sai → đặt hàng → sau 3 retry sẽ nhận alert đỏ trong channel error
+- Hoặc dùng test key đặc biệt `2x00000000000000000000AB` cho Turnstile để test luồng bị block
+
+### Uptime Monitoring
+
+**UptimeRobot** (uptimerobot.com, free) — ping `https://vuonhoatuoi.vn` mỗi 5 phút, gửi email khi down.
+
+### Cloudflare Notifications
+
+Vào Cloudflare Dashboard → Notifications → Add:
+- **Pages — Project deploy failure** → email khi deploy fail
+- **Workers & Pages — Workers usage** → email khi error rate > 5%
 
 ---
 

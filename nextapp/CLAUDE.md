@@ -21,11 +21,16 @@ No test suite is configured.
 ## Environment Variables
 
 ```
-NEXT_PUBLIC_POCKETBASE_URL=   # PocketBase backend URL (required for all data fetching)
-DISCORD_WEBHOOK_URL=          # Discord webhook URL for order notifications (optional)
+NEXT_PUBLIC_POCKETBASE_URL=      # PocketBase backend URL (required)
+DISCORD_WEBHOOK_URL=             # Discord webhook for order notifications (optional)
+DISCORD_ERROR_WEBHOOK_URL=       # Discord webhook for system error alerts (optional)
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=  # Cloudflare Turnstile site key (optional, dev: 1x00000000000000000000AA)
+TURNSTILE_SECRET_KEY=            # Cloudflare Turnstile secret key (optional, dev: 1x0000000000000000000000000000000AA)
 ```
 
-`DISCORD_WEBHOOK_URL` is optional. In development, if absent, `/api/notify/order` logs the payload to terminal. In production the route returns 503 and checkout continues normally (fire-and-forget).
+- `DISCORD_WEBHOOK_URL` absent → dev logs to terminal, prod returns 503, checkout unaffected (fire-and-forget)
+- `DISCORD_ERROR_WEBHOOK_URL` absent → `notifyError()` is a no-op, no alerts sent
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` absent → Turnstile widget not rendered, verify step skipped entirely
 
 ## Stack
 
@@ -58,7 +63,9 @@ src/app/
     navigation/route.ts         # Navigation tree from PocketBase categories
     settings/route.ts           # Public site settings
     revalidate/route.ts         # ISR cache purge: POST { path }
-    notify/order/route.ts       # Discord notification on new order (fire-and-forget)
+    notify/order/route.ts       # Discord notification on new order — 3-retry + exponential backoff + rate limit
+    verify-turnstile/route.ts   # Verify Cloudflare Turnstile token server-side
+    alert-error/route.ts        # Forward client-side errors to DISCORD_ERROR_WEBHOOK_URL
 ```
 
 The `(shop)` route group has no layout of its own — category pages inherit the root layout directly.
@@ -86,17 +93,24 @@ Server pages use `export const revalidate = 3600` for ISR. Purge via `POST /api/
 1. Reads cart from Zustand
 2. User selects province → district; district is mapped to a shipping zone via `DISTRICT_ZONE_MAP` from `src/config/shipping.ts`
 3. Form persisted to `sessionStorage` key `checkout-form` with 500ms debounce (survives accidental back-navigation)
-4. On submit: creates `orders` record directly via PocketBase SDK, then fire-and-forgets `POST /api/notify/order`
-5. Redirects to `/dat-hoa/cam-on?code=<orderCode>`
+4. **Turnstile verify** (if `NEXT_PUBLIC_TURNSTILE_SITE_KEY` set): `POST /api/verify-turnstile { token }` — blocks submit if bot detected; on PocketBase failure, fires `POST /api/alert-error` fire-and-forget
+5. Creates `orders` record directly via PocketBase SDK, then fire-and-forgets `POST /api/notify/order`
+6. Redirects to `/dat-hoa/cam-on?code=<orderCode>`
+
+**Turnstile widget** (`@marsidev/react-turnstile`): placed in left column of checkout form, Managed mode, light theme. Token stored in `useRef` (not state) to avoid re-renders. Test keys: `1x00000000000000000000AA` (always pass), `2x00000000000000000000AB` (always fail).
 
 Address fields: `recipientStreet` (free text) + province/district selects from `useProvinces` hook (fetches Vietnam HCSV API). The full address stored in PocketBase is assembled from these parts.
 
-### Discord Notification
+### Discord Notification & Error Alerts
 
 `src/app/api/notify/order/route.ts`:
-- Reads `DISCORD_WEBHOOK_URL` env var; if absent logs in dev / returns 503 in prod
-- POSTs a message with multiple Discord embeds: main embed (order info) + one embed per product with thumbnail image
-- Called fire-and-forget from the checkout page after the PocketBase order is created
+- Retries up to 3 times with exponential backoff (1s, 2s); respects Discord `Retry-After` header on 429
+- On final failure: calls `notifyError()` to alert error channel, returns 502 (checkout unaffected)
+- Embeds: one main embed (order info) + one per product with thumbnail
+
+`src/lib/notify-error.ts` — shared utility, always fire-and-forget, never throws:
+- Posts red embed to `DISCORD_ERROR_WEBHOOK_URL`; no-op if env var absent
+- Used by: `notify/order` (all retries failed), `alert-error` route (client-side PocketBase errors)
 
 ### SEO
 

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, Info, CreditCard, Package, ShoppingCart } from "lucide-react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { useCartStore } from "@/stores/cart-store";
 import { useToast } from "@/components/ui/toast";
 import pb from "@/services/pocketbase";
@@ -20,6 +21,8 @@ import ShippingZones from "@/components/checkout/shipping-zones";
 import OrderSummary from "@/components/checkout/order-summary";
 import CardSection from "@/components/checkout/card-section";
 import FormError from "@/components/ui/form-error";
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
 const STORAGE_KEY = "checkout-form";
 
@@ -83,6 +86,8 @@ export default function CheckoutPage() {
 
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const turnstileRef = useRef<TurnstileInstance>(null);
+  const turnstileToken = useRef("");
 
   // Auto map district → shipping zone (skip when pickup is active)
   useEffect(() => {
@@ -122,6 +127,27 @@ export default function CheckoutPage() {
     setLoading(true);
     setSubmitError("");
     try {
+      // Verify Turnstile token (skipped in dev when key not set)
+      if (TURNSTILE_SITE_KEY) {
+        if (!turnstileToken.current) {
+          setSubmitError("Đang xác thực bảo mật, vui lòng thử lại.");
+          setLoading(false);
+          return;
+        }
+        const verifyRes = await fetch("/api/verify-turnstile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: turnstileToken.current }),
+        });
+        const { success } = await verifyRes.json() as { success: boolean };
+        if (!success) {
+          turnstileRef.current?.reset();
+          turnstileToken.current = "";
+          setSubmitError("Xác thực bảo mật thất bại. Vui lòng thử lại.");
+          setLoading(false);
+          return;
+        }
+      }
       const finalName = data.sameAsBuyer ? data.customerName : data.recipientName;
       const finalPhone = data.sameAsBuyer ? data.customerPhone : data.recipientPhone;
       const finalAddress = isPickup
@@ -181,9 +207,17 @@ export default function CheckoutPage() {
       }).catch(console.error);
 
       router.push(`/dat-hoa/cam-on?code=${encodeURIComponent(orderCode)}`);
-    } catch {
+    } catch (err) {
       setSubmitError("Có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ Zalo.");
       addToast("Đặt hàng thất bại, vui lòng thử lại", "error");
+      fetch("/api/alert-error", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "Lỗi tạo đơn hàng",
+          detail: `Khách **${data.customerName}** (${data.customerPhone}) không đặt được hàng.\n\`${String(err)}\``,
+        }),
+      }).catch(() => {});
     } finally {
       setLoading(false);
     }
@@ -259,6 +293,15 @@ export default function CheckoutPage() {
                   className="w-full px-3.5 py-2.5 text-sm border border-border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/60 resize-none"
                 />
               </CardSection>
+
+              {TURNSTILE_SITE_KEY && (
+                <Turnstile
+                  ref={turnstileRef}
+                  siteKey={TURNSTILE_SITE_KEY}
+                  onSuccess={(token) => { turnstileToken.current = token; }}
+                  options={{ theme: "light" }}
+                />
+              )}
             </div>
 
             {/* RIGHT – desktop only */}

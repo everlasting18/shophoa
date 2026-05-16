@@ -27,7 +27,7 @@ VITE_SHOP_URL=         # Storefront URL for cache revalidation (optional, defaul
 - **Zustand 5 + persist** — auth state only, localStorage key `vht-admin-auth`
 - **PocketBase 0.26.8** — singleton at `src/lib/pb.ts`; `pb.afterSend` handles global 401 → auto-logout
 - **Tailwind v4** — via `@tailwindcss/vite` plugin, no config file; neutral palette is `stone-*` (not zinc)
-- **CKEditor 5 (GPL)** — rich text in product form (`src/components/ui/rich-editor.tsx`); lazy-loaded via `React.lazy()` to keep main bundle small; upload adapter posts to PocketBase `media` collection
+- **TipTap** — rich text in product form (`src/components/ui/rich-editor.tsx`); StarterKit + Image + Placeholder extensions; image upload posts to PocketBase `media` collection; uses `isInternalChange` ref flag to prevent update loops; `setContent(value, { emitUpdate: false })` for external value sync (TipTap v3 API)
 
 ## Routing Architecture
 
@@ -87,7 +87,7 @@ Login tries `_superusers` first (→ `role: "owner"`), falls back to `users` col
 - `PHOTO_BASE = "https://photo.fitchy.shop"` — CDN proxy for PocketBase files (`src/lib/config.ts`)
 - `SHOP_URL` — storefront URL used to call `/api/revalidate` after mutations (`src/lib/config.ts`)
 - `src/lib/media.ts` — `getThumbUrl(collectionId, recordId, filename)`, `getImageUrl(...)`
-- CKEditor uploads: `pb.collection("media").create(formData)` → URL from `PHOTO_BASE/collectionId/recordId/file`
+- TipTap image uploads: `pb.collection("media").create(formData)` → URL from `PHOTO_BASE/collectionId/recordId/file`; triggered via hidden `<input type="file">` ref in toolbar
 
 ## Cache Revalidation
 

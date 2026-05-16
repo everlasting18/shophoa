@@ -77,14 +77,16 @@ shophoa/
 | `GET /api/settings` | Cài đặt công khai (phone, địa chỉ, giờ mở cửa) |
 | `POST /api/revalidate` | Purge ISR cache theo `{ path }` — gọi từ admin |
 | `POST /api/notify/order` | Gửi thông báo Discord khi có đơn mới |
+| `POST /api/verify-turnstile` | Verify Cloudflare Turnstile token chống spam |
 
 ### Luồng đặt hàng
 1. Khách thêm sản phẩm vào giỏ (Zustand, persist localStorage)
 2. Vào `/dat-hoa`, chọn tỉnh/quận → hệ thống tự tính phí ship theo zone
 3. Form tự lưu `sessionStorage` mỗi 500ms (tránh mất khi back)
-4. Submit → tạo record `orders` trực tiếp qua PocketBase SDK
-5. Fire-and-forget `POST /api/notify/order` → gửi Discord embed kèm ảnh sản phẩm
-6. Redirect `/dat-hoa/cam-on?code=<orderCode>`, xoá giỏ hàng
+4. Turnstile verify ngầm (nếu có key) → xác nhận người thật trước khi submit
+5. Submit → tạo record `orders` trực tiếp qua PocketBase SDK
+6. Fire-and-forget `POST /api/notify/order` → gửi Discord embed kèm ảnh sản phẩm
+7. Redirect `/dat-hoa/cam-on?code=<orderCode>`, xoá giỏ hàng
 
 ### Phí giao hàng (TPHCM)
 | Khu vực | Phí |
@@ -115,7 +117,10 @@ npm run deploy:cf            # build + deploy Cloudflare Pages
 **Biến môi trường:**
 ```env
 NEXT_PUBLIC_POCKETBASE_URL=https://your-pocketbase-url.com   # bắt buộc
-DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...     # tuỳ chọn
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...     # tuỳ chọn — thông báo đơn mới
+DISCORD_ERROR_WEBHOOK_URL=https://discord.com/api/webhooks/... # tuỳ chọn — cảnh báo lỗi hệ thống
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA      # tuỳ chọn (test key cho dev)
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA     # tuỳ chọn (test key cho dev)
 ```
 
 → Chi tiết: [nextapp/README.md](nextapp/README.md)

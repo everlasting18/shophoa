@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { formatPrice } from "@/lib/utils";
 import { shortDateISO } from "@/lib/date-utils";
 import { PHOTO_BASE } from "@/config";
+import { notifyError } from "@/lib/notify-error";
 
 interface OrderItem {
   name: string;
@@ -109,22 +110,41 @@ export async function POST(req: NextRequest) {
     };
   });
 
-  try {
-    const res = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ embeds: [mainEmbed, ...productEmbeds] }),
-    });
+  const payload = JSON.stringify({ embeds: [mainEmbed, ...productEmbeds] });
+  const maxAttempts = 3;
 
-    if (!res.ok) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      });
+
+      if (res.ok) return NextResponse.json({ ok: true });
+
+      // Discord rate limit — respect retry-after header
+      if (res.status === 429 && attempt < maxAttempts) {
+        const retryAfter = parseInt(res.headers.get("retry-after") ?? "1", 10);
+        await new Promise((r) => setTimeout(r, retryAfter * 1000));
+        continue;
+      }
+
       const text = await res.text();
-      console.error("Discord notify error:", res.status, text);
-      return NextResponse.json({ error: "Discord API error" }, { status: 502 });
+      throw new Error(`Discord ${res.status}: ${text}`);
+    } catch (e) {
+      if (attempt === maxAttempts) {
+        console.error(`Discord notify failed after ${maxAttempts} attempts:`, e);
+        await notifyError(
+          "Discord webhook thất bại",
+          `Đơn hàng **${order.orderCode}** không gửi được thông báo sau ${maxAttempts} lần thử.\n\`${String(e)}\``
+        );
+        return NextResponse.json({ error: "Failed to reach Discord" }, { status: 502 });
+      }
+      // Exponential backoff: 1s, 2s
+      await new Promise((r) => setTimeout(r, attempt * 1000));
     }
-
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("Discord notify failed:", e);
-    return NextResponse.json({ error: "Failed to reach Discord" }, { status: 502 });
   }
+
+  return NextResponse.json({ error: "Failed to reach Discord" }, { status: 502 });
 }
