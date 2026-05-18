@@ -8,6 +8,7 @@ const FALLBACK = {
   phone: CONTACT.phone,
   phoneDisplay: CONTACT.phoneDisplay,
   zalo: CONTACT.zalo,
+  zaloGroup: "",
 };
 
 export function useSettings() {
@@ -15,6 +16,7 @@ export function useSettings() {
     phone: FALLBACK.phone,
     phoneDisplay: FALLBACK.phoneDisplay,
     zalo: FALLBACK.zalo,
+    zaloGroup: FALLBACK.zaloGroup,
   });
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export function useSettings() {
           phone: s.phone || FALLBACK.phone,
           phoneDisplay: s.phoneDisplay || FALLBACK.phoneDisplay,
           zalo: s.zalo || FALLBACK.zalo,
+          zaloGroup: s.zaloGroup || FALLBACK.zaloGroup,
         });
       })
       .catch(() => {});

@@ -62,6 +62,7 @@ src/app/
   api/
     navigation/route.ts         # Navigation tree from PocketBase categories
     settings/route.ts           # Public site settings
+    shipping-zones/route.ts     # Dynamic shipping zones from PocketBase (falls back to FALLBACK_ZONES)
     revalidate/route.ts         # ISR cache purge: POST { path }
     notify/order/route.ts       # Discord notification on new order — 3-retry + exponential backoff + rate limit
     verify-turnstile/route.ts   # Verify Cloudflare Turnstile token server-side
@@ -74,9 +75,11 @@ The `(shop)` route group has no layout of its own — category pages inherit the
 
 - `src/services/pocketbase.ts` — singleton PocketBase client (shared across server and client components)
 - `src/services/settings.ts`, `src/services/navigation.ts`, `src/services/seo.ts` — server-side services using React `cache()` for per-request deduplication; all fall back gracefully if PocketBase is unreachable
+- `src/services/shipping.ts` — `getShippingZones()` (React `cache()`): fetches from PocketBase `shipping_zones`, always ensures a pickup zone (fee=0) exists by appending from `FALLBACK_ZONES` if missing
 - `src/schema/` — `pocketbase.ts` (collection types), `checkout.ts` (Zod schema), `app.ts` (app-level types), `index.ts` (re-exports)
-- `src/config/` — `constants.ts` (site name, contact, nav), `shipping.ts` (zones + `DISTRICT_ZONE_MAP`), `third-party.ts` (CDN, APIs); all exported from `src/config/index.ts`
-- Main PocketBase collections: `products`, `categories`, `banners`, `orders`, `settings`, `media`
+- `src/config/` — `constants.ts` (site name, contact, nav), `shipping.ts` (`FALLBACK_ZONES`, `buildDistrictMap(zones)`), `third-party.ts` (CDN, APIs); all exported from `src/config/index.ts`
+- `src/lib/sanitize.ts` — `sanitizeHtml(html)` (strips scripts/iframes/event handlers for safe render) and `stripHtml(html)` (plain text for meta descriptions)
+- Main PocketBase collections: `products`, `categories`, `banners`, `orders`, `settings`, `media`, `shipping_zones`
 
 Server pages use `export const revalidate = 3600` for ISR. Purge via `POST /api/revalidate { path }`.
 
@@ -91,15 +94,20 @@ Server pages use `export const revalidate = 3600` for ISR. Purge via `POST /api/
 
 `src/app/dat-hoa/page.tsx` is a single client component (no step routing). Flow:
 1. Reads cart from Zustand
-2. User selects province → district; district is mapped to a shipping zone via `DISTRICT_ZONE_MAP` from `src/config/shipping.ts`
-3. Form persisted to `sessionStorage` key `checkout-form` with 500ms debounce (survives accidental back-navigation)
-4. **Turnstile verify** (if `NEXT_PUBLIC_TURNSTILE_SITE_KEY` set): `POST /api/verify-turnstile { token }` — blocks submit if bot detected; on PocketBase failure, fires `POST /api/alert-error` fire-and-forget
-5. Creates `orders` record directly via PocketBase SDK, then fire-and-forgets `POST /api/notify/order`
-6. Redirects to `/dat-hoa/cam-on?code=<orderCode>`
+2. On mount: fetches shipping zones from `GET /api/shipping-zones` (dynamic from PocketBase, falls back to `FALLBACK_ZONES`). Zones are stored in state; `buildDistrictMap(zones)` derives a `Record<districtName, zoneIndex>` for auto-mapping.
+3. User selects province → district → ward; district auto-maps to a shipping zone index. Pickup zone detected by `fee === 0`.
+4. Form persisted to `sessionStorage` key `checkout-form` with 500ms debounce (survives accidental back-navigation)
+5. **Turnstile verify** (if `NEXT_PUBLIC_TURNSTILE_SITE_KEY` set): `POST /api/verify-turnstile { token }` — blocks submit if bot detected; on PocketBase failure, fires `POST /api/alert-error` fire-and-forget
+6. Creates `orders` record directly via PocketBase SDK, then fire-and-forgets `POST /api/notify/order`
+7. Redirects to `/dat-hoa/cam-on?code=<orderCode>`
 
 **Turnstile widget** (`@marsidev/react-turnstile`): placed in left column of checkout form, Managed mode, light theme. Token stored in `useRef` (not state) to avoid re-renders. Test keys: `1x00000000000000000000AA` (always pass), `2x00000000000000000000AB` (always fail).
 
 Address fields: `recipientStreet` (free text) + province/district selects from `useProvinces` hook (fetches Vietnam HCSV API). The full address stored in PocketBase is assembled from these parts.
+
+### ZaloFloat
+
+`src/components/layout/zalo-float.tsx` — fixed floating buttons (phone + Zalo + optional Báo giá). The "Báo giá" button only renders when `contact.zaloGroup` is set (PocketBase `settings` key: `zalo_group`). Labels are always visible (not hover-only).
 
 ### Discord Notification & Error Alerts
 

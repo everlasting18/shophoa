@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext, type CarouselApi } from "@/components/ui/carousel";
 import type { Banner } from "@/schema";
 import { getImageUrl } from "@/lib/media";
 import { ArrowRight } from "lucide-react";
-import { CONTACT } from "@/config";
+import { CONTACT, NAV_ITEMS } from "@/config";
 
 interface HeroBannerProps {
   banners: Banner[];
@@ -41,6 +42,103 @@ const FALLBACK_SLIDES = [
 ];
 
 const INTERVAL = 5000;
+
+const PRICE_RANGES = [
+  { label: "Tất cả", value: "", min: 0, max: 0 },
+  { label: "Dưới 300.000đ", value: "duoi-300k", min: 0, max: 300000 },
+  { label: "300.000 – 500.000đ", value: "300k-500k", min: 300000, max: 500000 },
+  { label: "500.000 – 1.000.000đ", value: "500k-1trieu", min: 500000, max: 1000000 },
+  { label: "Trên 1.000.000đ", value: "tren-1trieu", min: 1000000, max: 0 },
+];
+
+function FlowerAdvisor() {
+  const router = useRouter();
+  const [topic, setTopic] = useState(NAV_ITEMS[0].href);
+  const [price, setPrice] = useState("");
+
+  function handleSearch() {
+    const range = PRICE_RANGES.find((p) => p.value === price);
+    const slug = topic.replace(/^\//, "");
+    const params = new URLSearchParams();
+    if (slug) params.set("categories", slug);
+    if (range?.min) params.set("min", String(range.min));
+    if (range?.max) params.set("max", String(range.max));
+    router.push(`/san-pham?${params.toString()}`);
+  }
+
+  const selectCls = "w-full bg-white rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer";
+
+  return (
+    <div className="bg-primary">
+      <div className="container mx-auto px-4 py-4">
+
+        {/* Mobile layout */}
+        <div className="sm:hidden space-y-2.5">
+          <p className="text-white font-heading font-bold text-sm uppercase tracking-wide text-center">
+            Tư vấn chọn hoa tươi
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <select value={topic} onChange={(e) => setTopic(e.target.value)} className={selectCls}>
+              {NAV_ITEMS.map((item) => (
+                <option key={item.href} value={item.href}>{item.label}</option>
+              ))}
+            </select>
+            <select value={price} onChange={(e) => setPrice(e.target.value)} className={selectCls}>
+              {PRICE_RANGES.map((p) => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={() => handleSearch()}
+            className="w-full bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors"
+          >
+            Tìm kiếm
+          </button>
+        </div>
+
+        {/* Desktop layout */}
+        <div className="hidden sm:flex items-center gap-3">
+          <span className="text-white font-heading font-bold text-sm lg:text-base uppercase tracking-wide whitespace-nowrap flex-shrink-0">
+            Tư vấn chọn hoa tươi
+          </span>
+          <div className="flex flex-1 gap-3 items-center">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <label className="text-white/80 text-xs whitespace-nowrap flex-shrink-0">Chủ đề</label>
+              <select value={topic} onChange={(e) => setTopic(e.target.value)} className={`flex-1 min-w-0 ${selectCls}`}>
+                {NAV_ITEMS.map((item) => (
+                  <option key={item.href} value={item.href}>{item.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <label className="text-white/80 text-xs whitespace-nowrap flex-shrink-0">Mức giá</label>
+              <select value={price} onChange={(e) => setPrice(e.target.value)} className={`flex-1 min-w-0 ${selectCls}`}>
+                {PRICE_RANGES.map((p) => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={() => handleSearch()}
+              className="bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0"
+            >
+              Tìm kiếm
+            </button>
+          </div>
+          <p className="text-white/70 text-xs whitespace-nowrap hidden xl:block flex-shrink-0">
+            *Gọi{" "}
+            <a href={`tel:${CONTACT.phone}`} className="text-amber-300 font-semibold hover:text-amber-200">
+              {CONTACT.phoneDisplay}
+            </a>{" "}
+            để đặt theo thiết kế riêng
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+}
 
 export default function HeroBanner({ banners }: HeroBannerProps) {
   const [api, setApi] = useState<CarouselApi | null>(null);
@@ -77,13 +175,13 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
         key: banner.id,
         content: (
           <Link href={banner.link || "/"} className="block">
-            <div className="relative w-full aspect-[2/1] bg-[#fdf6ee] overflow-hidden">
+            <div className="relative w-full aspect-[4/3] sm:aspect-[3/1] bg-[#fdf6ee] overflow-hidden">
               <Image
                 src={getImageUrl(banner.collectionId, banner.id, banner.image, 2400)}
                 alt="Banner"
                 fill
                 priority
-                className="object-contain"
+                className="object-cover object-left sm:object-center"
                 sizes="100vw"
               />
             </div>
@@ -93,7 +191,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
     : FALLBACK_SLIDES.map((slide) => ({
         key: slide.href,
         content: (
-          <div className={`${slide.bg} aspect-[16/10] sm:aspect-[2.6/1] w-full flex items-center relative overflow-hidden`}>
+          <div className={`${slide.bg} aspect-[16/10] sm:aspect-[3/1] w-full flex items-center relative overflow-hidden`}>
             <Image src={slide.img} alt={slide.title} fill className="object-cover" priority />
             <div className="container mx-auto px-4 py-8 sm:py-16 flex flex-col items-center sm:items-end text-center sm:text-right gap-3 sm:gap-5 relative z-10">
               <div className="space-y-1">
@@ -130,6 +228,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
       }));
 
   return (
+    <>
     <section
       className="relative overflow-hidden"
       onMouseEnter={() => setPaused(true)}
@@ -169,5 +268,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
         </div>
       )}
     </section>
+    <FlowerAdvisor />
+    </>
   );
 }

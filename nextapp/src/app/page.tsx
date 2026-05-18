@@ -3,11 +3,12 @@ import Link from "next/link";
 import pb from "@/services/pocketbase";
 import type { Product, Banner, Category } from "@/schema";
 import HeroBanner from "@/components/home/hero-banner";
-import { ArrowRight, Flower2 } from "lucide-react";
+import CategoryCircles from "@/components/home/category-circles";
 import ProductSection from "@/components/home/product-section";
-import CategoryGrid from "@/components/home/category-grid";
 import { getSiteSettings } from "@/services/settings";
 import { localBusinessSchema } from "@/services/seo";
+import { Flower2 } from "lucide-react";
+import { CONTACT } from "@/config";
 
 export const revalidate = 3600;
 
@@ -26,16 +27,6 @@ export const metadata: Metadata = {
   },
 };
 
-async function getBestSellers(): Promise<Product[]> {
-  try {
-    const res = await pb.collection("products").getList<Product>(1, 12, {
-      filter: "is_best_seller=true && is_active=true",
-      sort: "-is_best_seller,-created",
-    });
-    return res.items;
-  } catch { return []; }
-}
-
 async function getBanners(): Promise<Banner[]> {
   try {
     const res = await pb.collection("banners").getList<Banner>(1, 5, {
@@ -46,34 +37,74 @@ async function getBanners(): Promise<Banner[]> {
   } catch { return []; }
 }
 
-async function getParentCategories(): Promise<Category[]> {
+async function getBestSellers(): Promise<Product[]> {
   try {
-    const res = await pb.collection("categories").getFullList<Category>({
-      filter: 'parent="" && is_active=true',
-      sort: "sort_order",
-    });
-    return res;
-  } catch { return []; }
-}
-
-async function getAllProducts(): Promise<Product[]> {
-  try {
-    const res = await pb.collection("products").getList<Product>(1, 60, {
-      filter: "is_active=true",
-      sort: "-is_best_seller,-created",
+    const res = await pb.collection("products").getList<Product>(1, 12, {
+      filter: "is_best_seller=true && is_active=true",
+      sort: "-created",
     });
     return res.items;
   } catch { return []; }
 }
 
+async function getParentCategories(): Promise<Category[]> {
+  try {
+    return await pb.collection("categories").getFullList<Category>({
+      filter: 'parent="" && is_active=true',
+      sort: "sort_order",
+    });
+  } catch { return []; }
+}
+
+async function getFeaturedSections(
+  categories: Category[]
+): Promise<{ category: Category; products: Product[] }[]> {
+  const featured = categories.slice(0, 3);
+  if (featured.length === 0) return [];
+
+  // Fetch all subcategories in one query
+  const parentFilter = featured.map((c) => `parent="${c.id}"`).join(" || ");
+  let subs: Category[] = [];
+  try {
+    subs = await pb.collection("categories").getFullList<Category>({
+      filter: `(${parentFilter}) && is_active=true`,
+    });
+  } catch {}
+
+  const subsByParent = new Map<string, string[]>();
+  for (const sub of subs) {
+    subsByParent.set(sub.parent, [...(subsByParent.get(sub.parent) ?? []), sub.id]);
+  }
+
+  // Fetch products for each category in parallel
+  const sections = await Promise.all(
+    featured.map(async (cat) => {
+      const ids = [cat.id, ...(subsByParent.get(cat.id) ?? [])];
+      const filter = `(${ids.map((id) => `categories~"${id}"`).join(" || ")}) && is_active=true`;
+      try {
+        const res = await pb.collection("products").getList<Product>(1, 10, {
+          filter,
+          sort: "-is_best_seller,-created",
+        });
+        return { category: cat, products: res.items };
+      } catch {
+        return { category: cat, products: [] };
+      }
+    })
+  );
+
+  return sections.filter((s) => s.products.length > 0);
+}
+
 export default async function HomePage() {
-  const [bestSellers, banners, allProducts, parentCategories, contact] = await Promise.all([
-    getBestSellers(),
+  const [banners, bestSellers, parentCategories, contact] = await Promise.all([
     getBanners(),
-    getAllProducts(),
+    getBestSellers(),
     getParentCategories(),
     getSiteSettings(),
   ]);
+
+  const featuredSections = await getFeaturedSections(parentCategories);
 
   return (
     <>
@@ -85,18 +116,30 @@ export default async function HomePage() {
       {/* Hero */}
       <HeroBanner banners={banners} />
 
+      {/* Category circles */}
+      {parentCategories.length > 0 && (
+        <CategoryCircles categories={parentCategories} />
+      )}
+
       {/* Best Sellers */}
       {bestSellers.length > 0 && (
         <ProductSection
           title="Bán Chạy Nhất"
           subtitle="Được yêu thích tuần này"
-          href="/bo-hoa-tuoi"
+          href="/san-pham"
           products={bestSellers}
         />
       )}
 
-      {/* Categories + Products */}
-      <CategoryGrid categories={parentCategories} products={allProducts} />
+      {/* Featured category sections */}
+      {featuredSections.map(({ category, products }) => (
+        <ProductSection
+          key={category.id}
+          title={category.name}
+          href={`/${category.slug}`}
+          products={products}
+        />
+      ))}
 
       {/* CTA Banner */}
       <section className="relative overflow-hidden">
@@ -114,13 +157,22 @@ export default async function HomePage() {
             Liên hệ ngay qua Zalo hoặc gọi hotline để được tư vấn và đặt hoa nhanh nhất.
             Hoa tươi nhập mới mỗi ngày.
           </p>
-          <Link
-            href="/gioi-thieu"
-            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors group"
-          >
-            Learn more
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <a
+              href={CONTACT.zalo}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-2.5 bg-white text-[#3d4f33] text-sm font-semibold rounded-full hover:bg-white/90 transition-colors"
+            >
+              Nhắn Zalo ngay
+            </a>
+            <Link
+              href="/dat-hoa"
+              className="px-6 py-2.5 bg-white/10 border border-white/30 text-white text-sm font-semibold rounded-full hover:bg-white/20 transition-colors"
+            >
+              Đặt hoa online
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -138,7 +190,7 @@ export default async function HomePage() {
             </p>
             <p>
               Dịch vụ đặt hoa online tại Tiệm hoa nhà tình mang đến sự tiện lợi tối đa: chỉ với vài
-              thao tác, bó hoa tươi thắm sẽ được giao tận tay ngườithương trong vòng 60 phút tại
+              thao tác, bó hoa tươi thắm sẽ được giao tận tay người thương trong vòng 60 phút tại
               tất cả các quận nội thành TPHCM.
             </p>
             <div className="flex gap-3 flex-wrap pt-1">

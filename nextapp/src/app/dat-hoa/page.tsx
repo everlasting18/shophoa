@@ -11,7 +11,8 @@ import { useCartStore } from "@/stores/cart-store";
 import { useToast } from "@/components/ui/toast";
 import pb from "@/services/pocketbase";
 import { checkoutSchema, type CheckoutForm } from "@/schema";
-import { SHIPPING_ZONES, DISTRICT_ZONE_MAP } from "@/config";
+import { FALLBACK_ZONES, buildDistrictMap } from "@/config/shipping";
+import type { ShippingZone } from "@/schema";
 import { todayISO, isoToDisplay } from "@/lib/date-utils";
 import { formatPrice } from "@/lib/utils";
 import ProgressSteps from "@/components/checkout/progress-steps";
@@ -74,15 +75,16 @@ export default function CheckoutPage() {
     },
   });
 
+  const [zones, setZones] = useState<ShippingZone[]>(FALLBACK_ZONES);
+  const districtZoneMap = useMemo(() => buildDistrictMap(zones), [zones]);
+
   const shippingIdx = useWatch({ control, name: "shippingIdx" }) as number;
   const district = useWatch({ control, name: "recipientDistrict" }) as string;
   const allFormValues = useWatch({ control });
-  const shippingFee = SHIPPING_ZONES[shippingIdx]?.fee ?? 0;
+  const shippingFee = zones[shippingIdx]?.fee ?? 0;
   const subtotal = totalPrice();
   const total = subtotal + shippingFee;
-  const isPickup =
-    SHIPPING_ZONES[shippingIdx]?.fee === 0 &&
-    SHIPPING_ZONES[shippingIdx]?.label.includes("cửa hàng");
+  const isPickup = zones[shippingIdx]?.fee === 0;
 
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -92,10 +94,10 @@ export default function CheckoutPage() {
   // Auto map district → shipping zone (skip when pickup is active)
   useEffect(() => {
     if (isPickup) return;
-    if (district && district in DISTRICT_ZONE_MAP) {
-      setValue("shippingIdx", DISTRICT_ZONE_MAP[district]);
+    if (district && district in districtZoneMap) {
+      setValue("shippingIdx", districtZoneMap[district]);
     }
-  }, [district, isPickup, setValue]);
+  }, [district, isPickup, setValue, districtZoneMap]);
 
   // Save form to sessionStorage on every change (debounced)
   useEffect(() => {
@@ -104,6 +106,14 @@ export default function CheckoutPage() {
     }, 500);
     return () => clearTimeout(timer);
   }, [allFormValues]);
+
+  // Fetch shipping zones from admin
+  useEffect(() => {
+    fetch("/api/shipping-zones")
+      .then((r) => r.json())
+      .then((z: ShippingZone[]) => { if (Array.isArray(z) && z.length > 0) setZones(z); })
+      .catch(() => {});
+  }, []);
 
   // Scroll to first error on validation fail
   const prevErrorCount = useRef(0);
@@ -179,7 +189,7 @@ export default function CheckoutPage() {
         items: orderItems,
         subtotal,
         total,
-        note: `[Ship: ${SHIPPING_ZONES[data.shippingIdx].label}] ${data.note}`.trim(),
+        note: `[Ship: ${zones[data.shippingIdx]?.label ?? ""}] ${data.note}`.trim(),
         status: "pending",
         payment_method: "bank_transfer",
       });
@@ -275,14 +285,14 @@ export default function CheckoutPage() {
               {errors.deliveryDate && <FormError msg={errors.deliveryDate.message!} />}
               {errors.deliveryTime && <FormError msg={errors.deliveryTime.message!} />}
 
-              <CustomerForms register={register} setValue={setValue} watch={watch} isPickup={isPickup} />
+              <CustomerForms register={register} setValue={setValue} watch={watch} isPickup={isPickup} zones={zones} districtZoneMap={districtZoneMap} />
               {errors.customerName && <FormError msg={errors.customerName.message!} />}
               {errors.customerPhone && <FormError msg={errors.customerPhone.message!} />}
               {errors.recipientName && <FormError msg={errors.recipientName.message!} />}
               {errors.recipientPhone && <FormError msg={errors.recipientPhone.message!} />}
               {errors.recipientStreet && <FormError msg={errors.recipientStreet.message!} />}
 
-              <ShippingZones shippingIdx={shippingIdx} setValue={setValue} />
+              <ShippingZones zones={zones} shippingIdx={shippingIdx} setValue={setValue} />
 
               {/* Note */}
               <CardSection icon={<CreditCard className="w-4 h-4" />} title="Nội Dung Thiệp / Decal (tuỳ chọn)">
@@ -304,8 +314,8 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            {/* RIGHT – desktop only */}
-            <div className="hidden lg:block">
+            {/* RIGHT – sticky desktop, bottom on mobile */}
+            <div className="lg:sticky lg:top-6 lg:self-start">
               <OrderSummary
                 items={items}
                 shippingFee={shippingFee}

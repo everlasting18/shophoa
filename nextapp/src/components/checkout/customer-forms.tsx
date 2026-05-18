@@ -2,7 +2,7 @@
 
 import { User, Phone, Truck, MapPin, Gift } from "lucide-react";
 import type { UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-form";
-import type { CheckoutForm } from "@/schema";
+import type { CheckoutForm, ShippingZone } from "@/schema";
 import CardSection from "./card-section";
 import InputIcon from "@/components/ui/input-icon";
 import AddressFields from "./address-fields";
@@ -12,9 +12,11 @@ interface Props {
   setValue: UseFormSetValue<CheckoutForm>;
   watch: UseFormWatch<CheckoutForm>;
   isPickup: boolean;
+  zones: ShippingZone[];
+  districtZoneMap: Record<string, number>;
 }
 
-export default function CustomerForms({ register, setValue, watch, isPickup }: Props) {
+export default function CustomerForms({ register, setValue, watch, isPickup, zones, districtZoneMap }: Props) {
   const sameAsBuyer = watch("sameAsBuyer");
   const customerName = watch("customerName");
 
@@ -122,7 +124,7 @@ export default function CustomerForms({ register, setValue, watch, isPickup }: P
       {/* Address */}
       {!isPickup && (
         <CardSection icon={<MapPin className="w-4 h-4" />} title="Địa chỉ giao hàng">
-          <AddressFields register={register} setValue={setValue} watch={watch} isPickup={isPickup} />
+          <AddressFields register={register} setValue={setValue} watch={watch} isPickup={isPickup} zones={zones} districtZoneMap={districtZoneMap} />
         </CardSection>
       )}
 

@@ -134,7 +134,7 @@ export default function OrderSummary({
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 rounded-full bg-primary text-white font-bold hover:bg-primary/90 disabled:opacity-60 transition-all shadow-lg shadow-primary/15 flex items-center justify-center gap-2"
+          className="hidden lg:flex w-full py-3.5 rounded-full bg-primary text-white font-bold hover:bg-primary/90 disabled:opacity-60 transition-all shadow-lg shadow-primary/15 items-center justify-center gap-2"
         >
           {loading ? (
             <span className="animate-pulse">Đang xử lý...</span>

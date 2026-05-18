@@ -8,7 +8,7 @@ import ProductGrid from "@/components/product/product-grid";
 export const dynamic = "force-dynamic";
 
 interface Props {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; min?: string; max?: string }>;
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
@@ -19,12 +19,16 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   };
 }
 
-async function searchProducts(query: string): Promise<Product[]> {
-  if (!query.trim()) return [];
+async function searchProducts(query: string, min?: number, max?: number): Promise<Product[]> {
+  if (!query.trim() && !min && !max) return [];
   const safe = query.replace(/"/g, '\\"');
+  const filters: string[] = ["is_active=true"];
+  if (safe) filters.push(`(name~"${safe}" || short_description~"${safe}")`);
+  if (min) filters.push(`price>=${min}`);
+  if (max) filters.push(`price<=${max}`);
   try {
     const res = await pb.collection("products").getList<Product>(1, 48, {
-      filter: `(name~"${safe}" || short_description~"${safe}") && is_active=true`,
+      filter: filters.join(" && "),
       sort: "-is_best_seller,-created",
     });
     return res.items;
@@ -34,8 +38,10 @@ async function searchProducts(query: string): Promise<Product[]> {
 }
 
 export default async function SearchPage({ searchParams }: Props) {
-  const { q = "" } = await searchParams;
-  const results = await searchProducts(q);
+  const { q = "", min, max } = await searchParams;
+  const minPrice = min ? parseInt(min) : undefined;
+  const maxPrice = max ? parseInt(max) : undefined;
+  const results = await searchProducts(q, minPrice, maxPrice);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">

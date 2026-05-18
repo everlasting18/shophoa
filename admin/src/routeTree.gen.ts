@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AuthIndexRouteImport } from './routes/_auth/index'
+import { Route as AuthShippingRouteImport } from './routes/_auth/shipping'
 import { Route as AuthSettingsRouteImport } from './routes/_auth/settings'
 import { Route as AuthCategoriesRouteImport } from './routes/_auth/categories'
 import { Route as AuthBannersRouteImport } from './routes/_auth/banners'
@@ -32,6 +33,11 @@ const AuthRoute = AuthRouteImport.update({
 const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthShippingRoute = AuthShippingRouteImport.update({
+  id: '/shipping',
+  path: '/shipping',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthSettingsRoute = AuthSettingsRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/banners': typeof AuthBannersRoute
   '/categories': typeof AuthCategoriesRoute
   '/settings': typeof AuthSettingsRoute
+  '/shipping': typeof AuthShippingRoute
   '/orders/$id': typeof AuthOrdersIdRoute
   '/products/$id': typeof AuthProductsIdRoute
   '/orders/': typeof AuthOrdersIndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/banners': typeof AuthBannersRoute
   '/categories': typeof AuthCategoriesRoute
   '/settings': typeof AuthSettingsRoute
+  '/shipping': typeof AuthShippingRoute
   '/': typeof AuthIndexRoute
   '/orders/$id': typeof AuthOrdersIdRoute
   '/products/$id': typeof AuthProductsIdRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/_auth/banners': typeof AuthBannersRoute
   '/_auth/categories': typeof AuthCategoriesRoute
   '/_auth/settings': typeof AuthSettingsRoute
+  '/_auth/shipping': typeof AuthShippingRoute
   '/_auth/': typeof AuthIndexRoute
   '/_auth/orders/$id': typeof AuthOrdersIdRoute
   '/_auth/products/$id': typeof AuthProductsIdRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
     | '/banners'
     | '/categories'
     | '/settings'
+    | '/shipping'
     | '/orders/$id'
     | '/products/$id'
     | '/orders/'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
     | '/banners'
     | '/categories'
     | '/settings'
+    | '/shipping'
     | '/'
     | '/orders/$id'
     | '/products/$id'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/_auth/banners'
     | '/_auth/categories'
     | '/_auth/settings'
+    | '/_auth/shipping'
     | '/_auth/'
     | '/_auth/orders/$id'
     | '/_auth/products/$id'
@@ -168,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/shipping': {
+      id: '/_auth/shipping'
+      path: '/shipping'
+      fullPath: '/shipping'
+      preLoaderRoute: typeof AuthShippingRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/settings': {
@@ -226,6 +245,7 @@ interface AuthRouteChildren {
   AuthBannersRoute: typeof AuthBannersRoute
   AuthCategoriesRoute: typeof AuthCategoriesRoute
   AuthSettingsRoute: typeof AuthSettingsRoute
+  AuthShippingRoute: typeof AuthShippingRoute
   AuthIndexRoute: typeof AuthIndexRoute
   AuthOrdersIdRoute: typeof AuthOrdersIdRoute
   AuthProductsIdRoute: typeof AuthProductsIdRoute
@@ -237,6 +257,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthBannersRoute: AuthBannersRoute,
   AuthCategoriesRoute: AuthCategoriesRoute,
   AuthSettingsRoute: AuthSettingsRoute,
+  AuthShippingRoute: AuthShippingRoute,
   AuthIndexRoute: AuthIndexRoute,
   AuthOrdersIdRoute: AuthOrdersIdRoute,
   AuthProductsIdRoute: AuthProductsIdRoute,

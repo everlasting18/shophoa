@@ -14,7 +14,8 @@ export const Route = createFileRoute("/_auth/settings")({
 const SETTING_LABELS: Record<string, string> = {
   phone: "Số điện thoại",
   hotline_display: "Hotline hiển thị",
-  zalo: "Link Zalo",
+  zalo: "Link Zalo cá nhân",
+  zalo_group: "Link nhóm Zalo (Báo giá)",
   email: "Email",
   address_1: "Địa chỉ 1",
   address_2: "Địa chỉ 2",

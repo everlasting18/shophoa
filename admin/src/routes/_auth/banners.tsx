@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useAuthStore } from "@/stores/auth";
 import { useState } from "react";
-import { Plus, Trash2, Upload, GripVertical, Check } from "lucide-react";
+import { Plus, Trash2, Upload, GripVertical, Check, Pencil, X } from "lucide-react";
 import {
   DndContext, closestCenter, PointerSensor, KeyboardSensor,
   useSensor, useSensors, DragOverlay,
@@ -12,7 +12,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useBanners, useCreateBanner, useToggleBannerActive, useDeleteBanner, useReorderBanners } from "@/features/banners/api";
+import { useBanners, useCreateBanner, useUpdateBanner, useToggleBannerActive, useDeleteBanner, useReorderBanners } from "@/features/banners/api";
 import { getImageUrl } from "@/lib/media";
 import type { Banner } from "@/schema/pocketbase";
 
@@ -28,14 +28,18 @@ const iCls = "w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg t
 function BannersPage() {
   const { data: banners = [], isLoading } = useBanners();
   const createBanner = useCreateBanner();
+  const updateBanner = useUpdateBanner();
   const toggleActive = useToggleBannerActive();
   const deleteBanner = useDeleteBanner();
   const reorder = useReorderBanners();
 
   const [showForm, setShowForm] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string>("");
   const [link, setLink] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editBanner, setEditBanner] = useState<Banner | null>(null);
+  const [editLink, setEditLink] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -63,9 +67,18 @@ function BannersPage() {
         onSuccess: () => {
           setShowForm(false);
           setFile(null);
+          setPreview("");
           setLink("");
         },
       }
+    );
+  }
+
+  function handleEditSave() {
+    if (!editBanner) return;
+    updateBanner.mutate(
+      { id: editBanner.id, link: editLink },
+      { onSuccess: () => setEditBanner(null) }
     );
   }
 
@@ -87,23 +100,75 @@ function BannersPage() {
       {showForm && (
         <form onSubmit={handleCreate} className="bg-stone-900 border border-rose-500/30 rounded-xl p-4 space-y-3">
           <p className="text-xs font-medium text-rose-400 uppercase tracking-wide">Upload banner mới</p>
-          <label className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg text-sm text-stone-300 cursor-pointer w-fit">
-            <Upload className="w-4 h-4" />
-            {file ? file.name : "Chọn ảnh *"}
-            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="hidden" required />
+          <label className="cursor-pointer block">
+            {preview ? (
+              <div className="relative w-full aspect-[16/5] rounded-lg overflow-hidden border border-stone-700 group">
+                <img src={preview} alt="" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="text-xs text-white flex items-center gap-1.5"><Upload className="w-4 h-4" /> Đổi ảnh</span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg text-sm text-stone-300 w-fit">
+                <Upload className="w-4 h-4" />
+                Chọn ảnh *
+              </div>
+            )}
+            <input type="file" accept="image/*" onChange={(e) => {
+              const f = e.target.files?.[0] ?? null;
+              setFile(f);
+              setPreview(f ? URL.createObjectURL(f) : "");
+            }} className="hidden" required />
           </label>
           <div>
             <label className="text-xs text-stone-400 mb-1 block">Link đến (tuỳ chọn)</label>
             <input value={link} onChange={(e) => setLink(e.target.value)} className={iCls} placeholder="Mặc định: trang chủ" />
           </div>
-          <button
-            type="submit"
-            disabled={createBanner.isPending || !file}
-            className="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white text-sm rounded-lg transition-colors disabled:opacity-60"
-          >
-            {createBanner.isPending ? "Đang upload..." : "Tạo banner"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={createBanner.isPending || !file}
+              className="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white text-sm rounded-lg transition-colors disabled:opacity-60"
+            >
+              {createBanner.isPending ? "Đang upload..." : "Tạo banner"}
+            </button>
+            <button type="button" onClick={() => { setShowForm(false); setFile(null); setPreview(""); setLink(""); }}
+              className="px-4 py-2 text-sm text-stone-400 hover:text-white transition-colors">
+              Huỷ
+            </button>
+          </div>
         </form>
+      )}
+
+      {/* Edit link modal */}
+      {editBanner && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div className="bg-stone-950 border border-stone-800 rounded-xl w-full max-w-sm">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-stone-800">
+              <h3 className="text-white text-sm font-semibold">Chỉnh sửa link</h3>
+              <button onClick={() => setEditBanner(null)} className="text-stone-500 hover:text-white transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="w-full h-28 rounded-lg overflow-hidden bg-stone-800">
+                <img src={getImageUrl(editBanner.collectionId, editBanner.id, editBanner.image)} alt="" className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <label className="text-[11px] text-stone-500 mb-1.5 block">Link đến (tuỳ chọn)</label>
+                <input value={editLink} onChange={(e) => setEditLink(e.target.value)}
+                  className={iCls} placeholder="Mặc định: trang chủ" />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end px-5 py-3 border-t border-stone-800 bg-stone-900/50">
+              <button onClick={() => setEditBanner(null)} className="px-3 py-1.5 text-xs text-stone-400 hover:text-white transition-colors">Huỷ</button>
+              <button onClick={handleEditSave} disabled={updateBanner.isPending}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-60">
+                <Check className="w-3.5 h-3.5" /> {updateBanner.isPending ? "Đang lưu..." : "Lưu"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {deleteId && (
@@ -156,6 +221,7 @@ function BannersPage() {
                     idx={idx}
                     isDragging={activeId === banner.id}
                     onToggle={() => toggleActive.mutate({ id: banner.id, is_active: !banner.is_active })}
+                    onEdit={() => { setEditBanner(banner); setEditLink(banner.link || ""); }}
                     onDelete={() => setDeleteId(banner.id)}
                   />
                 ))}
@@ -171,9 +237,9 @@ function BannersPage() {
   );
 }
 
-function SortableBannerItem({ banner, idx, isDragging, onToggle, onDelete }: {
+function SortableBannerItem({ banner, idx, isDragging, onToggle, onEdit, onDelete }: {
   banner: Banner; idx: number; isDragging: boolean;
-  onToggle: () => void; onDelete: () => void;
+  onToggle: () => void; onEdit: () => void; onDelete: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: banner.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -213,6 +279,12 @@ function SortableBannerItem({ banner, idx, isDragging, onToggle, onDelete }: {
           }`}
         >
           {banner.is_active ? "Hiển thị" : "Ẩn"}
+        </button>
+        <button
+          onClick={onEdit}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-stone-400 bg-stone-800 hover:text-white hover:bg-stone-700 border border-stone-700 transition-colors"
+        >
+          <Pencil className="w-3.5 h-3.5" /> Sửa
         </button>
         <button
           onClick={onDelete}

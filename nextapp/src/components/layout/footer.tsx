@@ -42,151 +42,72 @@ export default async function Footer() {
     <footer className="relative bg-gradient-to-b from-[#4d5c43] to-[#2e3d27] text-white/80 overflow-hidden">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
 
-      <div className="container relative mx-auto px-4 pt-10 pb-6">
+      <div className="container relative mx-auto px-4 pt-12 pb-6">
 
-        {/* Mobile: logo + tagline + social */}
-        <div className="flex flex-col items-center text-center mb-8 lg:hidden">
-          <Link href="/" className="inline-block mb-3">
-            <img src="/images/LOGO2.png" alt={SITE_NAME} className="h-10 w-auto object-contain opacity-90" />
-          </Link>
-          <p className="text-xs text-white/50 mb-4 max-w-xs leading-relaxed">
-            Shop hoa tươi TPHCM – giao hoa nhanh trong ngày, mẫu đa dạng.
-          </p>
-          <div className="flex gap-2.5 mb-6">
-            {socialLinks.map((s) => (
-              <a
-                key={s.label}
-                href={s.label === "Zalo" ? contact.zalo : s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                className="w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all"
-              >
-                {s.icon}
-              </a>
-            ))}
+        {/* Brand — full width on mobile, 1/3 on desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-10 mb-10">
+          <div className="col-span-2 md:col-span-1 mb-2 md:mb-0">
+            <Link href="/" className="inline-block mb-4">
+              <img src="/images/LOGO2.png" alt={SITE_NAME} className="h-11 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
+            </Link>
+            <p className="text-sm text-white/55 leading-relaxed mb-5 max-w-sm">
+              Shop hoa tươi TPHCM, giao hoa nhanh trong ngày, mẫu mã đa dạng, giá cả phải chăng.
+            </p>
+            <div className="flex gap-2.5">
+              {socialLinks.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.label === "Zalo" ? contact.zalo : s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  className="w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all"
+                >
+                  {s.icon}
+                </a>
+              ))}
+            </div>
           </div>
 
-          {/* Mobile contact pills */}
-          <div className="flex flex-wrap justify-center gap-2 w-full">
-            <a href={`tel:${contact.phone}`}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-xs text-white/80 hover:bg-white/20 transition-all">
-              <Phone className="w-3.5 h-3.5 text-[#abb487]" />
-              {contact.phoneDisplay}
-            </a>
-            <a href={contact.zalo} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-xs text-white/80 hover:bg-white/20 transition-all">
-              <span className="text-[#abb487] text-xs font-bold">Z</span>
-              Zalo
-            </a>
-            <span className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-xs text-white/60">
-              <Clock className="w-3.5 h-3.5 text-[#abb487]" />
-              {contact.openingHours}
-            </span>
-          </div>
-        </div>
-
-        {/* Mobile: 2-col links */}
-        <div className="grid grid-cols-2 gap-6 mb-8 lg:hidden">
+          {/* Danh mục */}
           <div>
-            <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">Danh Mục</h3>
-            <ul className="space-y-2">
+            <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">Danh Mục</h3>
+            <ul className="space-y-2.5">
               {NAV_ITEMS.slice(0, 6).map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-xs text-white/55 hover:text-white transition-colors">
+                  <Link href={item.href} className="text-sm text-white/55 hover:text-white transition-colors">
                     {item.label}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
-          <div>
-            <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">Hỗ Trợ</h3>
-            <ul className="space-y-2">
-              {[
-                { label: `Về ${SITE_NAME}`, href: "/gioi-thieu" },
-                { label: "Chính sách bảo mật", href: "/chinh-sach-bao-mat" },
-                { label: "Chính sách giao hàng", href: "/chinh-sach-giao-hang" },
-                { label: "Chính sách đổi trả", href: "/chinh-sach-doi-tra" },
-                { label: "Liên hệ", href: "/lien-he" },
-              ].map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="text-xs text-white/55 hover:text-white transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
 
-        {/* Desktop layout */}
-        <div className="hidden lg:grid lg:grid-cols-12 gap-10 mb-12">
-          <div className="lg:col-span-4">
-            <Link href="/" className="inline-block mb-5">
-              <img src="/images/LOGO2.png" alt={SITE_NAME} className="h-12 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
-            </Link>
-            <p className="text-sm leading-relaxed text-white/60 mb-5 max-w-sm">
-              Shop hoa tươi TPHCM, giao hoa nhanh trong ngày, mẫu mã đa dạng, giá cả phải chăng.
-            </p>
-            <div className="flex gap-2.5">
-              {socialLinks.map((s) => (
-                <a key={s.label} href={s.label === "Zalo" ? contact.zalo : s.href}
-                  target="_blank" rel="noopener noreferrer" aria-label={s.label}
-                  className="w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all">
-                  {s.icon}
-                </a>
-              ))}
-            </div>
-          </div>
-          <div className="lg:col-span-3">
-            <h3 className="font-heading font-semibold text-white mb-5 text-sm uppercase tracking-wider">Danh Mục</h3>
-            <ul className="space-y-2.5">
-              {NAV_ITEMS.slice(0, 6).map((item) => (
-                <li key={item.href}>
-                  <Link href={item.href} className="text-sm text-white/55 hover:text-white transition-colors">{item.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="lg:col-span-2">
-            <h3 className="font-heading font-semibold text-white mb-5 text-sm uppercase tracking-wider">Hỗ Trợ</h3>
-            <ul className="space-y-2.5">
-              {[
-                { label: `Về ${SITE_NAME}`, href: "/gioi-thieu" },
-                { label: "Chính sách bảo mật", href: "/chinh-sach-bao-mat" },
-                { label: "Chính sách giao hàng", href: "/chinh-sach-giao-hang" },
-                { label: "Chính sách đổi trả", href: "/chinh-sach-doi-tra" },
-                { label: "Liên hệ", href: "/lien-he" },
-              ].map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-white/55 hover:text-white transition-colors">{l.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="lg:col-span-3">
-            <h3 className="font-heading font-semibold text-white mb-5 text-sm uppercase tracking-wider">Liên Hệ</h3>
-            <ul className="space-y-3.5">
+          {/* Liên hệ */}
+          <div>
+            <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">Liên Hệ</h3>
+            <ul className="space-y-3">
               {contact.addresses.map((addr, i) => (
-                <li key={i} className="flex gap-2.5 text-sm text-white/60">
+                <li key={i} className="flex items-start gap-2.5 text-sm text-white/60">
                   <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-[#abb487]" />
                   <span>{addr}</span>
                 </li>
               ))}
               <li>
-                <a href={`tel:${contact.phone}`} className="flex gap-2.5 text-sm text-white/60 hover:text-white transition-colors">
+                <a href={`tel:${contact.phone}`} className="flex items-center gap-2.5 text-sm text-white/60 hover:text-white transition-colors">
                   <Phone className="w-4 h-4 shrink-0 text-[#abb487]" />
                   {contact.phoneDisplay}
                 </a>
               </li>
-              <li>
-                <a href={`mailto:${contact.email}`} className="flex gap-2.5 text-sm text-white/60 hover:text-white transition-colors">
-                  <Mail className="w-4 h-4 shrink-0 text-[#abb487]" />
-                  {contact.email}
-                </a>
-              </li>
-              <li className="flex gap-2.5 text-sm text-white/60">
+              {contact.email && (
+                <li>
+                  <a href={`mailto:${contact.email}`} className="flex items-center gap-2.5 text-sm text-white/60 hover:text-white transition-colors">
+                    <Mail className="w-4 h-4 shrink-0 text-[#abb487]" />
+                    {contact.email}
+                  </a>
+                </li>
+              )}
+              <li className="flex items-center gap-2.5 text-sm text-white/60">
                 <Clock className="w-4 h-4 shrink-0 text-[#abb487]" />
                 <span>{contact.openingHours}</span>
               </li>
@@ -197,9 +118,15 @@ export default async function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-white/10 pt-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-white/40">
           <p>© {new Date().getFullYear()} {SITE_NAME}. MST: 031541764</p>
-          <div className="flex items-center gap-1">
-            <Heart className="w-3 h-3 text-[#abb487]" />
-            <span>Công ty TNHH Thương Mại Dịch Vụ {SITE_NAME}</span>
+          <div className="flex items-center gap-3">
+            <Link href="/chinh-sach-bao-mat" className="hover:text-white/70 transition-colors">
+              Chính sách bảo mật
+            </Link>
+            <span className="text-white/20">·</span>
+            <div className="flex items-center gap-1.5">
+              <Heart className="w-3 h-3 text-[#abb487]" />
+              <span>Công ty TNHH Thương Mại Dịch Vụ {SITE_NAME}</span>
+            </div>
           </div>
         </div>
       </div>

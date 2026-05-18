@@ -24,21 +24,24 @@ Tạo file `.env.local` ở thư mục gốc:
 # Bắt buộc
 NEXT_PUBLIC_POCKETBASE_URL=https://your-pocketbase-url.com
 
-# Tuỳ chọn — thông báo đơn mới qua Discord
-DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
-
-# Tuỳ chọn — chống spam đơn hàng (Cloudflare Turnstile)
-# Dev: dùng test key bên dưới; Prod: dùng key thật từ Cloudflare dashboard
+# Chống spam đơn hàng (Cloudflare Turnstile)
+# Dev: dùng test key bên dưới; Prod: key thật từ Cloudflare dashboard
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 
-# Tuỳ chọn — Discord channel riêng nhận cảnh báo lỗi hệ thống
+# Thông báo đơn mới qua Discord (tuỳ chọn)
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 DISCORD_ERROR_WEBHOOK_URL=https://discord.com/api/webhooks/...
+
+# Thông báo đơn mới qua Lark (tuỳ chọn)
+LARK_WEBHOOK_URL=https://open.larksuite.com/open-apis/bot/v2/hook/...
+LARK_APP_ID=cli_xxx
+LARK_APP_SECRET=xxx
 ```
 
-> Nếu thiếu `DISCORD_WEBHOOK_URL`, khi có đơn mới: dev sẽ log ra terminal, production trả về 503 nhưng checkout vẫn hoạt động bình thường (fire-and-forget).
+> Có thể dùng Discord, Lark, hoặc cả hai song song. Nếu cả hai đều thiếu: dev log ra terminal, production trả 503 nhưng checkout vẫn hoạt động (notify là fire-and-forget).
 
-> Nếu thiếu `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, Turnstile widget không render và bước verify bị bỏ qua hoàn toàn — checkout vẫn hoạt động bình thường.
+> Nếu thiếu Turnstile key, widget không render và bước verify bị bỏ qua — checkout vẫn hoạt động bình thường.
 
 ---
 
@@ -61,7 +64,7 @@ npm run preview:cf   # Build + preview Cloudflare runtime local
 | Lớp | Công nghệ |
 |-----|-----------|
 | Framework | Next.js 16 (App Router, SSR/ISR) |
-| Styling | Tailwind CSS v4 + shadcn/ui |
+| Styling | Tailwind CSS v4 + shadcn/ui + @base-ui/react |
 | Backend / DB | PocketBase 0.26.8 |
 | State | Zustand 5 (cart, persist localStorage) |
 | Form | React Hook Form + Zod |
@@ -90,8 +93,11 @@ npm run preview:cf   # Build + preview Cloudflare runtime local
 API Routes:
 /api/navigation            Navigation tree từ PocketBase categories (GET)
 /api/settings              Cài đặt công khai từ PocketBase (GET)
+/api/shipping-zones        Danh sách zone + phí ship từ PocketBase (GET)
 /api/revalidate            Purge ISR cache theo path (POST)
-/api/notify/order          Gửi thông báo Discord khi có đơn mới (POST)
+/api/notify/order          Gửi thông báo Discord + Lark khi có đơn mới (POST)
+/api/verify-turnstile      Verify Cloudflare Turnstile token (POST)
+/api/alert-error           Forward lỗi client-side về Discord error channel (POST)
 ```
 
 ---
@@ -115,27 +121,30 @@ src/
 │   ├── home/                   # HeroBanner, CategoryGrid, ProductSection
 │   ├── product/                # ProductCard, ProductGrid, ProductGallery, PriceDisplay, AddToCartButton
 │   ├── checkout/               # ProgressSteps, CustomerForms, DeliveryTime, ShippingZones, OrderSummary
-│   ├── category/               # Pagination, SortSelect
+│   ├── category/               # Pagination, SortSelect, FilterSidebar
 │   ├── layout/                 # Header, Footer, SearchDialog, ZaloFloat
 │   └── ui/                     # Button, Badge, Toast, Dialog, Skeleton, Carousel...
 ├── services/
 │   ├── pocketbase.ts           # PocketBase singleton
 │   ├── navigation.ts           # Navigation tree (React cache)
 │   ├── settings.ts             # Site settings (React cache)
+│   ├── shipping.ts             # Shipping zones (React cache, fallback FALLBACK_ZONES)
 │   └── seo.ts                  # JSON-LD: LocalBusiness, Product, Breadcrumb, CategoryItemList
 ├── stores/
 │   └── cart-store.ts           # Zustand cart (persist key: vuonhoatuoi-cart)
 ├── config/
 │   ├── constants.ts            # SITE_NAME, CONTACT, NAV_ITEMS
-│   ├── shipping.ts             # SHIPPING_ZONES, DISTRICT_ZONE_MAP
-│   └── third-party.ts          # PB_URL, PHOTO_BASE, ZALO_PHONE, SITE_URL...
+│   ├── shipping.ts             # FALLBACK_ZONES, buildDistrictMap()
+│   └── third-party.ts          # PB_URL, PHOTO_BASE, SITE_URL...
 ├── hooks/
-│   ├── use-provinces.ts        # Lấy danh sách tỉnh/huyện từ Vietnam Provinces API
-│   └── use-settings.ts        # Fetch /api/settings từ client
+│   ├── use-provinces.ts        # Danh sách tỉnh/huyện từ Vietnam Provinces API
+│   └── use-settings.ts         # Fetch /api/settings từ client
 ├── lib/
 │   ├── media.ts                # getThumbUrl, getImageUrl (Cloudflare Image Resizing)
 │   ├── utils.ts                # formatPrice, cn
-│   └── date-utils.ts           # todayISO, isoToDisplay, shortDateISO
+│   ├── date-utils.ts           # todayISO, isoToDisplay, shortDateISO
+│   ├── notify-error.ts         # Gửi alert về Discord error channel (fire-and-forget)
+│   └── sanitize.ts             # sanitizeHtml, stripHtml
 └── schema/
     ├── pocketbase.ts           # TypeScript interfaces: Product, Category, Order, Banner, Settings
     ├── checkout.ts             # Zod schema cho checkout form
@@ -152,7 +161,8 @@ src/
 | `categories` | `name`, `slug`, `parent` (self-relation), `image`, `sort_order`, `is_active` |
 | `orders` | `order_code`, `customer_name/phone`, `recipient_name/phone/address`, `delivery_date/time`, `items` (JSON), `subtotal`, `total`, `note`, `status` (`pending`/`confirmed`/`cancelled`), `payment_method` |
 | `banners` | `image`, `link`, `sort_order`, `is_active` |
-| `settings` | `key` / `value` — lưu phone, địa chỉ, giờ mở cửa, ghi chú free shipping |
+| `settings` | `key` / `value` — phone, địa chỉ, giờ mở cửa, link Zalo, link nhóm Zalo báo giá |
+| `shipping_zones` | `name`, `districts[]`, `fee` — quản lý phí ship động từ admin |
 | `media` | `file` — ảnh upload từ rich editor trong admin |
 
 ### Occasions hợp lệ (field `occasions[]` trong products)
@@ -165,15 +175,17 @@ Sự kiện, Chúc mừng, Valentine, 8/3, 20/10, 20/11
 
 ## Luồng Checkout
 
-1. Giỏ hàng lưu trong Zustand (persist localStorage)
+1. Giỏ hàng lưu trong Zustand (persist localStorage, key `vuonhoatuoi-cart`)
 2. Trang `/dat-hoa` là một client component duy nhất (không có step routing)
-3. Form tự động lưu vào `sessionStorage` mỗi 500ms (tránh mất dữ liệu khi back)
-4. Chọn tỉnh → quận: `DISTRICT_ZONE_MAP` tự tính phí ship theo zone
-5. **Turnstile verify** (nếu có key): gọi `POST /api/verify-turnstile` với token — Cloudflare xác nhận người thật; nếu fail thì dừng, không tạo đơn
-6. Submit: tạo record `orders` trực tiếp qua PocketBase SDK, sau đó fire-and-forget `POST /api/notify/order` để gửi Discord
-7. Redirect đến `/dat-hoa/cam-on?code=<orderCode>`
+3. Khi mount: fetch `GET /api/shipping-zones` để lấy danh sách zone + phí ship động từ PocketBase, fallback về `FALLBACK_ZONES` nếu PocketBase không phản hồi
+4. Form tự động lưu vào `sessionStorage` mỗi 500ms (tránh mất dữ liệu khi back)
+5. Chọn tỉnh → quận: `buildDistrictMap(zones)` tự map quận vào zone index, tính phí ship tự động
+6. **Turnstile verify** (nếu có key): gọi `POST /api/verify-turnstile { token }` — nếu fail thì dừng, không tạo đơn
+7. Submit: tạo record `orders` trực tiếp qua PocketBase SDK
+8. Fire-and-forget `POST /api/notify/order` → gửi thông báo song song tới Discord + Lark
+9. Redirect đến `/dat-hoa/cam-on?code=<orderCode>`, xoá giỏ hàng
 
-### Phí giao hàng theo khu vực (TPHCM)
+### Phí giao hàng (mặc định, có thể cấu hình trong admin)
 
 | Khu vực | Phí |
 |---------|-----|
@@ -187,133 +199,152 @@ Sự kiện, Chúc mừng, Valentine, 8/3, 20/10, 20/11
 
 ---
 
+## Thông Báo Đơn Hàng
+
+Khi có đơn mới, `POST /api/notify/order` gửi song song tới Discord và Lark (nếu được cấu hình). Checkout không bị ảnh hưởng nếu webhook fail.
+
+### Discord
+
+Mỗi đơn gửi thành một embed chính (thông tin đơn) + các embed phụ (một embed per sản phẩm, có thumbnail).
+
+- Retry tối đa 3 lần với exponential backoff (1s, 2s)
+- Tôn trọng header `Retry-After` khi bị rate limit 429
+- Nếu fail hoàn toàn: gửi alert về `DISCORD_ERROR_WEBHOOK_URL`
+
+**Setup:**
+1. Discord → server → channel → Edit Channel → Integrations → Webhooks → New Webhook → Copy URL
+2. Thêm vào env: `DISCORD_WEBHOOK_URL=<url>`
+
+### Lark
+
+Gửi Interactive Card với header đỏ, thông tin đơn in đậm, và ảnh thumbnail của mỗi sản phẩm nằm cạnh tên.
+
+Luồng gửi ảnh:
+1. Dùng `LARK_APP_ID` + `LARK_APP_SECRET` để lấy `tenant_access_token`
+2. Với mỗi sản phẩm: download ảnh từ CDN → upload lên Lark → nhận `img_key`
+3. Nhúng `img_key` vào card message, gửi qua webhook URL
+
+Nếu không có `LARK_APP_ID`/`LARK_APP_SECRET`, vẫn gửi được tin nhắn nhưng không có ảnh.
+
+**Setup Lark (từng bước):**
+
+**Bước 1 — Tạo Custom Bot (lấy webhook URL)**
+1. Mở Lark → vào group chat muốn nhận thông báo
+2. Settings → Bots → Add Bot → Custom Bot
+3. Đặt tên, upload icon → copy **Webhook URL**
+4. Thêm vào env: `LARK_WEBHOOK_URL=<url>`
+
+**Bước 2 — Tạo Lark App (để gửi ảnh)**
+1. Vào [open.larksuite.com](https://open.larksuite.com) → Developer Console → Create App → Custom App
+2. Credentials & Basic Info → copy **App ID** và **App Secret**
+3. Thêm vào env: `LARK_APP_ID=<id>` và `LARK_APP_SECRET=<secret>`
+
+**Bước 3 — Cấu hình app**
+1. **Add Features** → bật **Bot**
+2. **Permissions & Scopes** → thêm `im:resource` (Read and upload images or other files)
+3. **Version Management & Release** → Create Version → Submit for release → approve
+
+**Bước 4 — Cấp quyền cho tổ chức**
+1. Vào Lark Admin Console (admin.larksuite.com) → Apps → tìm app → Enable
+
+---
+
 ## Chống Spam — Cloudflare Turnstile
 
-Widget Turnstile nhúng vào form `/dat-hoa`, hiện checkbox "Verify you are human" trước khi submit.
+Widget Turnstile nhúng vào form `/dat-hoa`, Managed mode (tự động hoặc challenge tùy rủi ro).
 
-### Cách hoạt động
+1. Widget load ngầm, Cloudflare phân tích browser fingerprint
+2. User pass (tự động hoặc click challenge) → Turnstile trả token
+3. Submit form: `POST /api/verify-turnstile { token }` → server verify với Cloudflare
+4. Pass → tạo đơn; Fail → báo lỗi, không tạo đơn
 
-1. Widget load ngầm khi user vào trang, Cloudflare phân tích browser fingerprint + hành vi
-2. User verify (click checkbox hoặc tự động pass) → Turnstile trả về token
-3. Khi submit form: `POST /api/verify-turnstile { token }` → server verify với Cloudflare
-4. Nếu pass → tạo đơn bình thường; nếu fail → báo lỗi, không tạo đơn
-
-### Keys
-
-| Môi trường | Cách lấy key |
+| Môi trường | Key |
 |---|---|
-| Dev | Dùng test key `1x00000000000000000000AA` — luôn pass, không cần domain |
-| Prod | Tạo widget tại Cloudflare Dashboard → Turnstile, chọn **Invisible** mode |
-
-Test key đặc biệt: `2x00000000000000000000AB` (luôn fail) để kiểm tra luồng bị chặn.
-
-### Deploy Cloudflare Pages
-
-Thêm 2 biến vào **Settings → Environment variables**:
-- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` — site key từ Cloudflare dashboard
-- `TURNSTILE_SECRET_KEY` — secret key từ Cloudflare dashboard
+| Dev (luôn pass) | `1x00000000000000000000AA` |
+| Dev (luôn fail) | `2x00000000000000000000AB` |
+| Prod | Tạo tại Cloudflare Dashboard → Turnstile → chọn **Invisible** mode |
 
 ---
 
 ## Giám Sát Lỗi
 
-### Discord Error Alerts
+`src/lib/notify-error.ts` gửi embed đỏ về `DISCORD_ERROR_WEBHOOK_URL` khi có lỗi hệ thống. No-op nếu không set env var.
 
-`src/lib/notify-error.ts` — utility gửi cảnh báo về Discord channel riêng khi có lỗi hệ thống.
-
-**Các điểm được monitor:**
-
-| Lỗi | Trigger |
+| Trigger | Lỗi |
 |---|---|
-| Discord order webhook fail sau 3 retry | `POST /api/notify/order` |
-| PocketBase không tạo được đơn hàng | `src/app/dat-hoa/page.tsx` → `POST /api/alert-error` |
-
-Nếu không set `DISCORD_ERROR_WEBHOOK_URL` → tất cả alert là no-op, không ảnh hưởng hệ thống.
-
-**Setup:**
-1. Discord → channel `#lỗi-hệ-thống` → Edit Channel → Integrations → Webhooks → New Webhook → Copy URL
-2. Thêm vào env: `DISCORD_ERROR_WEBHOOK_URL=<url>`
-
-**Test:**
-- Đổi `DISCORD_WEBHOOK_URL` thành URL sai → đặt hàng → sau 3 retry sẽ nhận alert đỏ trong channel error
-- Hoặc dùng test key đặc biệt `2x00000000000000000000AB` cho Turnstile để test luồng bị block
-
-### Uptime Monitoring
-
-**UptimeRobot** (uptimerobot.com, free) — ping `https://vuonhoatuoi.vn` mỗi 5 phút, gửi email khi down.
-
-### Cloudflare Notifications
-
-Vào Cloudflare Dashboard → Notifications → Add:
-- **Pages — Project deploy failure** → email khi deploy fail
-- **Workers & Pages — Workers usage** → email khi error rate > 5%
+| `POST /api/notify/order` | Discord webhook fail sau 3 retry |
+| `POST /api/alert-error` | PocketBase không tạo được đơn hàng (từ client) |
 
 ---
 
 ## Media & Ảnh
 
-`src/lib/media.ts` xử lý URL ảnh tự động:
+`src/lib/media.ts`:
 - **Dev**: `PHOTO_BASE/{collectionId}/{recordId}/{filename}`
-- **Prod**: `/cdn-cgi/image/format=auto,width=N/{url}` — Cloudflare Image Resizing resize tự động
-- `getThumbUrl(...)` — thumbnail nhỏ, fallback về ảnh hoa Unsplash nếu không có thumbnail
+- **Prod**: `/cdn-cgi/image/format=auto,width=N/{url}` — Cloudflare Image Resizing
+- `getThumbUrl(...)` — thumbnail, fallback về ảnh hoa Unsplash nếu không có thumbnail (deterministic từ `recordId`)
 - `getImageUrl(...)` — ảnh full size
 
-`PHOTO_BASE = https://photo.fitchy.shop` — CDN proxy cho file PocketBase.
+`PHOTO_BASE = https://photo.fitchy.shop` — CDN proxy cho PocketBase files.
 
 ---
 
 ## SEO
 
 - Mỗi trang server có `export const metadata` riêng (title, description, canonical, OG, Twitter)
-- JSON-LD được inject trực tiếp trong RSC: `LocalBusiness` (trang chủ), `Product` (chi tiết SP), `BreadcrumbList`, `ItemList` (danh mục)
-- `src/app/sitemap.ts` — dynamic sitemap lấy từ PocketBase (tất cả sản phẩm + danh mục active)
-- `/gio-hang` và `/dat-hoa` có `layout.tsx` riêng với `robots: { index: false }`
+- JSON-LD trong RSC: `LocalBusiness` (trang chủ), `Product` (chi tiết SP), `BreadcrumbList`, `ItemList` (danh mục)
+- `src/app/sitemap.ts` — dynamic sitemap từ PocketBase (sản phẩm + danh mục active)
+- `/gio-hang` và `/dat-hoa` có `layout.tsx` với `robots: { index: false }`
 
 ---
 
 ## Cache & Revalidation
 
-- Các trang dùng `export const revalidate = 3600` (ISR 1 tiếng)
-- Khi admin thay đổi sản phẩm/danh mục, admin SPA gọi `POST /api/revalidate { path }` để purge ngay
-- Cloudflare edge cache: `public/_headers` set `Cache-Control: s-maxage=...` cho static assets
+- Các trang ISR dùng `export const revalidate = 3600` (1 tiếng)
+- Admin SPA gọi `POST /api/revalidate { path }` sau mỗi mutation để purge Cloudflare edge cache ngay lập tức
+- `public/_headers` set `Cache-Control: s-maxage=...` cho static assets
 
 ---
 
-## Tuỳ chỉnh giao diện
+## Tuỳ chỉnh
 
-| Thứ muốn đổi | Chỗ chỉnh |
-|---|---|
-| Màu sắc chủ đạo | `src/app/globals.css` → `:root` CSS variables (`--primary`, `--background`...) |
-| Font chữ | `src/app/layout.tsx` → thay `Baloo_2` bằng font khác từ `next/font/google` |
-| Tên shop, liên hệ | `src/config/constants.ts` → `SITE_NAME`, `CONTACT` |
-| Menu điều hướng | `src/config/constants.ts` → `NAV_ITEMS` |
-| Phí ship / khu vực | `src/config/shipping.ts` → `SHIPPING_ZONES`, `DISTRICT_ZONE_MAP` |
+| Muốn đổi | File | Chỗ cụ thể |
+|---|---|---|
+| Màu sắc chủ đạo | `src/app/globals.css` | `:root` CSS variables (`--primary`, `--background`...) |
+| Font chữ | `src/app/layout.tsx` | Thay `Baloo_2` bằng font khác từ `next/font/google` |
+| Tên shop, liên hệ | `src/config/constants.ts` | `SITE_NAME`, `CONTACT` |
+| Menu điều hướng | `src/config/constants.ts` | `NAV_ITEMS` |
+| Phí ship mặc định | `src/config/shipping.ts` | `FALLBACK_ZONES` |
+| Phí ship động | Admin → Settings | Quản lý `shipping_zones` trong PocketBase qua admin |
 
 ---
 
 ## Deploy lên Cloudflare Pages
 
-### Lần đầu
-
 ```bash
+# Lần đầu
 npx wrangler login
 npm run deploy:cf
-```
 
-### Các lần sau
-
-```bash
+# Các lần sau
 npm run deploy:cf
 ```
 
-### Env vars trên Cloudflare
+**Env vars trên Cloudflare** (Settings → Environment variables):
 
-Vào **Cloudflare Dashboard → Pages → shophoa → Settings → Environment variables**, thêm:
-- `NEXT_PUBLIC_POCKETBASE_URL` — bắt buộc
-- `DISCORD_WEBHOOK_URL` — tuỳ chọn
+| Biến | Bắt buộc |
+|---|---|
+| `NEXT_PUBLIC_POCKETBASE_URL` | ✅ |
+| `DISCORD_WEBHOOK_URL` | Tuỳ chọn |
+| `DISCORD_ERROR_WEBHOOK_URL` | Tuỳ chọn |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Tuỳ chọn |
+| `TURNSTILE_SECRET_KEY` | Tuỳ chọn |
+| `LARK_WEBHOOK_URL` | Tuỳ chọn |
+| `LARK_APP_ID` | Tuỳ chọn |
+| `LARK_APP_SECRET` | Tuỳ chọn |
 
-### Ghi chú kỹ thuật
-
-- Dùng `@opennextjs/cloudflare` (OpenNext) để wrap Next.js chạy trên Cloudflare Workers
-- `open-next.config.ts`: `incrementalCache: "dummy"` — không dùng KV, dựa hoàn toàn vào Cloudflare edge cache + ISR revalidate theo request
+**Ghi chú kỹ thuật:**
+- Dùng `@opennextjs/cloudflare` (OpenNext) để chạy Next.js trên Cloudflare Workers
+- `open-next.config.ts`: `incrementalCache: "dummy"` — không dùng KV, dựa vào Cloudflare edge cache
 - `wrangler.toml`: project `shophoa`, `compatibility_flags: ["nodejs_compat"]`
+- `public/_routes.json` loại trừ static paths khỏi Worker để tăng hiệu suất

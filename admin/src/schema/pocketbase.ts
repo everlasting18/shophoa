@@ -83,3 +83,11 @@ export interface Settings {
   key: string;
   value: string;
 }
+
+export interface ShippingZone {
+  id: string;
+  label: string;
+  fee: number;
+  districts: string[];
+  sort_order: number;
+}

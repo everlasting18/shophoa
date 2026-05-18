@@ -1,7 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import {
   LayoutDashboard, ShoppingBag, Package,
-  FolderOpen, Image, Settings, LogOut, LayoutGrid, X, ChevronLeft,
+  FolderOpen, Image, Settings, LogOut, LayoutGrid, X, ChevronLeft, Truck,
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -25,6 +25,7 @@ const SIDEBAR_NAV: NavItem[] = [
   { to: "/products",   label: "Sản phẩm",   icon: Package },
   { to: "/categories", label: "Danh mục",   icon: FolderOpen, ownerOnly: true },
   { to: "/banners",    label: "Banners",     icon: Image,      ownerOnly: true },
+  { to: "/shipping",   label: "Phí ship",   icon: Truck,      ownerOnly: true },
   { to: "/settings",   label: "Cài đặt",    icon: Settings,   ownerOnly: true },
 ];
 
@@ -37,6 +38,7 @@ const BOTTOM_TABS: NavItem[] = [
 const MORE_ITEMS: NavItem[] = [
   { to: "/categories", label: "Danh mục", icon: FolderOpen, ownerOnly: true },
   { to: "/banners",    label: "Banners",  icon: Image,      ownerOnly: true },
+  { to: "/shipping",   label: "Phí ship", icon: Truck,      ownerOnly: true },
   { to: "/settings",   label: "Cài đặt", icon: Settings,   ownerOnly: true },
 ];
 
@@ -60,6 +62,7 @@ const MOBILE_TITLES: Record<string, string> = {
   "/products": "Sản phẩm",
   "/categories": "Danh mục",
   "/banners": "Banners",
+  "/shipping": "Phí ship",
   "/settings": "Cài đặt",
 };
 
@@ -202,13 +205,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             ))}
 
             {/* More tab — owner only */}
-            {isOwner && (
+            {isOwner ? (
               <button
                 onClick={() => setMoreOpen(true)}
                 className="flex-1 flex flex-col items-center justify-center gap-1 text-stone-500 hover:text-stone-300 transition-colors"
               >
                 <LayoutGrid className="w-[22px] h-[22px]" />
                 <span className="text-[10px] font-medium leading-none">Thêm</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleLogout}
+                className="flex-1 flex flex-col items-center justify-center gap-1 text-stone-500 hover:text-red-400 transition-colors"
+              >
+                <LogOut className="w-[22px] h-[22px]" />
+                <span className="text-[10px] font-medium leading-none">Đăng xuất</span>
               </button>
             )}
           </div>

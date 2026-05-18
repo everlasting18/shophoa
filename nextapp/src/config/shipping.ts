@@ -1,3 +1,5 @@
+import type { ShippingZone } from "@/schema/pocketbase";
+
 export const DISTRICT_ZONE_MAP: Record<string, number> = {
   "Quận 1": 0, "Quận 3": 0, "Quận 5": 0, "Quận 10": 0,
   "Quận 4": 1, "Quận Phú Nhuận": 1,
@@ -20,3 +22,21 @@ export const SHIPPING_ZONES = [
 ];
 
 export const DAY_NAMES = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+
+export const FALLBACK_ZONES: ShippingZone[] = SHIPPING_ZONES.map((z, i) => ({
+  id: String(i),
+  label: z.label,
+  fee: z.fee,
+  sort_order: i,
+  districts: Object.entries(DISTRICT_ZONE_MAP)
+    .filter(([, zoneIdx]) => zoneIdx === i)
+    .map(([name]) => name),
+}));
+
+export function buildDistrictMap(zones: ShippingZone[]): Record<string, number> {
+  const map: Record<string, number> = {};
+  zones.forEach((zone, idx) => {
+    (zone.districts ?? []).forEach((d) => { map[d] = idx; });
+  });
+  return map;
+}

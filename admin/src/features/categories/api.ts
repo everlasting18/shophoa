@@ -24,7 +24,7 @@ export function useCategories() {
 export function useSaveCategory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string | null; data: object }) =>
+    mutationFn: ({ id, data }: { id: string | null; data: FormData }) =>
       id
         ? pb.collection("categories").update<Category>(id, data)
         : pb.collection("categories").create<Category>(data),

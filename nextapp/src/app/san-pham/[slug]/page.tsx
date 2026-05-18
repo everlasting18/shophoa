@@ -9,6 +9,7 @@ import ProductGrid from "@/components/product/product-grid";
 import PriceDisplay from "@/components/product/price-display";
 import { productSchema, breadcrumbSchema } from "@/services/seo";
 import { getImageUrl } from "@/lib/media";
+import { sanitizeHtml, stripHtml } from "@/lib/sanitize";
 import { SITE_NAME, CONTACT } from "@/config";
 import { Home, ChevronRight, Truck, ShieldCheck, Gift, Clock, Phone } from "lucide-react";
 
@@ -32,8 +33,9 @@ async function getProduct(slug: string): Promise<Product | null> {
 async function getRelated(product: Product): Promise<Product[]> {
   try {
     if (!product.categories?.length) return [];
+    const catFilter = product.categories.map((id) => `categories ~ "${id}"`).join(" || ");
     const res = await pb.collection("products").getList<Product>(1, 8, {
-      filter: `categories ~ "${product.categories[0]}" && id != "${product.id}" && is_active=true`,
+      filter: `(${catFilter}) && id != "${product.id}" && is_active=true`,
       sort: "-is_best_seller,-created",
     });
     return res.items;
@@ -48,7 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) return { title: "Không tìm thấy" };
 
   const title = `${product.name} | ${SITE_NAME}`;
-  const description = product.short_description || product.description;
+  const description = stripHtml(product.short_description || product.description || "");
   const image = product.thumbnail
     ? getImageUrl(product.collectionId, product.id, product.thumbnail)
     : undefined;
@@ -163,7 +165,7 @@ export default async function ProductDetailPage({ params }: Props) {
                   <Link
                     key={cat.id}
                     href={`/${cat.slug}`}
-                    className="text-[11px] px-2.5 py-1 rounded-full bg-accent text-primary/70 font-medium hover:text-primary transition-colors"
+                    className="text-[11px] px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-primary font-medium hover:bg-primary/10 hover:border-primary/50 transition-colors"
                   >
                     {cat.name}
                   </Link>
@@ -213,7 +215,7 @@ export default async function ProductDetailPage({ params }: Props) {
             {/* Trust badges */}
             <div className="grid grid-cols-2 gap-2.5 pt-1">
               {TRUST_BADGES.map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-xl px-3 py-2.5">
+                <div key={text} className="flex items-center gap-2 text-xs text-muted-foreground bg-background border border-border rounded-xl px-3 py-2.5">
                   <Icon className="w-3.5 h-3.5 text-primary shrink-0" />
                   <span>{text}</span>
                 </div>
@@ -246,7 +248,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 prose-p:text-foreground/75 prose-p:leading-relaxed
                 prose-img:rounded-xl prose-img:shadow-sm
                 prose-a:text-primary prose-a:no-underline hover:prose-a:underline"
-              dangerouslySetInnerHTML={{ __html: product.description }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
             />
           </div>
         )}

@@ -6,17 +6,19 @@ import type { UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-
 import type { CheckoutForm } from "@/schema";
 import InputIcon from "@/components/ui/input-icon";
 import { useProvinces } from "@/hooks/use-provinces";
-import { DISTRICT_ZONE_MAP, SHIPPING_ZONES } from "@/config";
 import { formatPrice } from "@/lib/utils";
+import type { ShippingZone } from "@/schema";
 
 interface Props {
   register: UseFormRegister<CheckoutForm>;
   setValue: UseFormSetValue<CheckoutForm>;
   watch: UseFormWatch<CheckoutForm>;
   isPickup: boolean;
+  zones: ShippingZone[];
+  districtZoneMap: Record<string, number>;
 }
 
-export default function AddressFields({ register, setValue, watch, isPickup }: Props) {
+export default function AddressFields({ register, setValue, watch, isPickup, zones, districtZoneMap }: Props) {
   const { districts, wards, fetchWards, loading, error } = useProvinces();
   const district = watch("recipientDistrict");
   const lastDistrict = useRef("");
@@ -34,8 +36,8 @@ export default function AddressFields({ register, setValue, watch, isPickup }: P
 
   if (isPickup) return null;
 
-  const mappedIdx = district ? DISTRICT_ZONE_MAP[district] : undefined;
-  const mappedZone = mappedIdx !== undefined ? SHIPPING_ZONES[mappedIdx] : null;
+  const mappedIdx = district ? districtZoneMap[district] : undefined;
+  const mappedZone = mappedIdx !== undefined ? zones[mappedIdx] : null;
 
   return (
     <div className="space-y-3">
@@ -53,7 +55,7 @@ export default function AddressFields({ register, setValue, watch, isPickup }: P
         />
       </InputIcon>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <InputIcon icon={<MapPin className="w-4 h-4" />}>
           <select
             {...register("recipientDistrict")}

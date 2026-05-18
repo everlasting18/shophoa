@@ -8,12 +8,7 @@ const BASE_URL = SITE_URL;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
-    { url: `${BASE_URL}/hoa-sinh-nhat`, changeFrequency: "daily", priority: 0.9 },
-    { url: `${BASE_URL}/hoa-khai-truong`, changeFrequency: "daily", priority: 0.9 },
-    { url: `${BASE_URL}/hoa-tot-nghiep`, changeFrequency: "daily", priority: 0.9 },
-    { url: `${BASE_URL}/bo-hoa-tuoi`, changeFrequency: "daily", priority: 0.9 },
-    { url: `${BASE_URL}/hop-hoa-mica`, changeFrequency: "daily", priority: 0.8 },
-    { url: `${BASE_URL}/hoa-tinh-yeu`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${BASE_URL}/san-pham`, changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE_URL}/lien-he`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/gioi-thieu`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/chinh-sach-bao-mat`, changeFrequency: "monthly", priority: 0.3 },

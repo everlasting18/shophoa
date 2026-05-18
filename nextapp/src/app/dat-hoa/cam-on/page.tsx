@@ -175,15 +175,6 @@ function ThanksContent() {
 
       {/* Actions */}
       <div className="space-y-2.5 pt-1">
-        <a
-          href={contact.zalo}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-full bg-[#0068FF] text-white font-semibold text-sm hover:bg-[#0055d4] transition-colors"
-        >
-          <MessageCircle className="w-4 h-4" />
-          Theo dõi qua Zalo
-        </a>
         <Link
           href="/"
           className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-full border border-border font-semibold text-sm hover:bg-muted transition-colors"

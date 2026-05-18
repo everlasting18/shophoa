@@ -78,7 +78,7 @@ function ProductFormPage() {
     data.append("name", form.name);
     data.append("slug", slug);
     data.append("price", form.price);
-    if (form.sale_price) data.append("sale_price", form.sale_price);
+    data.append("sale_price", form.sale_price || "0");
     data.append("short_description", form.short_description);
     data.append("description", form.description);
     data.append("is_featured", String(form.is_featured));
@@ -174,19 +174,35 @@ function ProductFormPage() {
               <div className="space-y-4">
                 <div>
                   <label className={lCls}>Danh mục</label>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {categories.map((c) => (
-                      <button key={c.id} type="button"
-                        onClick={() => setForm((f) => ({
+                  <div className="mt-1 space-y-2">
+                    {categories
+                      .filter((c) => !c.parent)
+                      .sort((a, b) => a.sort_order - b.sort_order)
+                      .map((parent) => {
+                        const children = categories.filter((c) => c.parent === parent.id).sort((a, b) => a.sort_order - b.sort_order);
+                        const toggleCat = (id: string) => setForm((f) => ({
                           ...f,
-                          categories: f.categories.includes(c.id)
-                            ? f.categories.filter((x) => x !== c.id)
-                            : [...f.categories, c.id],
-                        }))}
-                        className={tagCls(form.categories.includes(c.id))}>
-                        {c.name}
-                      </button>
-                    ))}
+                          categories: f.categories.includes(id)
+                            ? f.categories.filter((x) => x !== id)
+                            : [...f.categories, id],
+                        }));
+                        return (
+                          <div key={parent.id}>
+                            <button type="button" onClick={() => toggleCat(parent.id)} className={tagCls(form.categories.includes(parent.id))}>
+                              {parent.name}
+                            </button>
+                            {children.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-1.5 ml-3 pl-2 border-l border-stone-700">
+                                {children.map((child) => (
+                                  <button key={child.id} type="button" onClick={() => toggleCat(child.id)} className={tagCls(form.categories.includes(child.id))}>
+                                    {child.name}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
                 <div>

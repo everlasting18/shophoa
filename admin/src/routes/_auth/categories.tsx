@@ -1,7 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useAuthStore } from "@/stores/auth";
-import { useState, useMemo } from "react";
-import { Plus, Pencil, Trash2, Check, GripVertical, ChevronRight } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
+import { Plus, Pencil, Trash2, Check, GripVertical, ChevronRight, ImageIcon, X } from "lucide-react";
+import { getThumbUrl } from "@/lib/media";
 import {
   DndContext, closestCenter, PointerSensor, KeyboardSensor,
   useSensor, useSensors, DragOverlay,
@@ -37,8 +38,12 @@ function CategoriesPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteBlocked, setDeleteBlocked] = useState<string | null>(null);
   const [editing, setEditing] = useState<Category | null>(null);
   const [form, setForm] = useState({ name: "", is_active: true, parent: "" });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -61,22 +66,38 @@ function CategoriesPage() {
     return ids;
   }, [categories]);
 
-  function openCreate() { setForm({ name: "", is_active: true, parent: "" }); setEditing(null); setDialogOpen(true); }
-  function openEdit(cat: Category) { setForm({ name: cat.name, is_active: cat.is_active, parent: cat.parent || "" }); setEditing(cat); setDialogOpen(true); }
-  function closeDialog() { setDialogOpen(false); setEditing(null); }
+  function openCreate() {
+    setForm({ name: "", is_active: true, parent: "" });
+    setEditing(null);
+    setImageFile(null);
+    setImagePreview("");
+    setDialogOpen(true);
+  }
+  function openEdit(cat: Category) {
+    setForm({ name: cat.name, is_active: cat.is_active, parent: cat.parent || "" });
+    setEditing(cat);
+    setImageFile(null);
+    setImagePreview(cat.image ? getThumbUrl(cat.collectionId, cat.id, cat.image) : "");
+    setDialogOpen(true);
+  }
+  function closeDialog() { setDialogOpen(false); setEditing(null); setImageFile(null); setImagePreview(""); }
 
   function saveForm() {
     if (!form.name) return;
-    const slug = generateSlug(form.name);
+    const slug = editing ? editing.slug : generateSlug(form.name);
     let sort_order = editing ? editing.sort_order : 0;
     if (!editing) {
       const siblings = categories.filter((c) => c.parent === (form.parent || ""));
       sort_order = siblings.length > 0 ? Math.max(...siblings.map((s) => s.sort_order)) + 1 : 0;
     }
-    saveCategory.mutate(
-      { id: editing?.id ?? null, data: { name: form.name, slug, sort_order, is_active: form.is_active, parent: form.parent || "" } },
-      { onSuccess: closeDialog }
-    );
+    const fd = new FormData();
+    fd.append("name", form.name);
+    fd.append("slug", slug);
+    fd.append("sort_order", String(sort_order));
+    fd.append("is_active", String(form.is_active));
+    fd.append("parent", form.parent || "");
+    if (imageFile) fd.append("image", imageFile);
+    saveCategory.mutate({ id: editing?.id ?? null, data: fd }, { onSuccess: closeDialog });
   }
 
   function handleDragEnd({ active, over }: DragEndEvent) {
@@ -128,30 +149,68 @@ function CategoriesPage() {
       {/* Create/Edit dialog */}
       {dialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-          <div className="bg-stone-950 border border-stone-800 rounded-xl w-full max-w-md">
+          <div className="bg-stone-950 border border-stone-800 rounded-xl w-full max-w-lg">
             <div className="px-5 py-4 border-b border-stone-800">
               <h3 className="text-white text-sm font-semibold">{editing ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}</h3>
             </div>
-            <div className="p-5 space-y-3">
-              <div>
-                <label className="text-[11px] text-stone-500 mb-1.5 block">Tên *</label>
-                <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  className={iCls} placeholder="Hoa Sinh Nhật" />
+            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Left: fields */}
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[11px] text-stone-500 mb-1.5 block">Tên *</label>
+                  <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    className={iCls} placeholder="Hoa Sinh Nhật" />
+                </div>
+                <div>
+                  <label className="text-[11px] text-stone-500 mb-1.5 block">Danh mục cha</label>
+                  <select value={form.parent} onChange={(e) => setForm((f) => ({ ...f, parent: e.target.value }))} className={iCls}>
+                    <option value="">— Gốc —</option>
+                    {buildParentOptions().map((opt) => (
+                      <option key={opt.id} value={opt.id}>{opt.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer pt-1">
+                  <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
+                    className="w-4 h-4 rounded accent-rose-500" />
+                  <span className="text-sm text-stone-300">Hiển thị</span>
+                </label>
               </div>
+
+              {/* Right: image */}
               <div>
-                <label className="text-[11px] text-stone-500 mb-1.5 block">Danh mục cha</label>
-                <select value={form.parent} onChange={(e) => setForm((f) => ({ ...f, parent: e.target.value }))} className={iCls}>
-                  <option value="">— Gốc —</option>
-                  {buildParentOptions().map((opt) => (
-                    <option key={opt.id} value={opt.id}>{opt.name}</option>
-                  ))}
-                </select>
+                <label className="text-[11px] text-stone-500 mb-1.5 block">Ảnh danh mục</label>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setImageFile(file);
+                    setImagePreview(URL.createObjectURL(file));
+                  }}
+                />
+                {imagePreview ? (
+                  <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden border border-stone-700 group">
+                    <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <button type="button" onClick={() => fileInputRef.current?.click()}
+                        className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-xs rounded-lg transition-colors">
+                        Đổi ảnh
+                      </button>
+                      <button type="button"
+                        onClick={() => { setImageFile(null); setImagePreview(""); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                        className="p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => fileInputRef.current?.click()}
+                    className="w-full aspect-[4/3] border-2 border-dashed border-stone-700 hover:border-stone-500 rounded-lg flex flex-col items-center justify-center gap-1.5 text-stone-500 hover:text-stone-400 transition-colors">
+                    <ImageIcon className="w-6 h-6" />
+                    <span className="text-xs">Click để chọn ảnh</span>
+                  </button>
+                )}
               </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-                  className="w-4 h-4 rounded accent-rose-500" />
-                <span className="text-sm text-stone-300">Hiển thị</span>
-              </label>
             </div>
             <div className="flex gap-2 justify-end px-5 py-3 border-t border-stone-800 bg-stone-900/50">
               <button onClick={closeDialog} className="px-3 py-1.5 text-xs text-stone-400 hover:text-white transition-colors">Huỷ</button>
@@ -182,6 +241,19 @@ function CategoriesPage() {
         </div>
       )}
 
+      {/* Delete blocked */}
+      {deleteBlocked && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div className="bg-stone-950 border border-stone-800 rounded-xl p-5 w-full max-w-sm">
+            <h3 className="text-white text-sm font-semibold mb-2">Không thể xoá</h3>
+            <p className="text-stone-400 text-sm mb-4">Danh mục này còn danh mục con. Vui lòng xoá danh mục con trước.</p>
+            <div className="flex justify-end">
+              <button onClick={() => setDeleteBlocked(null)} className="px-4 py-1.5 bg-stone-700 hover:bg-stone-600 text-white text-xs font-medium rounded-lg transition-colors">Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tree list */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl overflow-hidden">
         {isLoading ? (
@@ -207,7 +279,10 @@ function CategoriesPage() {
                     activeId={activeId}
                     onEdit={openEdit}
                     onToggle={(c) => toggleActive.mutate({ id: c.id, is_active: !c.is_active })}
-                    onDelete={setDeleteId}
+                    onDelete={(id) => {
+                      if (categories.some((c) => c.parent === id)) { setDeleteBlocked(id); return; }
+                      setDeleteId(id);
+                    }}
                   />
                 ))}
               </div>
