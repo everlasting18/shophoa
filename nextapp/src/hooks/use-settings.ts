@@ -7,6 +7,8 @@ import { CONTACT } from "@/config";
 const FALLBACK = {
   phone: CONTACT.phone,
   phoneDisplay: CONTACT.phoneDisplay,
+  phone2: "",
+  phone2Display: "",
   zalo: CONTACT.zalo,
   zaloGroup: "",
 };
@@ -15,6 +17,8 @@ export function useSettings() {
   const [contact, setContact] = useState({
     phone: FALLBACK.phone,
     phoneDisplay: FALLBACK.phoneDisplay,
+    phone2: FALLBACK.phone2,
+    phone2Display: FALLBACK.phone2Display,
     zalo: FALLBACK.zalo,
     zaloGroup: FALLBACK.zaloGroup,
   });
@@ -26,6 +30,8 @@ export function useSettings() {
         setContact({
           phone: s.phone || FALLBACK.phone,
           phoneDisplay: s.phoneDisplay || FALLBACK.phoneDisplay,
+          phone2: s.phone2 || "",
+          phone2Display: s.phone2Display || "",
           zalo: s.zalo || FALLBACK.zalo,
           zaloGroup: s.zaloGroup || FALLBACK.zaloGroup,
         });

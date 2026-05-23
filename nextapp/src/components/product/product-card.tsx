@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PriceDisplay from "@/components/product/price-display";
@@ -19,6 +20,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
   const { addToast } = useToast();
+  const router = useRouter();
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
@@ -27,10 +29,18 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     addToast(`Đã thêm "${product.name}" vào giỏ hàng`, "success");
   }
 
+  function handleBuyNow(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(product, 1);
+    router.push("/dat-hoa");
+  }
+
   return (
     <Link
       href={`/san-pham/${product.slug}`}
-      className="group block bg-white rounded-2xl border border-border/60 overflow-hidden hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300"
+      draggable={false}
+      className="group block bg-[#F5EFE3] rounded-2xl border border-[#C8B89A] overflow-hidden hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300"
     >
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-muted">
@@ -39,7 +49,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           alt={product.name}
           fill
           priority={priority}
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, (max-width: 1279px) 25vw, 20vw"
           className="object-cover group-hover:scale-105 transition-transform duration-500"
         />
         {/* Overlay on hover */}
@@ -48,35 +58,42 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         {/* Badges — gom vào cùng 1 góc trái, stack dọc */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
           {product.is_best_seller && (
-            <Badge className="bg-amber-500 text-white text-[10px] px-2 py-0.5 font-semibold shadow-sm">
+            <Badge className="bg-red-600 text-white text-[10px] px-2 py-0.5 font-semibold shadow-sm">
               Bán chạy
             </Badge>
           )}
           {hasSale(product.price, product.sale_price) && (
-            <Badge className="bg-primary text-white text-[10px] px-2 py-0.5 font-semibold shadow-sm">
+            <Badge className="bg-red-600 text-white text-[10px] px-2 py-0.5 font-semibold shadow-sm">
               Sale
             </Badge>
           )}
         </div>
 
-        {/* Quick actions */}
-        <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+      </div>
+
+      {/* Info */}
+      <div className="p-3.5 flex flex-col">
+        <h3 className="font-bold text-sm leading-snug line-clamp-2 mb-2 h-10 group-hover:text-primary transition-colors">
+          {product.name}
+        </h3>
+        <div className="h-7 flex items-center">
+          <PriceDisplay price={product.price} salePrice={product.sale_price} />
+        </div>
+        <div className="mt-2.5 flex gap-2">
+          <button
+            onClick={handleBuyNow}
+            className="flex-1 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary/90 active:scale-95 transition-all"
+          >
+            Mua ngay
+          </button>
           <button
             onClick={handleAddToCart}
             aria-label="Thêm vào giỏ hàng"
-            className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-lg hover:bg-primary hover:text-white transition-colors"
+            className="w-9 h-9 rounded-xl border border-[#C8B89A] bg-[#EEE5D3]/60 flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary active:scale-95 transition-all shrink-0"
           >
             <ShoppingCart className="w-4 h-4" />
           </button>
         </div>
-      </div>
-
-      {/* Info */}
-      <div className="p-3.5">
-        <h3 className="font-bold text-sm leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors">
-          {product.name}
-        </h3>
-        <PriceDisplay price={product.price} salePrice={product.sale_price} />
       </div>
     </Link>
   );

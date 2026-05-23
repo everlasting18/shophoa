@@ -11,8 +11,8 @@ export default function PriceDisplay({ price, salePrice, className = "" }: Price
   if (hasSale(price, salePrice)) {
     return (
       <div className={`flex items-center gap-2 flex-wrap ${className}`}>
-        <span className="text-primary font-bold text-[15px]">{formatPrice(salePrice!)}</span>
-        <span className="text-muted-foreground line-through text-xs bg-muted px-1.5 py-0.5 rounded">
+        <span className="text-gray-900 font-bold text-[15px]">{formatPrice(salePrice!)}</span>
+        <span className="text-red-400 line-through text-xs bg-red-50 px-1.5 py-0.5 rounded">
           {formatPrice(price)}
         </span>
       </div>
@@ -20,7 +20,7 @@ export default function PriceDisplay({ price, salePrice, className = "" }: Price
   }
 
   return (
-    <span className={`text-primary font-bold text-[15px] ${className}`}>
+    <span className={`text-card-foreground font-bold text-[15px] ${className}`}>
       {formatPrice(price)}
     </span>
   );

@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useAuthStore } from "@/stores/auth";
 import { useState } from "react";
-import { Plus, Trash2, Upload, GripVertical, Check, Pencil, X } from "lucide-react";
+import { Plus, Trash2, Upload, GripVertical, Check, Pencil, X, Smartphone } from "lucide-react";
 import {
   DndContext, closestCenter, PointerSensor, KeyboardSensor,
   useSensor, useSensors, DragOverlay,
@@ -36,10 +36,15 @@ function BannersPage() {
   const [showForm, setShowForm] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
+  const [mobileFile, setMobileFile] = useState<File | null>(null);
+  const [mobilePreview, setMobilePreview] = useState<string>("");
   const [link, setLink] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editBanner, setEditBanner] = useState<Banner | null>(null);
   const [editLink, setEditLink] = useState("");
+  const [editMobileFile, setEditMobileFile] = useState<File | null>(null);
+  const [editMobilePreview, setEditMobilePreview] = useState<string>("");
+  const [editMobileRemove, setEditMobileRemove] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -62,12 +67,12 @@ function BannersPage() {
     e.preventDefault();
     if (!file) return;
     createBanner.mutate(
-      { image: file, link, sort_order: banners.length },
+      { image: file, ...(mobileFile ? { mobile_image: mobileFile } : {}), link, sort_order: banners.length },
       {
         onSuccess: () => {
           setShowForm(false);
-          setFile(null);
-          setPreview("");
+          setFile(null); setPreview("");
+          setMobileFile(null); setMobilePreview("");
           setLink("");
         },
       }
@@ -77,8 +82,20 @@ function BannersPage() {
   function handleEditSave() {
     if (!editBanner) return;
     updateBanner.mutate(
-      { id: editBanner.id, link: editLink },
-      { onSuccess: () => setEditBanner(null) }
+      {
+        id: editBanner.id,
+        link: editLink,
+        ...(editMobileFile ? { mobile_image: editMobileFile } : {}),
+        removeMobileImage: editMobileRemove,
+        currentMobileImage: editBanner.mobile_image,
+      },
+      {
+        onSuccess: () => {
+          setEditBanner(null);
+          setEditMobileFile(null); setEditMobilePreview("");
+          setEditMobileRemove(false);
+        },
+      }
     );
   }
 
@@ -121,6 +138,30 @@ function BannersPage() {
             }} className="hidden" required />
           </label>
           <div>
+            <label className="text-xs text-stone-400 mb-1.5 flex items-center gap-1.5">
+              <Smartphone className="w-3.5 h-3.5" /> Ảnh mobile (tuỳ chọn — dọc, tỉ lệ 9:16)
+            </label>
+            <label className="cursor-pointer block">
+              {mobilePreview ? (
+                <div className="relative w-32 aspect-[4/3] rounded-lg overflow-hidden border border-stone-700 group">
+                  <img src={mobilePreview} alt="" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="text-[10px] text-white flex items-center gap-1"><Upload className="w-3 h-3" /> Đổi</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg text-sm text-stone-300 w-fit">
+                  <Smartphone className="w-4 h-4" /> Chọn ảnh mobile
+                </div>
+              )}
+              <input type="file" accept="image/*" onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setMobileFile(f);
+                setMobilePreview(f ? URL.createObjectURL(f) : "");
+              }} className="hidden" />
+            </label>
+          </div>
+          <div>
             <label className="text-xs text-stone-400 mb-1 block">Link đến (tuỳ chọn)</label>
             <input value={link} onChange={(e) => setLink(e.target.value)} className={iCls} placeholder="Mặc định: trang chủ" />
           </div>
@@ -132,7 +173,7 @@ function BannersPage() {
             >
               {createBanner.isPending ? "Đang upload..." : "Tạo banner"}
             </button>
-            <button type="button" onClick={() => { setShowForm(false); setFile(null); setPreview(""); setLink(""); }}
+            <button type="button" onClick={() => { setShowForm(false); setFile(null); setPreview(""); setMobileFile(null); setMobilePreview(""); setLink(""); }}
               className="px-4 py-2 text-sm text-stone-400 hover:text-white transition-colors">
               Huỷ
             </button>
@@ -145,15 +186,66 @@ function BannersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
           <div className="bg-stone-950 border border-stone-800 rounded-xl w-full max-w-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b border-stone-800">
-              <h3 className="text-white text-sm font-semibold">Chỉnh sửa link</h3>
-              <button onClick={() => setEditBanner(null)} className="text-stone-500 hover:text-white transition-colors">
+              <h3 className="text-white text-sm font-semibold">Chỉnh sửa banner</h3>
+              <button onClick={() => { setEditBanner(null); setEditMobileFile(null); setEditMobilePreview(""); setEditMobileRemove(false); }} className="text-stone-500 hover:text-white transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-5 space-y-3">
+            <div className="p-5 space-y-4">
               <div className="w-full h-28 rounded-lg overflow-hidden bg-stone-800">
                 <img src={getImageUrl(editBanner.collectionId, editBanner.id, editBanner.image)} alt="" className="w-full h-full object-cover" />
               </div>
+
+              {/* Mobile image */}
+              <div>
+                <label className="text-[11px] text-stone-500 mb-2 flex items-center gap-1.5">
+                  <Smartphone className="w-3.5 h-3.5" /> Ảnh mobile
+                </label>
+                {editMobilePreview ? (
+                  <div className="flex items-start gap-3">
+                    <div className="w-20 aspect-[4/3] rounded-lg overflow-hidden border border-stone-700 shrink-0">
+                      <img src={editMobilePreview} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <button type="button" onClick={() => { setEditMobileFile(null); setEditMobilePreview(""); }}
+                      className="text-xs text-stone-500 hover:text-red-400 transition-colors mt-1">Bỏ chọn</button>
+                  </div>
+                ) : editBanner.mobile_image && !editMobileRemove ? (
+                  <div className="flex items-start gap-3">
+                    <div className="w-20 aspect-[4/3] rounded-lg overflow-hidden border border-stone-700 shrink-0">
+                      <img src={getImageUrl(editBanner.collectionId, editBanner.id, editBanner.mobile_image)} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex flex-col gap-1.5 mt-1">
+                      <label className="cursor-pointer flex items-center gap-1.5 text-xs text-stone-400 hover:text-white transition-colors">
+                        <Upload className="w-3.5 h-3.5" /> Đổi ảnh
+                        <input type="file" accept="image/*" onChange={(e) => {
+                          const f = e.target.files?.[0] ?? null;
+                          setEditMobileFile(f);
+                          setEditMobilePreview(f ? URL.createObjectURL(f) : "");
+                        }} className="hidden" />
+                      </label>
+                      <button type="button" onClick={() => setEditMobileRemove(true)}
+                        className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-red-400 transition-colors text-left">
+                        <X className="w-3 h-3" /> Xoá ảnh mobile
+                      </button>
+                    </div>
+                  </div>
+                ) : editMobileRemove ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-red-400">Sẽ xoá ảnh mobile</span>
+                    <button type="button" onClick={() => setEditMobileRemove(false)} className="text-xs text-stone-500 hover:text-white transition-colors">Huỷ</button>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer flex items-center gap-2 px-3 py-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg text-xs text-stone-300 w-fit">
+                    <Smartphone className="w-3.5 h-3.5" /> Thêm ảnh mobile
+                    <input type="file" accept="image/*" onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      setEditMobileFile(f);
+                      setEditMobilePreview(f ? URL.createObjectURL(f) : "");
+                    }} className="hidden" />
+                  </label>
+                )}
+              </div>
+
               <div>
                 <label className="text-[11px] text-stone-500 mb-1.5 block">Link đến (tuỳ chọn)</label>
                 <input value={editLink} onChange={(e) => setEditLink(e.target.value)}
@@ -161,7 +253,7 @@ function BannersPage() {
               </div>
             </div>
             <div className="flex gap-2 justify-end px-5 py-3 border-t border-stone-800 bg-stone-900/50">
-              <button onClick={() => setEditBanner(null)} className="px-3 py-1.5 text-xs text-stone-400 hover:text-white transition-colors">Huỷ</button>
+              <button onClick={() => { setEditBanner(null); setEditMobileFile(null); setEditMobilePreview(""); setEditMobileRemove(false); }} className="px-3 py-1.5 text-xs text-stone-400 hover:text-white transition-colors">Huỷ</button>
               <button onClick={handleEditSave} disabled={updateBanner.isPending}
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-60">
                 <Check className="w-3.5 h-3.5" /> {updateBanner.isPending ? "Đang lưu..." : "Lưu"}
@@ -267,7 +359,14 @@ function SortableBannerItem({ banner, idx, isDragging, onToggle, onEdit, onDelet
           ? <p className="text-sm text-stone-300 font-mono truncate">{banner.link}</p>
           : <p className="text-sm text-stone-500">Trang chủ</p>
         }
-        <p className="text-[11px] text-stone-600 mt-0.5">#{idx + 1}</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <p className="text-[11px] text-stone-600">#{idx + 1}</p>
+          {banner.mobile_image && (
+            <span className="inline-flex items-center gap-1 text-[10px] text-sky-400 bg-sky-400/10 px-1.5 py-0.5 rounded-full">
+              <Smartphone className="w-2.5 h-2.5" /> Mobile
+            </span>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <button

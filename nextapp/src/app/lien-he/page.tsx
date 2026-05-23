@@ -6,8 +6,8 @@ import { getSiteSettings } from "@/services/settings";
 import { googleMapsLink } from "@/config";
 
 export const metadata: Metadata = {
-  title: `Liên Hệ | ${SITE_NAME}`,
-  description: "Liên hệ đặt hoa tươi tại Vườn Hoa Tươi TPHCM. Hotline: 0976.491.322. Zalo, email, 2 cửa hàng tại Quận 3 và Vườn Lài.",
+  title: "Liên Hệ",
+  description: `Liên hệ đặt hoa tươi tại ${SITE_NAME} TPHCM. Hotline: 0976.491.322. Zalo, email, 2 cửa hàng tại Quận 3 và Vườn Lài.`,
   alternates: { canonical: "/lien-he" },
 };
 

@@ -20,6 +20,8 @@ export interface CartStore {
 export interface SiteContact {
   phone: string;
   phoneDisplay: string;
+  phone2: string;
+  phone2Display: string;
   zalo: string;
   zaloGroup: string;
   email: string;

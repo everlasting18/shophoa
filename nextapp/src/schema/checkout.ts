@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { SHIPPING_ZONES } from "@/config";
 import { todayISO } from "@/lib/date-utils";
 
 export const checkoutSchema = z
@@ -9,11 +8,8 @@ export const checkoutSchema = z
     recipientName: z.string(),
     recipientPhone: z.string(),
     recipientStreet: z.string(),
-    recipientWard: z.string(),
-    recipientDistrict: z.string(),
     deliveryDate: z.string(),
     deliveryTime: z.string().min(1, "Vui lòng chọn giờ giao"),
-    shippingIdx: z.number().min(0).max(SHIPPING_ZONES.length - 1),
     sameAsBuyer: z.boolean(),
     note: z.string(),
   })
@@ -25,11 +21,7 @@ export const checkoutSchema = z
     message: "SĐT không hợp lệ",
     path: ["recipientPhone"],
   })
-  .refine((d) => {
-    const zone = SHIPPING_ZONES[d.shippingIdx];
-    const isPickup = zone.fee === 0 && zone.label.includes("cửa hàng");
-    return isPickup || d.recipientStreet.trim().length > 0;
-  }, {
+  .refine((d) => d.recipientStreet.trim().length > 0, {
     message: "Vui lòng nhập số nhà, tên đường",
     path: ["recipientStreet"],
   })

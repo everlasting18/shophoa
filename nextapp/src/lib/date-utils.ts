@@ -1,4 +1,4 @@
-import { DAY_NAMES } from "@/config";
+const DAY_NAMES = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 
 export function isoToDisplay(iso: string) {
   const [y, m, d] = iso.slice(0, 10).split("-").map(Number);

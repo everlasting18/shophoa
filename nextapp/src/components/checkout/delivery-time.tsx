@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Calendar, Clock } from "lucide-react";
 import type { UseFormSetValue, UseFormWatch } from "react-hook-form";
 import type { CheckoutForm } from "@/schema";
@@ -17,17 +18,31 @@ interface Props {
   watch: UseFormWatch<CheckoutForm>;
 }
 
+function getMinTime(deliveryDate: string, todayISO: string): string {
+  if (deliveryDate !== todayISO) return "";
+  const d = new Date();
+  d.setHours(d.getHours() + 2);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
 export default function DeliveryTime({ todayISO, dateMode, setDateMode, customDate, setCustomDate, setValue, watch }: Props) {
   const deliveryDate = watch("deliveryDate");
   const deliveryTime = watch("deliveryTime");
+  const minTime = getMinTime(deliveryDate, todayISO);
+
+  // Tự điền minTime khi chọn hôm nay và chưa có giờ hợp lệ
+  useEffect(() => {
+    if (!minTime) return;
+    if (!deliveryTime || deliveryTime < minTime) {
+      setValue("deliveryTime", minTime);
+    }
+  }, [minTime, deliveryTime, setValue]);
 
   function handleDateMode(mode: typeof dateMode) {
     setDateMode(mode);
     if (mode === "today") setValue("deliveryDate", todayISO);
     else if (mode === "tomorrow") setValue("deliveryDate", addDaysToISO(todayISO, 1));
     else setValue("deliveryDate", customDate || "");
-    
-    // Reset time when changing date to prevent invalid selections
     setValue("deliveryTime", "");
   }
 
@@ -89,11 +104,17 @@ export default function DeliveryTime({ todayISO, dateMode, setDateMode, customDa
           <input
             type="time"
             value={deliveryTime}
+            min={minTime}
             disabled={!deliveryDate}
             onChange={(e) => setValue("deliveryTime", e.target.value)}
             className="w-full bg-transparent outline-none text-sm py-1 disabled:opacity-40 disabled:cursor-not-allowed"
           />
         </InputIcon>
+        {minTime && (
+          <p className="text-xs text-muted-foreground mt-2 ml-1">
+            Giao sớm nhất hôm nay: <span className="font-medium text-foreground">{minTime}</span>
+          </p>
+        )}
       </div>
     </CardSection>
   );

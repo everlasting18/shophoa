@@ -13,9 +13,13 @@ import { SITE_NAME } from "@/config";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Tất Cả Sản Phẩm",
-  description: `Xem toàn bộ sản phẩm hoa tươi tại ${SITE_NAME}. Hoa sinh nhật, khai trương, tốt nghiệp và nhiều loại hoa tươi đẹp khác.`,
+  title: "Mua Hoa Tươi Online TPHCM",
+  description: `Toàn bộ hoa tươi tại ${SITE_NAME} TPHCM. Hoa sinh nhật, khai trương, tốt nghiệp, tình yêu – đặt online, giao hỏa tốc 60 phút nội thành.`,
   alternates: { canonical: "/san-pham" },
+  openGraph: {
+    title: "Mua Hoa Tươi Online TPHCM",
+    images: [{ url: "/images/banner1.jpg", width: 1200, height: 630 }],
+  },
 };
 
 const PER_PAGE = 20;
@@ -132,10 +136,9 @@ export default async function AllProductsPage({ searchParams }: Props) {
         {/* Desktop sidebar */}
         <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-24">
           <div className="bg-white border border-border rounded-xl p-5">
-            <div className="flex items-center justify-between mb-5">
-              <span className="font-semibold text-sm">Bộ lọc</span>
-            </div>
+            <span className="font-semibold text-sm block mb-5">Bộ lọc</span>
             <FilterSidebar
+              mode="sidebar"
               categories={allCategories}
               selectedCategories={categorySlugs}
               currentMin={min}
@@ -150,9 +153,10 @@ export default async function AllProductsPage({ searchParams }: Props) {
           {/* Toolbar */}
           <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              {/* Mobile filter trigger — hidden on desktop (desktop uses aside) */}
+              {/* Mobile filter trigger */}
               <div className="lg:hidden">
                 <FilterSidebar
+                  mode="mobile"
                   categories={allCategories}
                   selectedCategories={categorySlugs}
                   currentMin={min}

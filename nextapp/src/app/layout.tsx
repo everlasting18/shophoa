@@ -6,12 +6,12 @@ import Footer from "@/components/layout/footer";
 import ZaloFloat from "@/components/layout/zalo-float";
 import { ToastProvider } from "@/components/ui/toast";
 
-import { Baloo_2 } from "next/font/google";
+import { Merriweather } from "next/font/google";
 
-const baloo = Baloo_2({
-  variable: "--font-baloo",
-  subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700", "800"],
+const merriweather = Merriweather({
+  variable: "--font-merriweather",
+  subsets: ["latin", "latin-ext"],
+  weight: ["300", "400", "700", "900"],
 });
 
 export const metadata: Metadata = {
@@ -21,6 +21,14 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   metadataBase: new URL(SITE_URL),
+  keywords: [
+    "tiệm hoa nhà tình", "shop hoa tươi TPHCM", "đặt hoa online TPHCM",
+    "hoa sinh nhật TPHCM", "hoa khai trương", "hoa tốt nghiệp",
+    "điện hoa hỏa tốc", "giao hoa tận nơi TPHCM", "tiemhoanhatinh.com",
+  ],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
   openGraph: {
     type: "website",
     locale: "vi_VN",
@@ -28,16 +36,30 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} – Shop Hoa Tươi TPHCM`,
     description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/images/banner1.jpg",
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} – Shop Hoa Tươi TPHCM`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `${SITE_NAME} – Shop Hoa Tươi TPHCM`,
     description: SITE_DESCRIPTION,
+    images: ["/images/banner1.jpg"],
   },
   robots: {
     index: true,
     follow: true,
-    googleBot: { index: true, follow: true },
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
@@ -49,7 +71,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${baloo.variable} h-full antialiased`}
+      className={`${merriweather.variable} h-full antialiased`}
       data-scroll-behavior="smooth"
     >
       <head>

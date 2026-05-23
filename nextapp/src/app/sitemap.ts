@@ -2,10 +2,23 @@ import type { MetadataRoute } from "next";
 import pb from "@/services/pocketbase";
 import type { Product, Category } from "@/schema";
 import { SITE_URL } from "@/config";
+import postsManifest from "@/content/posts-manifest.json";
+
+export const revalidate = 3600;
 
 const BASE_URL = SITE_URL;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const blogRoutes: MetadataRoute.Sitemap = [
+    { url: `${BASE_URL}/blog`, changeFrequency: "weekly", priority: 0.7 },
+    ...postsManifest.map((post) => ({
+      url: `${BASE_URL}/blog/${post.slug}`,
+      lastModified: new Date(post.date),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
+  ];
+
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: `${BASE_URL}/san-pham`, changeFrequency: "daily", priority: 0.9 },
@@ -45,5 +58,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // PocketBase unreachable at build time — skip
   }
 
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+  return [...staticRoutes, ...blogRoutes, ...categoryRoutes, ...productRoutes];
 }

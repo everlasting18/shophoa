@@ -1,14 +1,14 @@
 import { ZALO_PHONE, zaloLink } from "./third-party";
 
-export const SITE_NAME = "Tiệm hoa nhà tình";
+export const SITE_NAME = "Tiệm Hoa Nhà Tình";
 export const SITE_DESCRIPTION =
-  "Tiệm hoa nhà tình - Shop hoa tươi TPHCM phong cách hiện đại. Chuyên đặt hoa tươi sinh nhật, khai trương. Dịch vụ điện hoa hỏa tốc 60p.";
+  "Tiệm Hoa Nhà Tình – Shop hoa tươi TPHCM uy tín. Đặt hoa sinh nhật, khai trương, tốt nghiệp. Giao hỏa tốc 60 phút nội thành, hoa giống mẫu 100%.";
 
 export const CONTACT = {
   phone: ZALO_PHONE,
   phoneDisplay: "0976.491.322",
   zalo: zaloLink(ZALO_PHONE),
-  email: "cskh@vuonhoatuoi.vn",
+  email: "cskh@tiemhoanhatinh.com",
   addresses: [
     "183/37 Đường 3 Tháng 2, Phường Vườn Lài, TPHCM",
     "704/19 Nguyễn Đình Chiểu, Phường 1, Quận 3, TPHCM",
@@ -72,4 +72,5 @@ export const NAV_ITEMS = [
       { label: "Hoa Gấu Bông", href: "/bo-hoa-gau-bong" },
     ],
   },
+  { label: "Blog", href: "/blog" },
 ];

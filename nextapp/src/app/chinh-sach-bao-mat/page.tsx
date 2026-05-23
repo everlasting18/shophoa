@@ -5,8 +5,8 @@ import { getSiteSettings } from "@/services/settings";
 import { Home, ChevronRight, Shield } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: `Chính Sách Bảo Mật | ${SITE_NAME}`,
-  description: "Chính sách bảo mật thông tin khách hàng của Vườn Hoa Tươi.",
+  title: "Chính Sách Bảo Mật",
+  description: `Chính sách bảo mật thông tin khách hàng của ${SITE_NAME}.`,
   alternates: { canonical: "/chinh-sach-bao-mat" },
 };
 

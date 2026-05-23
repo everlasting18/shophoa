@@ -17,6 +17,7 @@ import {
   useCategories, useSaveCategory, useToggleCategoryActive,
   useDeleteCategory, useReorderCategories,
 } from "@/features/categories/api";
+import { useProductCategoryCounts } from "@/features/products/api";
 import { generateSlug } from "@/lib/utils";
 import type { Category } from "@/schema/pocketbase";
 
@@ -31,6 +32,7 @@ const iCls = "w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg t
 
 function CategoriesPage() {
   const { data: categories = [], isLoading } = useCategories();
+  const { data: productCounts = {} } = useProductCategoryCounts();
   const saveCategory = useSaveCategory();
   const toggleActive = useToggleCategoryActive();
   const deleteCategory = useDeleteCategory();
@@ -246,7 +248,7 @@ function CategoriesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
           <div className="bg-stone-950 border border-stone-800 rounded-xl p-5 w-full max-w-sm">
             <h3 className="text-white text-sm font-semibold mb-2">Không thể xoá</h3>
-            <p className="text-stone-400 text-sm mb-4">Danh mục này còn danh mục con. Vui lòng xoá danh mục con trước.</p>
+            <p className="text-stone-400 text-sm mb-4">{deleteBlocked}</p>
             <div className="flex justify-end">
               <button onClick={() => setDeleteBlocked(null)} className="px-4 py-1.5 bg-stone-700 hover:bg-stone-600 text-white text-xs font-medium rounded-lg transition-colors">Đóng</button>
             </div>
@@ -277,10 +279,19 @@ function CategoriesPage() {
                     depth={0}
                     getChildren={getChildren}
                     activeId={activeId}
+                    productCounts={productCounts}
                     onEdit={openEdit}
                     onToggle={(c) => toggleActive.mutate({ id: c.id, is_active: !c.is_active })}
                     onDelete={(id) => {
-                      if (categories.some((c) => c.parent === id)) { setDeleteBlocked(id); return; }
+                      if (categories.some((c) => c.parent === id)) {
+                        setDeleteBlocked("Danh mục này còn danh mục con. Vui lòng xoá danh mục con trước.");
+                        return;
+                      }
+                      const count = productCounts[id] ?? 0;
+                      if (count > 0) {
+                        setDeleteBlocked(`Danh mục này đang có ${count} sản phẩm. Vui lòng gỡ sản phẩm khỏi danh mục trước khi xoá.`);
+                        return;
+                      }
                       setDeleteId(id);
                     }}
                   />
@@ -305,13 +316,15 @@ function CategoriesPage() {
   );
 }
 
-function CategoryRow({ cat, depth, getChildren, activeId, onEdit, onToggle, onDelete }: {
+function CategoryRow({ cat, depth, getChildren, activeId, productCounts, onEdit, onToggle, onDelete }: {
   cat: Category; depth: number; getChildren: (pid: string) => Category[];
   activeId: string | null;
+  productCounts: Record<string, number>;
   onEdit: (c: Category) => void; onToggle: (c: Category) => void; onDelete: (id: string) => void;
 }) {
   const children = getChildren(cat.id);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
+  const count = productCounts[cat.id] ?? 0;
 
   return (
     <>
@@ -329,11 +342,27 @@ function CategoryRow({ cat, depth, getChildren, activeId, onEdit, onToggle, onDe
           <GripVertical className="w-4 h-4" />
         </button>
         {depth > 0 && <ChevronRight className="w-3.5 h-3.5 text-stone-600 shrink-0 -ml-1" />}
+        {cat.image ? (
+          <img
+            src={getThumbUrl(cat.collectionId, cat.id, cat.image)}
+            alt={cat.name}
+            className="w-8 h-8 rounded-md object-cover shrink-0 border border-stone-700"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-md bg-stone-800 border border-stone-700 shrink-0 flex items-center justify-center">
+            <ImageIcon className="w-3.5 h-3.5 text-stone-600" />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-white font-medium">
-            {!cat.is_active && <span className="text-stone-500 mr-1.5">[Ẩn]</span>}
-            {cat.name}
-          </p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm text-white font-medium">
+              {!cat.is_active && <span className="text-stone-500 mr-1.5">[Ẩn]</span>}
+              {cat.name}
+            </p>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-stone-800 text-stone-400 border border-stone-700 font-medium">
+              {count} SP
+            </span>
+          </div>
           <p className="text-xs text-stone-500">/{cat.slug}</p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -368,6 +397,7 @@ function CategoryRow({ cat, depth, getChildren, activeId, onEdit, onToggle, onDe
           depth={depth + 1}
           getChildren={getChildren}
           activeId={activeId}
+          productCounts={productCounts}
           onEdit={onEdit}
           onToggle={onToggle}
           onDelete={onDelete}

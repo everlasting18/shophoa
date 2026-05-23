@@ -21,7 +21,7 @@ export function useBanners() {
 export function useCreateBanner() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { image: File; link: string; sort_order: number }) =>
+    mutationFn: (data: { image: File; mobile_image?: File; link: string; sort_order: number }) =>
       pb.collection("banners").create<Banner>({ ...data, is_active: true }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["banners"] }); revalidate(); },
   });
@@ -30,8 +30,21 @@ export function useCreateBanner() {
 export function useUpdateBanner() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, link }: { id: string; link: string }) =>
-      pb.collection("banners").update<Banner>(id, { link }),
+    mutationFn: ({ id, link, mobile_image, removeMobileImage, currentMobileImage }: {
+      id: string;
+      link: string;
+      mobile_image?: File;
+      removeMobileImage?: boolean;
+      currentMobileImage?: string;
+    }) => {
+      const data: Record<string, unknown> = { link };
+      if (mobile_image) {
+        data.mobile_image = mobile_image;
+      } else if (removeMobileImage && currentMobileImage) {
+        data["mobile_image-"] = currentMobileImage;
+      }
+      return pb.collection("banners").update<Banner>(id, data);
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["banners"] }); revalidate(); },
   });
 }

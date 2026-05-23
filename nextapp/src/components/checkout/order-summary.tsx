@@ -12,7 +12,6 @@ import type { CartItem } from "@/schema";
 
 interface Props {
   items: { product: CartItem["product"]; quantity: number }[];
-  shippingFee: number;
   total: number;
   subtotal: number;
   loading: boolean;
@@ -26,7 +25,6 @@ interface Props {
 
 export default function OrderSummary({
   items,
-  shippingFee,
   total,
   subtotal,
   loading,
@@ -100,29 +98,10 @@ export default function OrderSummary({
           </div>
         )}
 
-        <div className="space-y-2 mb-5">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Tạm tính</span>
-            <span className="font-medium">{formatPrice(subtotal)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Phí vận chuyển</span>
-            <span className="font-medium">
-              {shippingFee === 0 ? (
-                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Miễn phí</span>
-              ) : (
-                formatPrice(shippingFee)
-              )}
-            </span>
-          </div>
-        </div>
-        <div className="flex justify-between items-baseline mb-1">
+        <div className="flex justify-between items-baseline mb-5">
           <span className="font-semibold">Tổng cộng</span>
           <span className="font-bold text-xl text-primary">{formatPrice(total)}</span>
         </div>
-        <p className="text-xs text-muted-foreground mb-5">
-          Tạm tính · Cửa hàng sẽ báo phí ship phụ thu nếu có khi liên hệ
-        </p>
 
         {submitError && (
           <p className="text-xs text-destructive bg-destructive/10 rounded-xl p-3 mb-4 flex items-center gap-2">

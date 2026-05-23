@@ -25,7 +25,6 @@ export interface Product {
   description: string;
   occasions: string[];
   categories: string[];
-  is_featured: boolean;
   is_best_seller: boolean;
   is_active: boolean;
   created: string;
@@ -69,6 +68,7 @@ export interface OrderItem {
 export interface Banner {
   id: string;
   image: string;
+  mobile_image?: string;
   link: string;
   sort_order: number;
   is_active: boolean;
@@ -82,12 +82,4 @@ export interface Settings {
   id: string;
   key: string;
   value: string;
-}
-
-export interface ShippingZone {
-  id: string;
-  label: string;
-  fee: number;
-  districts: string[];
-  sort_order: number;
 }

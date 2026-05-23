@@ -51,6 +51,6 @@ export const useCartStore = create<CartStore>()(
           return sum + price * i.quantity;
         }, 0),
     }),
-    { name: "vuonhoatuoi-cart" }
+    { name: "tiemhoanhatinh-cart" }
   )
 );

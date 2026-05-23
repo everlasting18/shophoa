@@ -12,11 +12,7 @@ import { shortDateISO } from "@/lib/date-utils";
 import { PHOTO_BASE } from "@/config";
 import type { Order } from "@/schema";
 
-const STEPS = [
-  { icon: Clock, text: "Xác nhận trong 15 phút" },
-  { icon: MessageCircle, text: "Gửi hình thành phẩm" },
-  { icon: Package, text: "Giao đúng khung giờ" },
-];
+
 
 function OrderSkeleton() {
   return (
@@ -69,26 +65,9 @@ function ThanksContent() {
         </div>
         <h1 className="font-heading text-2xl font-bold mb-1">Đặt hoa thành công! 🌸</h1>
         <p className="text-muted-foreground text-sm mb-4">
-          Cảm ơn bạn đã tin tưởng <strong className="text-foreground">Tiệm hoa nhà tình</strong>
+          Cảm ơn quý khách đã tin tưởng. Shop sẽ chủ động liên hệ xác nhận đơn sớm nhất.
         </p>
-        {orderCode && (
-          <div className="inline-flex flex-col items-center bg-primary/5 border border-primary/15 rounded-2xl px-6 py-3">
-            <p className="text-[11px] text-muted-foreground uppercase tracking-widest mb-1">Mã đơn hàng</p>
-            <p className="text-2xl font-bold text-primary font-mono tracking-wider">{orderCode}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Next steps — compact row */}
-      <div className="grid grid-cols-3 gap-2">
-        {STEPS.map(({ icon: Icon, text }, i) => (
-          <div key={i} className="flex flex-col items-center gap-1.5 bg-white border border-border/60 rounded-2xl px-2 py-3 text-center shadow-sm">
-            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-              <Icon className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <p className="text-[11px] text-muted-foreground leading-tight font-medium">{text}</p>
-          </div>
-        ))}
+      
       </div>
 
       {/* Order detail */}
@@ -96,10 +75,7 @@ function ThanksContent() {
         <OrderSkeleton />
       ) : order ? (
         <div className="bg-white rounded-2xl border border-border/60 overflow-hidden shadow-sm">
-          <div className="px-5 py-3.5 border-b border-border/40 flex items-center justify-between">
-            <h2 className="font-heading font-bold text-sm">Chi tiết đơn hàng</h2>
-            <span className="text-[11px] text-muted-foreground font-mono bg-muted/50 px-2 py-0.5 rounded-full">{orderCode}</span>
-          </div>
+          
 
           {/* Info rows */}
           <div className="divide-y divide-border/30">

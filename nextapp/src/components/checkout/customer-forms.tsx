@@ -1,8 +1,8 @@
 "use client";
 
-import { User, Phone, Truck, MapPin, Gift } from "lucide-react";
+import { User, Phone, MapPin, Gift } from "lucide-react";
 import type { UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-form";
-import type { CheckoutForm, ShippingZone } from "@/schema";
+import type { CheckoutForm } from "@/schema";
 import CardSection from "./card-section";
 import InputIcon from "@/components/ui/input-icon";
 import AddressFields from "./address-fields";
@@ -11,12 +11,9 @@ interface Props {
   register: UseFormRegister<CheckoutForm>;
   setValue: UseFormSetValue<CheckoutForm>;
   watch: UseFormWatch<CheckoutForm>;
-  isPickup: boolean;
-  zones: ShippingZone[];
-  districtZoneMap: Record<string, number>;
 }
 
-export default function CustomerForms({ register, setValue, watch, isPickup, zones, districtZoneMap }: Props) {
+export default function CustomerForms({ register, setValue, watch }: Props) {
   const sameAsBuyer = watch("sameAsBuyer");
   const customerName = watch("customerName");
 
@@ -122,19 +119,9 @@ export default function CustomerForms({ register, setValue, watch, isPickup, zon
       )}
 
       {/* Address */}
-      {!isPickup && (
-        <CardSection icon={<MapPin className="w-4 h-4" />} title="Địa chỉ giao hàng">
-          <AddressFields register={register} setValue={setValue} watch={watch} isPickup={isPickup} zones={zones} districtZoneMap={districtZoneMap} />
-        </CardSection>
-      )}
-
-      {/* Pickup notice */}
-      {isPickup && (
-        <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">
-          <Truck className="w-4 h-4 shrink-0 text-emerald-600" />
-          <span>Bạn đã chọn <strong>lấy tại cửa hàng</strong>. Vui lòng đến địa chỉ của tiệm để nhận hoa.</span>
-        </div>
-      )}
+      <CardSection icon={<MapPin className="w-4 h-4" />} title="Địa chỉ giao hàng">
+        <AddressFields register={register} />
+      </CardSection>
     </>
   );
 }

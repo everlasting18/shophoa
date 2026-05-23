@@ -11,6 +11,7 @@ interface OrderItem {
   thumbnail?: string;
   collectionId?: string;
   product_id?: string;
+  slug?: string;
 }
 
 interface NotifyPayload {
@@ -155,6 +156,9 @@ async function notifyLark(webhookUrl: string, order: NotifyPayload): Promise<voi
     const url = itemImageUrl(item);
     const imgKey = token && url ? await uploadImageToLark(token, url) : null;
 
+    const productUrl = item.slug ? `https://tiemhoanhatinh.com/san-pham/${item.slug}` : null;
+    const nameText = productUrl ? `**[${item.name}](${productUrl})**` : `**${item.name}**`;
+
     if (imgKey) {
       productElements.push({
         tag: "column_set",
@@ -171,14 +175,14 @@ async function notifyLark(webhookUrl: string, order: NotifyPayload): Promise<voi
             width: "weighted",
             weight: 1,
             vertical_align: "center",
-            elements: [{ tag: "markdown", content: `**${item.name}**\nx${item.quantity} — ${formatPrice(item.price * item.quantity)}` }],
+            elements: [{ tag: "markdown", content: `${nameText}\nx${item.quantity} — ${formatPrice(item.price * item.quantity)}` }],
           },
         ],
       });
     } else {
       productElements.push({
         tag: "markdown",
-        content: `• **${item.name}**  x${item.quantity}  ${formatPrice(item.price * item.quantity)}`,
+        content: `• ${nameText}  x${item.quantity}  ${formatPrice(item.price * item.quantity)}`,
       });
     }
   }

@@ -13,12 +13,6 @@ export {
 } from "./third-party";
 
 export {
-  DISTRICT_ZONE_MAP,
-  SHIPPING_ZONES,
-  DAY_NAMES,
-} from "./shipping";
-
-export {
   SITE_NAME,
   SITE_DESCRIPTION,
   CONTACT,

@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus, Pencil, Trash2, Search, Check, Package, Eye, EyeOff } from "lucide-react";
 import { useProducts, useToggleProductActive, useDeleteProduct } from "@/features/products/api";
+import { useCategories } from "@/features/categories/api";
 import { formatPrice, useDebounce } from "@/lib/utils";
 import { getThumbUrl } from "@/lib/media";
 
@@ -19,10 +20,12 @@ function ProductsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const debouncedSearch = useDebounce(search);
-  const { data, isLoading } = useProducts(page, debouncedSearch, activeFilter);
+  const { data, isLoading } = useProducts(page, debouncedSearch, activeFilter, categoryFilter);
+  const { data: categories = [] } = useCategories();
   const toggleActive = useToggleProductActive();
   const deleteProduct = useDeleteProduct();
 
@@ -66,6 +69,30 @@ function ProductsPage() {
           ))}
         </div>
       </div>
+
+      {categories.length > 0 && (
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+          <button
+            onClick={() => { setCategoryFilter(""); setPage(1); }}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all whitespace-nowrap shrink-0 ${
+              !categoryFilter ? "bg-rose-600 border-rose-600 text-white" : "bg-stone-900 border-stone-800 text-stone-400 hover:text-white hover:border-stone-700"
+            }`}
+          >
+            Tất cả
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => { setCategoryFilter(cat.id === categoryFilter ? "" : cat.id); setPage(1); }}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all whitespace-nowrap shrink-0 ${
+                categoryFilter === cat.id ? "bg-rose-600 border-rose-600 text-white" : "bg-stone-900 border-stone-800 text-stone-400 hover:text-white hover:border-stone-700"
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Delete confirm modal */}
       {deleteId && (
@@ -145,10 +172,12 @@ function ProductsPage() {
                         ? <><span className="text-stone-300">{formatPrice(p.sale_price)}</span><span className="line-through text-stone-600 ml-1.5">{formatPrice(p.price)}</span></>
                         : formatPrice(p.price)}
                     </p>
-                    {(p.is_best_seller || p.is_featured) && (
-                      <div className="flex gap-1 mt-1">
+                    {(p.is_best_seller || (p.expand?.categories?.length ?? 0) > 0) && (
+                      <div className="flex gap-1 mt-1 flex-wrap">
                         {p.is_best_seller && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/20">Best</span>}
-                        {p.is_featured && <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/20">Nổi bật</span>}
+                        {(p.expand?.categories ?? []).map((cat) => (
+                          <span key={cat.id} className="text-[10px] px-1.5 py-0.5 rounded bg-stone-800 text-stone-400 border border-stone-700">{cat.name}</span>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -194,7 +223,12 @@ function ProductsPage() {
                         </div>
                       </td>
                       <td className="py-3 pl-2">
-                        <p className="text-white font-medium truncate max-w-[200px] md:max-w-[320px]">{p.name}</p>
+                        <p className="text-white font-medium truncate max-w-[200px] md:max-w-[280px]">{p.name}</p>
+                        {p.is_best_seller && (
+                          <div className="flex gap-1 mt-1">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/20">Best</span>
+                          </div>
+                        )}
                       </td>
                       <td className="py-3 pl-2 hidden md:table-cell">
                         {p.sale_price ? (
@@ -204,9 +238,13 @@ function ProductsPage() {
                         )}
                       </td>
                       <td className="py-3 pl-2 hidden lg:table-cell">
-                        <div className="flex gap-1 flex-wrap">
-                          {p.is_best_seller && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/20">Best</span>}
-                          {p.is_featured && <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/20">Nổi bật</span>}
+                        <div className="flex gap-1 flex-wrap max-w-[180px]">
+                          {(p.expand?.categories ?? []).length > 0
+                            ? (p.expand?.categories ?? []).map((cat) => (
+                                <span key={cat.id} className="text-[10px] px-2 py-0.5 rounded-full bg-stone-800 text-stone-400 border border-stone-700 whitespace-nowrap">{cat.name}</span>
+                              ))
+                            : <span className="text-stone-600 text-xs">—</span>
+                          }
                         </div>
                       </td>
                       <td className="py-3 pl-2 text-center">
@@ -274,7 +312,7 @@ function TableHead() {
         <th className="py-3 pl-4 text-left w-14">Ảnh</th>
         <th className="py-3 pl-2 text-left">Sản phẩm</th>
         <th className="py-3 pl-2 text-left hidden md:table-cell">Giá</th>
-        <th className="py-3 pl-2 text-left hidden lg:table-cell">Tags</th>
+        <th className="py-3 pl-2 text-left hidden lg:table-cell">Danh mục</th>
         <th className="py-3 pl-2 text-center w-24">Hiển thị</th>
         <th className="py-3 pr-4 text-center w-28">Thao tác</th>
       </tr>

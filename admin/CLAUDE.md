@@ -22,7 +22,7 @@ VITE_SHOP_URL=         # Storefront URL for cache revalidation (optional, defaul
 ## Stack
 
 - **Vite + React 19 + TypeScript** — standalone SPA, no SSR
-- **TanStack Router v1** — file-based routing under `src/routes/`; route tree auto-generated to `src/routeTree.gen.ts` on build/dev
+- **TanStack Router v1** — file-based routing under `src/routes/`; route tree auto-geneđorated to `src/routeTree.gen.ts` on build/dev
 - **TanStack Query** — all data fetching; hooks live in `src/features/<feature>/api.ts`
 - **Zustand 5 + persist** — auth state only, localStorage key `vht-admin-auth`
 - **PocketBase 0.26.8** — singleton at `src/lib/pb.ts`; `pb.afterSend` handles global 401 → auto-logout

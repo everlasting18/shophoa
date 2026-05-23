@@ -20,7 +20,7 @@ export default function Error({
         <p className="text-5xl mb-4">🌸</p>
         <h1 className="font-heading text-2xl font-bold mb-2">Có lỗi xảy ra</h1>
         <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
-          Rất tiếc, đã có lỗi khi tải trang này. Vui lòng thử lại.
+          Rất tiếc, đã có lỗi khi tảfi trang này. Vui lòng thử lại.
         </p>
         <div className="flex gap-3 justify-center">
           <button

@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
+import { Calendar, Clock, ArrowRight } from "lucide-react";
 import pb from "@/services/pocketbase";
 import type { Product, Banner, Category } from "@/schema";
 import HeroBanner from "@/components/home/hero-banner";
 import CategoryCircles from "@/components/home/category-circles";
 import ProductSection from "@/components/home/product-section";
 import { getSiteSettings } from "@/services/settings";
-import { localBusinessSchema } from "@/services/seo";
-import { Flower2 } from "lucide-react";
-import { CONTACT } from "@/config";
+import { localBusinessSchema, websiteSchema } from "@/services/seo";
+import type { PostMeta } from "@/lib/posts";
+import postsManifest from "@/content/posts-manifest.json";
 
 export const revalidate = 3600;
 
@@ -59,7 +61,7 @@ async function getParentCategories(): Promise<Category[]> {
 async function getFeaturedSections(
   categories: Category[]
 ): Promise<{ category: Category; products: Product[] }[]> {
-  const featured = categories.slice(0, 3);
+  const featured = categories;
   if (featured.length === 0) return [];
 
   // Fetch all subcategories in one query
@@ -96,6 +98,14 @@ async function getFeaturedSections(
   return sections.filter((s) => s.products.length > 0);
 }
 
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
 export default async function HomePage() {
   const [banners, bestSellers, parentCategories, contact] = await Promise.all([
     getBanners(),
@@ -103,11 +113,16 @@ export default async function HomePage() {
     getParentCategories(),
     getSiteSettings(),
   ]);
+  const latestPosts = postsManifest.slice(0, 3) as PostMeta[];
 
   const featuredSections = await getFeaturedSections(parentCategories);
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema()) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema(contact)) }}
@@ -141,69 +156,82 @@ export default async function HomePage() {
         />
       ))}
 
-      {/* CTA Banner */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#5d714f] to-[#3d4f33]" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-        <div className="container relative mx-auto px-4 py-16 sm:py-20 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 text-white/90 text-xs font-medium mb-5">
-            <Flower2 className="w-3.5 h-3.5" />
-            Giao hoa hỏa tốc TPHCM
-          </div>
-          <h2 className="font-heading text-2xl sm:text-4xl font-bold text-white mb-4 tracking-tight">
-            Đặt Hoa Ngay – Giao Trong 60 Phút!
-          </h2>
-          <p className="text-white/70 mb-8 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
-            Liên hệ ngay qua Zalo hoặc gọi hotline để được tư vấn và đặt hoa nhanh nhất.
-            Hoa tươi nhập mới mỗi ngày.
-          </p>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <a
-              href={CONTACT.zalo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-2.5 bg-white text-[#3d4f33] text-sm font-semibold rounded-full hover:bg-white/90 transition-colors"
-            >
-              Nhắn Zalo ngay
-            </a>
-            <Link
-              href="/dat-hoa"
-              className="px-6 py-2.5 bg-white/10 border border-white/30 text-white text-sm font-semibold rounded-full hover:bg-white/20 transition-colors"
-            >
-              Đặt hoa online
-            </Link>
-          </div>
-        </div>
-      </section>
+      
 
-      {/* SEO content */}
-      <section className="py-14 bg-background">
-        <div className="container mx-auto px-4 max-w-3xl">
-          <h2 className="font-heading text-xl sm:text-2xl font-bold mb-5 tracking-tight">
-            Tiệm hoa nhà tình – Shop Hoa Tươi TPHCM & Đặt Hoa Online Uy Tín
-          </h2>
-          <div className="space-y-4 text-muted-foreground leading-relaxed text-sm">
-            <p>
-              Chào mừng bạn đến với <strong className="text-foreground">Tiệm hoa nhà tình</strong> – tiệm hoa tươi TPHCM phong
-              cách hiện đại, nơi mỗi bó hoa đều là một tác phẩm nghệ thuật truyền tải trọn vẹn cảm
-              xúc của người tặng.
-            </p>
-            <p>
-              Dịch vụ đặt hoa online tại Tiệm hoa nhà tình mang đến sự tiện lợi tối đa: chỉ với vài
-              thao tác, bó hoa tươi thắm sẽ được giao tận tay người thương trong vòng 60 phút tại
-              tất cả các quận nội thành TPHCM.
-            </p>
-            <div className="flex gap-3 flex-wrap pt-1">
-              <Link href="/hoa-sinh-nhat" className="text-primary hover:underline font-medium text-sm">Hoa Sinh Nhật</Link>
-              <Link href="/hoa-khai-truong" className="text-primary hover:underline font-medium text-sm">Hoa Khai Trương</Link>
-              <Link href="/hoa-tot-nghiep" className="text-primary hover:underline font-medium text-sm">Hoa Tốt Nghiệp</Link>
-              <Link href="/hoa-tinh-yeu" className="text-primary hover:underline font-medium text-sm">Hoa Tình Yêu</Link>
-              <Link href="/bo-hoa-tulip" className="text-primary hover:underline font-medium text-sm">Bó Hoa Tulip</Link>
-              <Link href="/hop-hoa-mica" className="text-primary hover:underline font-medium text-sm">Hộp Hoa Mica</Link>
+      {/* Blog preview */}
+      {latestPosts.length > 0 && (
+        <section className="py-14 bg-accent/30">
+          <div className="container mx-auto px-4">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-1">Góc Kiến Thức</p>
+                <h2 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight">Bài Viết Mới</h2>
+              </div>
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                Xem tất cả <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
-        </div>
-      </section>
+
+          {/* Mobile/small-tablet: horizontal scroll — md+: grid inside container */}
+          <div className="md:container md:mx-auto md:px-4">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none px-4 pb-2 md:px-0 md:pb-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-5">
+              {latestPosts.map((post) => (
+                <Link
+                  key={post.slug}
+                  href={`/blog/${post.slug}`}
+                  className="group flex flex-col rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 overflow-hidden shrink-0 w-[calc(50vw-24px)] snap-start md:w-auto md:shrink"
+                >
+                  {post.cover && (
+                    <div className="relative aspect-[4/3] md:aspect-[16/9] overflow-hidden shrink-0">
+                      <Image
+                        src={post.cover}
+                        alt={post.title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                    </div>
+                  )}
+                  <div className="flex flex-col flex-1 p-3 md:p-5">
+                    {post.tags && post.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2 md:gap-1.5 md:mb-3">
+                        {post.tags.slice(0, 1).map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] md:text-[11px] font-medium text-primary"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <h3 className="font-heading font-semibold text-sm md:text-base leading-snug mb-1.5 md:mb-2 group-hover:text-primary transition-colors line-clamp-3 md:line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="hidden md:block text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-4 flex-1">
+                      {post.description}
+                    </p>
+                    <div className="flex items-center gap-2 text-[10px] md:text-xs text-muted-foreground mt-auto pt-2">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {post.readTime} phút
+                      </span>
+                      <span aria-hidden>·</span>
+                      <span>{formatDate(post.date)}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      
     </>
   );
 }

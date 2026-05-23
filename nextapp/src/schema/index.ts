@@ -5,7 +5,6 @@ export type {
   OrderItem,
   Banner,
   Settings,
-  ShippingZone,
 } from "./pocketbase";
 
 export type {

@@ -9,6 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: ["/dat-hoa", "/gio-hang", "/my-account"],
       },
+
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

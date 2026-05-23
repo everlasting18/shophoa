@@ -5,6 +5,8 @@ import { CONTACT } from "@/config";
 const FALLBACK: SiteContact = {
   phone: CONTACT.phone,
   phoneDisplay: CONTACT.phoneDisplay,
+  phone2: "",
+  phone2Display: "",
   zalo: CONTACT.zalo,
   zaloGroup: "",
   email: CONTACT.email,
@@ -19,9 +21,14 @@ function mapSettings(records: Settings[]): SiteContact {
   const addresses = [get("address_1"), get("address_2")].filter(Boolean);
   if (addresses.length === 0) addresses.push(...FALLBACK.addresses);
 
+  const hotlineDisplay = get("hotline_display") || FALLBACK.phoneDisplay;
+  const displayParts = hotlineDisplay.split(/\s*[-–]\s*/).map((s) => s.trim()).filter(Boolean);
+
   return {
     phone: get("phone") || FALLBACK.phone,
-    phoneDisplay: get("hotline_display") || FALLBACK.phoneDisplay,
+    phoneDisplay: displayParts[0] || hotlineDisplay,
+    phone2: displayParts[1] ? displayParts[1].replace(/\D/g, "") : "",
+    phone2Display: displayParts[1] || "",
     zalo: get("zalo") || FALLBACK.zalo,
     zaloGroup: get("zalo_group"),
     email: get("email") || FALLBACK.email,

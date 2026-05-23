@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 import { ChevronLeft, Upload, ImageIcon, Plus, X, Check } from "lucide-react";
 const RichEditor = lazy(() => import("@/components/ui/rich-editor"));
 import { useProduct, useSaveProduct } from "@/features/products/api";
@@ -7,6 +7,7 @@ import { useCategories } from "@/features/categories/api";
 import { useToast } from "@/lib/toast";
 import { formatPrice, generateSlug } from "@/lib/utils";
 import { getThumbUrl, getImageUrl } from "@/lib/media";
+import type { Product } from "@/schema/pocketbase";
 
 export const Route = createFileRoute("/_auth/products/$id")({
   component: ProductFormPage,
@@ -22,47 +23,101 @@ const tagCls = (active: boolean) =>
 
 function ProductFormPage() {
   const { id } = Route.useParams();
+  const creating = id === "new";
+  const { data: product, isLoading } = useProduct(id);
+  const { data: categories = [] } = useCategories();
+
+  const header = (
+    <div className="flex items-center gap-3 mb-5">
+      <Link to="/products" className="text-stone-400 hover:text-white transition-colors">
+        <ChevronLeft className="w-5 h-5" />
+      </Link>
+      <h1 className="text-xl font-bold text-white">
+        {creating ? "Thêm sản phẩm mới" : "Chỉnh sửa sản phẩm"}
+      </h1>
+    </div>
+  );
+
+  if (!creating && isLoading) {
+    return (
+      <div className="max-w-6xl">
+        {header}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
+          <div className="space-y-4">
+            <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 space-y-3 animate-pulse">
+              <div className="h-3 w-24 bg-stone-800 rounded" />
+              <div className="h-9 bg-stone-800 rounded-lg" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="h-9 bg-stone-800 rounded-lg" />
+                <div className="h-9 bg-stone-800 rounded-lg" />
+              </div>
+              <div className="h-16 bg-stone-800 rounded-lg" />
+            </div>
+            <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 animate-pulse">
+              <div className="h-48 bg-stone-800 rounded-lg" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 animate-pulse">
+              <div className="aspect-square bg-stone-800 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl">
+      {header}
+      <ProductForm id={id} creating={creating} product={product} categories={categories} />
+    </div>
+  );
+}
+
+function ProductForm({
+  id,
+  creating,
+  product,
+  categories,
+}: {
+  id: string;
+  creating: boolean;
+  product: Product | undefined;
+  categories: import("@/schema/pocketbase").Category[];
+}) {
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const creating = id === "new";
-
-  const { data: product } = useProduct(id);
-  const { data: categories = [] } = useCategories();
   const saveProduct = useSaveProduct();
 
   const [form, setForm] = useState({
-    name: "", price: "", sale_price: "", short_description: "", description: "",
-    is_featured: false, is_best_seller: false, is_active: true,
-    categories: [] as string[], occasions: [] as string[],
+    name: product?.name ?? "",
+    price: product?.price ? String(product.price) : "",
+    sale_price: product?.sale_price ? String(product.sale_price) : "",
+    short_description: product?.short_description ?? "",
+    description: product?.description ?? "",
+    is_best_seller: product?.is_best_seller ?? false,
+    is_active: product?.is_active ?? true,
+    categories: product?.categories ?? ([] as string[]),
+    occasions: product?.occasions ?? ([] as string[]),
   });
+
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState("");
+  const [thumbnailPreview, setThumbnailPreview] = useState(
+    product?.thumbnail ? getThumbUrl(product.collectionId, product.id, product.thumbnail) : ""
+  );
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<{ filename: string; url: string }[]>([]);
+  const [existingImages, setExistingImages] = useState<{ filename: string; url: string }[]>(
+    Array.isArray(product?.images)
+      ? product.images.map((img) => ({
+          filename: img,
+          url: getImageUrl(product.collectionId, product.id, img),
+        }))
+      : []
+  );
   const [removedImages, setRemovedImages] = useState<string[]>([]);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (!product) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setForm({
-      name: product.name, price: String(product.price),
-      sale_price: product.sale_price ? String(product.sale_price) : "",
-      short_description: product.short_description || "",
-      description: product.description || "",
-      is_featured: product.is_featured, is_best_seller: product.is_best_seller,
-      is_active: product.is_active,
-      categories: product.categories || [], occasions: product.occasions || [],
-    });
-    if (product.thumbnail) setThumbnailPreview(getThumbUrl(product.collectionId, product.id, product.thumbnail));
-    if (Array.isArray(product.images)) {
-      setExistingImages(product.images.map((img: string) => ({
-        filename: img,
-        url: getImageUrl(product.collectionId, product.id, img),
-      })));
-    }
-  }, [product]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -81,7 +136,6 @@ function ProductFormPage() {
     data.append("sale_price", form.sale_price || "0");
     data.append("short_description", form.short_description);
     data.append("description", form.description);
-    data.append("is_featured", String(form.is_featured));
     data.append("is_best_seller", String(form.is_best_seller));
     data.append("is_active", String(form.is_active));
     form.occasions.forEach((o) => data.append("occasions", o));
@@ -106,223 +160,214 @@ function ProductFormPage() {
   const totalGallery = existingImages.length + galleryPreviews.length;
 
   return (
-    <div className="max-w-6xl">
-      <div className="flex items-center gap-3 mb-5">
-        <Link to="/products" className="text-stone-400 hover:text-white transition-colors">
-          <ChevronLeft className="w-5 h-5" />
-        </Link>
-        <h1 className="text-xl font-bold text-white">{creating ? "Thêm sản phẩm mới" : "Chỉnh sửa sản phẩm"}</h1>
-      </div>
+    <form onSubmit={handleSubmit}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
-
-          {/* LEFT */}
-          <div className="space-y-4">
-            <Section title="Thông tin cơ bản">
-              <div className="space-y-3">
-                <div>
-                  <label className={lCls}>Tên sản phẩm *</label>
-                  <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    placeholder="VD: Bó hoa hồng đỏ 20 bông" className={iCls} />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={lCls}>Giá gốc *</label>
-                    <input type="number" min="0" step="1000" value={form.price}
-                      onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                      placeholder="350000" className={iCls + noSpinner} />
-                    {form.price && <p className="text-[10px] text-stone-500 mt-1">{formatPrice(Number(form.price))}</p>}
-                  </div>
-                  <div>
-                    <label className={lCls}>Giá sale</label>
-                    <input type="number" min="0" step="1000" value={form.sale_price}
-                      onChange={(e) => setForm((f) => ({ ...f, sale_price: e.target.value }))}
-                      placeholder="Để trống nếu không sale" className={iCls + noSpinner} />
-                    {form.sale_price && Number(form.sale_price) >= Number(form.price) && (
-                      <p className="text-[10px] text-red-400 mt-1">Phải nhỏ hơn giá gốc</p>
-                    )}
-                    {form.sale_price && Number(form.sale_price) < Number(form.price) && (
-                      <p className="text-[10px] text-stone-500 mt-1">{formatPrice(Number(form.sale_price))}</p>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className={lCls.replace("mb-1.5", "")}>Mô tả ngắn <span className="text-stone-600">(hiển thị trên thẻ sản phẩm)</span></label>
-                    <span className={`text-[10px] tabular-nums ${form.short_description.length > 120 ? "text-amber-400" : "text-stone-600"}`}>
-                      {form.short_description.length}/150
-                    </span>
-                  </div>
-                  <textarea value={form.short_description}
-                    onChange={(e) => setForm((f) => ({ ...f, short_description: e.target.value.slice(0, 150) }))}
-                    placeholder="Mô tả 1-2 câu ngắn gọn..." className={iCls} rows={2} />
-                </div>
+        {/* LEFT */}
+        <div className="space-y-4">
+          <Section title="Thông tin cơ bản">
+            <div className="space-y-3">
+              <div>
+                <label className={lCls}>Tên sản phẩm *</label>
+                <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="VD: Bó hoa hồng đỏ 20 bông" className={iCls} />
               </div>
-            </Section>
-
-            <Section title="Mô tả chi tiết">
-              <Suspense fallback={<div className="h-48 rounded-lg bg-stone-800 animate-pulse" />}>
-                <RichEditor
-                  value={form.description}
-                  onChange={(html) => setForm((f) => ({ ...f, description: html }))}
-                />
-              </Suspense>
-            </Section>
-
-            <Section title="Phân loại">
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={lCls}>Danh mục</label>
-                  <div className="mt-1 space-y-2">
-                    {categories
-                      .filter((c) => !c.parent)
-                      .sort((a, b) => a.sort_order - b.sort_order)
-                      .map((parent) => {
-                        const children = categories.filter((c) => c.parent === parent.id).sort((a, b) => a.sort_order - b.sort_order);
-                        const toggleCat = (id: string) => setForm((f) => ({
-                          ...f,
-                          categories: f.categories.includes(id)
-                            ? f.categories.filter((x) => x !== id)
-                            : [...f.categories, id],
-                        }));
-                        return (
-                          <div key={parent.id}>
-                            <button type="button" onClick={() => toggleCat(parent.id)} className={tagCls(form.categories.includes(parent.id))}>
-                              {parent.name}
-                            </button>
-                            {children.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5 mt-1.5 ml-3 pl-2 border-l border-stone-700">
-                                {children.map((child) => (
-                                  <button key={child.id} type="button" onClick={() => toggleCat(child.id)} className={tagCls(form.categories.includes(child.id))}>
-                                    {child.name}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                  </div>
+                  <label className={lCls}>Giá gốc *</label>
+                  <input type="number" min="0" value={form.price}
+                    onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                    placeholder="350000" className={iCls + noSpinner} />
+                  {form.price && <p className="text-[10px] text-stone-500 mt-1">{formatPrice(Number(form.price))}</p>}
                 </div>
                 <div>
-                  <label className={lCls}>Dịp tặng</label>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {OCCASIONS.map((o) => (
-                      <button key={o} type="button"
-                        onClick={() => setForm((f) => ({
-                          ...f,
-                          occasions: f.occasions.includes(o)
-                            ? f.occasions.filter((x) => x !== o)
-                            : [...f.occasions, o],
-                        }))}
-                        className={tagCls(form.occasions.includes(o))}>
-                        {o}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Section>
-
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm">{error}</div>
-            )}
-          </div>
-
-          {/* RIGHT */}
-          <div className="space-y-4 lg:sticky lg:top-4">
-            <Section title="Ảnh đại diện">
-              <label className="block cursor-pointer group">
-                <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-stone-800 border-2 border-dashed border-stone-700 group-hover:border-rose-500/60 transition-colors">
-                  {thumbnailPreview ? (
-                    <>
-                      <img src={thumbnailPreview} alt="" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
-                        <Upload className="w-6 h-6 text-white" />
-                        <span className="text-white text-xs font-medium">Thay ảnh</span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-stone-500">
-                      <ImageIcon className="w-10 h-10" />
-                      <span className="text-xs">Click để chọn ảnh</span>
-                    </div>
+                  <label className={lCls}>Giá sale</label>
+                  <input type="number" min="0" value={form.sale_price}
+                    onChange={(e) => setForm((f) => ({ ...f, sale_price: e.target.value }))}
+                    placeholder="Để trống nếu không sale" className={iCls + noSpinner} />
+                  {form.sale_price && Number(form.sale_price) >= Number(form.price) && (
+                    <p className="text-[10px] text-red-400 mt-1">Phải nhỏ hơn giá gốc</p>
+                  )}
+                  {form.sale_price && Number(form.sale_price) < Number(form.price) && (
+                    <p className="text-[10px] text-stone-500 mt-1">{formatPrice(Number(form.sale_price))}</p>
                   )}
                 </div>
-                <input type="file" accept="image/*" className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) { setThumbnailFile(f); setThumbnailPreview(URL.createObjectURL(f)); }
-                  }} />
-              </label>
-            </Section>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className={lCls.replace("mb-1.5", "")}>Mô tả ngắn <span className="text-stone-600">(hiển thị trên thẻ sản phẩm)</span></label>
+                  <span className={`text-[10px] tabular-nums ${form.short_description.length > 120 ? "text-amber-400" : "text-stone-600"}`}>
+                    {form.short_description.length}/150
+                  </span>
+                </div>
+                <textarea value={form.short_description}
+                  onChange={(e) => setForm((f) => ({ ...f, short_description: e.target.value.slice(0, 150) }))}
+                  placeholder="Mô tả 1-2 câu ngắn gọn..." className={iCls} rows={2} />
+              </div>
+            </div>
+          </Section>
 
-            <Section title={`Gallery (${totalGallery}/4)`}>
-              <div className="grid grid-cols-2 gap-2">
-                {existingImages.map((img, i) => (
-                  <div key={`e-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-stone-800 border border-stone-700 group">
-                    <img src={img.url} alt="" className="w-full h-full object-cover" />
-                    <button type="button"
-                      onClick={() => { setRemovedImages((p) => [...p, img.filename]); setExistingImages((p) => p.filter((_, j) => j !== i)); }}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <X className="w-3 h-3" />
+          <Section title="Mô tả chi tiết">
+            <Suspense fallback={<div className="h-48 rounded-lg bg-stone-800 animate-pulse" />}>
+              <RichEditor
+                value={form.description}
+                onChange={(html) => setForm((f) => ({ ...f, description: html }))}
+              />
+            </Suspense>
+          </Section>
+
+          <Section title="Phân loại">
+            <div className="space-y-4">
+              <div>
+                <label className={lCls}>Danh mục</label>
+                <div className="mt-1 space-y-2">
+                  {categories
+                    .filter((c) => !c.parent)
+                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .map((parent) => {
+                      const children = categories.filter((c) => c.parent === parent.id).sort((a, b) => a.sort_order - b.sort_order);
+                      const toggleCat = (catId: string) => setForm((f) => ({
+                        ...f,
+                        categories: f.categories.includes(catId)
+                          ? f.categories.filter((x) => x !== catId)
+                          : [...f.categories, catId],
+                      }));
+                      return (
+                        <div key={parent.id}>
+                          <button type="button" onClick={() => toggleCat(parent.id)} className={tagCls(form.categories.includes(parent.id))}>
+                            {parent.name}
+                          </button>
+                          {children.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-1.5 ml-3 pl-2 border-l border-stone-700">
+                              {children.map((child) => (
+                                <button key={child.id} type="button" onClick={() => toggleCat(child.id)} className={tagCls(form.categories.includes(child.id))}>
+                                  {child.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+              <div>
+                <label className={lCls}>Dịp tặng</label>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {OCCASIONS.map((o) => (
+                    <button key={o} type="button"
+                      onClick={() => setForm((f) => ({
+                        ...f,
+                        occasions: f.occasions.includes(o)
+                          ? f.occasions.filter((x) => x !== o)
+                          : [...f.occasions, o],
+                      }))}
+                      className={tagCls(form.occasions.includes(o))}>
+                      {o}
                     </button>
-                  </div>
-                ))}
-                {galleryPreviews.map((src, i) => (
-                  <div key={`n-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-stone-800 border border-stone-700 group">
-                    <img src={src} alt="" className="w-full h-full object-cover" />
-                    <button type="button"
-                      onClick={() => { setGalleryFiles((p) => p.filter((_, j) => j !== i)); setGalleryPreviews((p) => p.filter((_, j) => j !== i)); }}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-                {totalGallery < 4 && (
-                  <label className="aspect-square rounded-lg bg-stone-800 border-2 border-dashed border-stone-700 hover:border-rose-500/60 flex items-center justify-center cursor-pointer transition-colors">
-                    <div className="flex flex-col items-center gap-1 text-stone-500">
-                      <Plus className="w-5 h-5" />
-                      <span className="text-[10px]">Thêm ảnh</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm">{error}</div>
+          )}
+        </div>
+
+        {/* RIGHT */}
+        <div className="space-y-4 lg:sticky lg:top-4">
+          <Section title="Ảnh đại diện">
+            <label className="block cursor-pointer group">
+              <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-stone-800 border-2 border-dashed border-stone-700 group-hover:border-rose-500/60 transition-colors">
+                {thumbnailPreview ? (
+                  <>
+                    <img src={thumbnailPreview} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
+                      <Upload className="w-6 h-6 text-white" />
+                      <span className="text-white text-xs font-medium">Thay ảnh</span>
                     </div>
-                    <input type="file" accept="image/*" multiple className="hidden"
-                      onChange={(e) => {
-                        const slots = 4 - totalGallery;
-                        const files = Array.from(e.target.files || []).slice(0, slots);
-                        setGalleryFiles((p) => [...p, ...files]);
-                        setGalleryPreviews((p) => [...p, ...files.map((f) => URL.createObjectURL(f))]);
-                      }} />
-                  </label>
+                  </>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-stone-500">
+                    <ImageIcon className="w-10 h-10" />
+                    <span className="text-xs">Click để chọn ảnh</span>
+                  </div>
                 )}
               </div>
-            </Section>
+              <input type="file" accept="image/*" className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) { setThumbnailFile(f); setThumbnailPreview(URL.createObjectURL(f)); }
+                  e.target.value = "";
+                }} />
+            </label>
+          </Section>
 
-            <Section title="Tuỳ chọn">
-              <div className="space-y-2.5">
-                <Toggle label="Hiển thị" desc="Sản phẩm xuất hiện ngoài cửa hàng"
-                  checked={form.is_active} onChange={(v) => setForm((f) => ({ ...f, is_active: v }))} />
-                <Toggle label="Nổi bật" desc="Hiển thị trong mục sản phẩm nổi bật"
-                  checked={form.is_featured} onChange={(v) => setForm((f) => ({ ...f, is_featured: v }))} />
-                <Toggle label="Bán chạy" desc="Hiển thị nhãn best seller"
-                  checked={form.is_best_seller} onChange={(v) => setForm((f) => ({ ...f, is_best_seller: v }))} />
-              </div>
-            </Section>
-
-            <div className="flex gap-2">
-              <button type="submit" disabled={saveProduct.isPending}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60">
-                <Check className="w-3.5 h-3.5" />
-                {saveProduct.isPending ? "Đang lưu..." : creating ? "Tạo sản phẩm" : "Lưu thay đổi"}
-              </button>
-              <Link to="/products" className="px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 text-sm rounded-lg transition-colors">
-                Huỷ
-              </Link>
+          <Section title={`Gallery (${totalGallery}/4)`}>
+            <div className="grid grid-cols-2 gap-2">
+              {existingImages.map((img, i) => (
+                <div key={`e-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-stone-800 border border-stone-700 group">
+                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                  <button type="button"
+                    onClick={() => { setRemovedImages((p) => [...p, img.filename]); setExistingImages((p) => p.filter((_, j) => j !== i)); }}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              {galleryPreviews.map((src, i) => (
+                <div key={`n-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-stone-800 border border-stone-700 group">
+                  <img src={src} alt="" className="w-full h-full object-cover" />
+                  <button type="button"
+                    onClick={() => { setGalleryFiles((p) => p.filter((_, j) => j !== i)); setGalleryPreviews((p) => p.filter((_, j) => j !== i)); }}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              {totalGallery < 4 && (
+                <label className="aspect-square rounded-lg bg-stone-800 border-2 border-dashed border-stone-700 hover:border-rose-500/60 flex items-center justify-center cursor-pointer transition-colors">
+                  <div className="flex flex-col items-center gap-1 text-stone-500">
+                    <Plus className="w-5 h-5" />
+                    <span className="text-[10px]">Thêm ảnh</span>
+                  </div>
+                  <input type="file" accept="image/*" multiple className="hidden"
+                    onChange={(e) => {
+                      const slots = 4 - totalGallery;
+                      const files = Array.from(e.target.files || []).slice(0, slots);
+                      setGalleryFiles((p) => [...p, ...files]);
+                      setGalleryPreviews((p) => [...p, ...files.map((f) => URL.createObjectURL(f))]);
+                      e.target.value = "";
+                    }} />
+                </label>
+              )}
             </div>
+          </Section>
+
+          <Section title="Tuỳ chọn">
+            <div className="space-y-2.5">
+              <Toggle label="Hiển thị" desc="Sản phẩm xuất hiện ngoài cửa hàng"
+                checked={form.is_active} onChange={(v) => setForm((f) => ({ ...f, is_active: v }))} />
+              <Toggle label="Bán chạy" desc="Hiển thị nhãn best seller"
+                checked={form.is_best_seller} onChange={(v) => setForm((f) => ({ ...f, is_best_seller: v }))} />
+            </div>
+          </Section>
+
+          <div className="flex gap-2">
+            <button type="submit" disabled={saveProduct.isPending}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60">
+              <Check className="w-3.5 h-3.5" />
+              {saveProduct.isPending ? "Đang lưu..." : creating ? "Tạo sản phẩm" : "Lưu thay đổi"}
+            </button>
+            <Link to="/products" className="px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 text-sm rounded-lg transition-colors">
+              Huỷ
+            </Link>
           </div>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 }
 

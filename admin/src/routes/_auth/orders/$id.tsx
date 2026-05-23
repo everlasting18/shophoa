@@ -31,6 +31,7 @@ function OrderDetailPage() {
   const { data: order, isLoading } = useOrder(id);
   const updateStatus = useUpdateOrderStatus();
   const [copied, setCopied] = useState<string | null>(null);
+  const [cancelConfirm, setCancelConfirm] = useState(false);
 
   function copyText(text: string, key: string) {
     navigator.clipboard.writeText(text);
@@ -58,10 +59,31 @@ function OrderDetailPage() {
   const current = STATUSES.find((s) => s.value === order.status) ?? STATUSES[0];
   const items: OrderItem[] = Array.isArray(order.items) ? order.items : [];
   const next = NEXT_STATUS[order.status];
-  const shippingFee = (order.total ?? 0) - (order.subtotal ?? 0);
 
   return (
     <div className="space-y-5 max-w-3xl">
+      {/* Cancel confirm modal */}
+      {cancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div className="bg-stone-950 border border-stone-800 rounded-xl p-5 w-full max-w-sm">
+            <h3 className="text-white text-sm font-semibold mb-2">Huỷ đơn hàng?</h3>
+            <p className="text-stone-400 text-sm mb-4">
+              Đơn <span className="text-white font-mono">{order.order_code || `#${order.id.slice(-8).toUpperCase()}`}</span> sẽ bị huỷ và không thể khôi phục.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setCancelConfirm(false)} className="px-3 py-1.5 text-xs text-stone-400 hover:text-white transition-colors">Không</button>
+              <button
+                onClick={() => { updateStatus.mutate({ id: order.id, status: "cancelled" }); setCancelConfirm(false); }}
+                disabled={updateStatus.isPending}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-60"
+              >
+                Xác nhận huỷ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link to="/orders" search={{ status: "" }} className="hidden lg:block text-stone-400 hover:text-white transition-colors shrink-0">
@@ -120,7 +142,7 @@ function OrderDetailPage() {
           )}
           {order.status === "pending" && (
             <button
-              onClick={() => updateStatus.mutate({ id: order.id, status: "cancelled" })}
+              onClick={() => setCancelConfirm(true)}
               disabled={updateStatus.isPending}
               className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors disabled:opacity-50"
             >
@@ -202,13 +224,9 @@ function OrderDetailPage() {
             </div>
           ))}
         </div>
-        <div className="mt-4 pt-4 border-t border-stone-800 space-y-2">
-          <div className="flex justify-between text-sm"><span className="text-stone-400">Tạm tính</span><span className="text-white">{formatPrice(order.subtotal)}</span></div>
-          <div className="flex justify-between text-sm"><span className="text-stone-400">Phí vận chuyển</span><span className="text-white">{formatPrice(shippingFee)}</span></div>
-          <div className="flex justify-between pt-2 border-t border-stone-700">
-            <span className="text-white font-bold">Tổng cộng</span>
-            <span className="text-lg font-bold text-rose-400">{formatPrice(order.total)}</span>
-          </div>
+        <div className="mt-4 pt-4 border-t border-stone-800 flex justify-between items-center">
+          <span className="text-white font-bold">Tổng cộng</span>
+          <span className="text-lg font-bold text-rose-400">{formatPrice(order.total)}</span>
         </div>
       </Card>
 

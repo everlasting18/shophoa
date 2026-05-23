@@ -10,7 +10,8 @@ import PriceDisplay from "@/components/product/price-display";
 import { productSchema, breadcrumbSchema } from "@/services/seo";
 import { getImageUrl } from "@/lib/media";
 import { sanitizeHtml, stripHtml } from "@/lib/sanitize";
-import { SITE_NAME, CONTACT } from "@/config";
+import { SITE_NAME, PHOTO_BASE } from "@/config";
+import { getSiteSettings } from "@/services/settings";
 import { Home, ChevronRight, Truck, ShieldCheck, Gift, Clock, Phone } from "lucide-react";
 
 export const revalidate = 3600;
@@ -49,21 +50,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getProduct(slug);
   if (!product) return { title: "Không tìm thấy" };
 
-  const title = `${product.name} | ${SITE_NAME}`;
-  const description = stripHtml(product.short_description || product.description || "");
+  const title = `${product.name} – Mua Tại ${SITE_NAME} TPHCM`;
+  const description = stripHtml(product.short_description || product.description || "").slice(0, 155);
   const image = product.thumbnail
-    ? getImageUrl(product.collectionId, product.id, product.thumbnail)
+    ? `${PHOTO_BASE}/${product.collectionId}/${product.id}/${product.thumbnail}`
     : undefined;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical: `/san-pham/${slug}` },
     openGraph: {
       title,
       description,
       url: `/san-pham/${slug}`,
-      images: image ? [{ url: image }] : undefined,
+      images: image ? [{ url: image, width: 800, height: 800, alt: product.name }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
@@ -86,20 +87,18 @@ export default async function ProductDetailPage({ params }: Props) {
   const product = await getProduct(slug);
   if (!product) notFound();
 
-  const related = await getRelated(product);
+  const [related, contact] = await Promise.all([getRelated(product), getSiteSettings()]);
 
   const rawImages = Array.isArray(product.images) ? product.images : [];
   const seen = new Set<string>();
   const imageUrls: string[] = [];
 
-  // Thumbnail luôn là ảnh đầu tiên
   if (product.thumbnail) {
     const url = getImageUrl(product.collectionId, product.id, product.thumbnail, 800);
     imageUrls.push(url);
     seen.add(product.thumbnail);
   }
 
-  // Append các ảnh phụ (bỏ trùng với thumbnail)
   for (const img of rawImages) {
     if (!seen.has(img)) {
       imageUrls.push(getImageUrl(product.collectionId, product.id, img, 800));
@@ -152,13 +151,10 @@ export default async function ProductDetailPage({ params }: Props) {
           <span className="text-foreground font-medium line-clamp-1">{product.name}</span>
         </nav>
 
-        {/* Product main — gallery sticky on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 mb-16 items-start">
           <ProductGallery images={imageUrls} productName={product.name} />
 
-          {/* Info */}
           <div className="flex flex-col gap-5">
-            {/* Category tags */}
             {categories.length > 0 && (
               <div className="flex gap-2 flex-wrap">
                 {categories.map((cat) => (
@@ -173,7 +169,6 @@ export default async function ProductDetailPage({ params }: Props) {
               </div>
             )}
 
-            {/* Title + badges */}
             <div>
               <div className="flex gap-2 mb-2 flex-wrap">
                 {product.is_best_seller && (
@@ -181,18 +176,13 @@ export default async function ProductDetailPage({ params }: Props) {
                     🔥 Bán chạy
                   </span>
                 )}
-                {product.is_featured && (
-                  <span className="text-[11px] px-2.5 py-1 rounded-full bg-primary/10 text-primary font-semibold">
-                    ✨ Nổi bật
-                  </span>
-                )}
+
               </div>
               <h1 className="font-heading text-2xl sm:text-3xl font-bold leading-snug tracking-tight">
                 {product.name}
               </h1>
             </div>
 
-            {/* Price */}
             <div className="flex items-center gap-3 flex-wrap">
               <PriceDisplay price={product.price} salePrice={product.sale_price} className="text-2xl sm:text-3xl" />
               {discount > 0 && (
@@ -202,17 +192,14 @@ export default async function ProductDetailPage({ params }: Props) {
               )}
             </div>
 
-            {/* Short description */}
             {product.short_description && (
               <p className="text-sm text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-4 py-0.5">
                 {product.short_description}
               </p>
             )}
 
-            {/* Add to cart */}
             <AddToCartButton product={product} />
 
-            {/* Trust badges */}
             <div className="grid grid-cols-2 gap-2.5 pt-1">
               {TRUST_BADGES.map(({ icon: Icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-xs text-muted-foreground bg-background border border-border rounded-xl px-3 py-2.5">
@@ -222,20 +209,18 @@ export default async function ProductDetailPage({ params }: Props) {
               ))}
             </div>
 
-            {/* Contact */}
             <div className="flex items-center gap-3 pt-1 border-t border-border/60">
               <a
-                href={`tel:${CONTACT.phone}`}
+                href={`tel:${contact.phone}`}
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 <Phone className="w-4 h-4 text-primary" />
-                <span>Hotline: <strong className="text-foreground">{CONTACT.phoneDisplay}</strong></span>
+                <span>Hotline: <strong className="text-foreground">{contact.phoneDisplay}</strong></span>
               </a>
             </div>
           </div>
         </div>
 
-        {/* Description */}
         {product.description && (
           <div className="mb-14 max-w-3xl">
             <h2 className="font-heading text-lg font-bold mb-5 flex items-center gap-2.5">
@@ -246,14 +231,13 @@ export default async function ProductDetailPage({ params }: Props) {
               className="prose prose-sm max-w-none text-foreground/80 leading-relaxed
                 prose-headings:font-heading prose-headings:text-foreground
                 prose-p:text-foreground/75 prose-p:leading-relaxed
-                prose-img:rounded-xl prose-img:shadow-sm
+                prose-img:rounded-xl prose-img:shadow-sm prose-img:my-4
                 prose-a:text-primary prose-a:no-underline hover:prose-a:underline"
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
             />
           </div>
         )}
 
-        {/* Related */}
         {related.length > 0 && (
           <div>
             <h2 className="font-heading text-lg font-bold mb-6 flex items-center gap-2.5">

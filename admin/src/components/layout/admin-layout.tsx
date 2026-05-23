@@ -1,7 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import {
   LayoutDashboard, ShoppingBag, Package,
-  FolderOpen, Image, Settings, LogOut, LayoutGrid, X, ChevronLeft, Truck,
+  FolderOpen, Image, Settings, LogOut, LayoutGrid, X, ChevronLeft,
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -25,7 +25,6 @@ const SIDEBAR_NAV: NavItem[] = [
   { to: "/products",   label: "Sản phẩm",   icon: Package },
   { to: "/categories", label: "Danh mục",   icon: FolderOpen, ownerOnly: true },
   { to: "/banners",    label: "Banners",     icon: Image,      ownerOnly: true },
-  { to: "/shipping",   label: "Phí ship",   icon: Truck,      ownerOnly: true },
   { to: "/settings",   label: "Cài đặt",    icon: Settings,   ownerOnly: true },
 ];
 
@@ -38,7 +37,6 @@ const BOTTOM_TABS: NavItem[] = [
 const MORE_ITEMS: NavItem[] = [
   { to: "/categories", label: "Danh mục", icon: FolderOpen, ownerOnly: true },
   { to: "/banners",    label: "Banners",  icon: Image,      ownerOnly: true },
-  { to: "/shipping",   label: "Phí ship", icon: Truck,      ownerOnly: true },
   { to: "/settings",   label: "Cài đặt", icon: Settings,   ownerOnly: true },
 ];
 
@@ -62,7 +60,6 @@ const MOBILE_TITLES: Record<string, string> = {
   "/products": "Sản phẩm",
   "/categories": "Danh mục",
   "/banners": "Banners",
-  "/shipping": "Phí ship",
   "/settings": "Cài đặt",
 };
 

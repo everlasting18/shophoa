@@ -13,17 +13,19 @@ function revalidate(...paths: string[]) {
   );
 }
 
-export function useProducts(page: number, search: string, activeFilter: "all" | "active" | "inactive" = "all") {
+export function useProducts(page: number, search: string, activeFilter: "all" | "active" | "inactive" = "all", categoryFilter = "") {
   return useQuery({
-    queryKey: ["products", page, search, activeFilter],
+    queryKey: ["products", page, search, activeFilter, categoryFilter],
     queryFn: () => {
       const parts: string[] = [];
       if (search) parts.push(`name~"${search.replace(/"/g, '\\"')}"`);
       if (activeFilter === "active") parts.push("is_active=true");
       if (activeFilter === "inactive") parts.push("is_active=false");
+      if (categoryFilter) parts.push(`categories ~ "${categoryFilter}"`);
       return pb.collection("products").getList<Product>(page, 10, {
         sort: "-created",
         filter: parts.join(" && ") || undefined,
+        expand: "categories",
       });
     },
   });
@@ -57,6 +59,21 @@ export function useDeleteProduct() {
       qc.invalidateQueries({ queryKey: ["products"] });
       revalidate("/san-pham", "/");
     },
+  });
+}
+
+export function useProductCategoryCounts() {
+  return useQuery({
+    queryKey: ["products", "category-counts"],
+    queryFn: async () => {
+      const items = await pb.collection("products").getFullList<{ categories: string[] }>({ fields: "categories" });
+      const counts: Record<string, number> = {};
+      items.forEach((p) => {
+        (p.categories ?? []).forEach((cid) => { counts[cid] = (counts[cid] ?? 0) + 1; });
+      });
+      return counts;
+    },
+    staleTime: 60_000,
   });
 }
 

@@ -6,7 +6,7 @@ import { ShoppingCart, Search, Menu, Phone, ChevronDown, ChevronRight } from "lu
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { SITE_NAME, NAV_ITEMS, CONTACT } from "@/config";
-import type { NavItem } from "@/schema";
+import type { NavItem, SiteContact } from "@/schema";
 import { useCartStore } from "@/stores/cart-store";
 import SearchDialog from "@/components/layout/search-dialog";
 
@@ -15,6 +15,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState<Record<string, boolean>>({});
   const [openMegaMenu, setOpenMegaMenu] = useState<string | null>(null);
   const [navItems, setNavItems] = useState<NavItem[]>(NAV_ITEMS);
+  const [contact, setContact] = useState<Pick<SiteContact, "phone" | "phoneDisplay">>(CONTACT);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const totalItems = useCartStore((s) => s.totalItems());
@@ -25,15 +26,17 @@ export default function Header() {
       .then((r) => r.json())
       .then((data: NavItem[]) => { if (data.length > 0) setNavItems(data); })
       .catch(() => { });
-  }, []);
-
-  useEffect(() => {
-    setMounted(true);
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((data: SiteContact) => { if (data.phone) setContact(data); })
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -57,14 +60,14 @@ export default function Header() {
     <>
       <header
         className={`sticky top-0 z-40 w-full transition-all duration-300 ${scrolled
-          ? "bg-[#fcfdeb]/95 backdrop-blur-xl shadow-[0_1px_3px_rgba(61,79,51,0.08)] border-b border-[#c9d4b8]/60"
-          : "bg-[#fcfdeb] border-b border-transparent"
+          ? "bg-[#A8B774]/95 backdrop-blur-xl shadow-[0_1px_3px_rgba(58,48,32,0.08)] border-b border-white/10"
+          : "bg-[#A8B774] border-b border-transparent"
           }`}
       >
-        <div className="container mx-auto px-4 h-14 lg:h-[72px] flex items-center justify-between gap-4">
+        <div className="container mx-auto px-4 h-14 xl:h-[72px] flex items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0 group h-full">
-            <div className="relative h-14 w-auto min-w-[100px] lg:h-[72px] transition-transform duration-300 group-hover:scale-[1.02]">
+            <div className="relative h-14 w-auto min-w-[100px] xl:h-[72px] transition-transform duration-300 group-hover:scale-[1.02]">
               <img
                 src="/images/LO1.png"
                 alt={SITE_NAME}
@@ -74,7 +77,7 @@ export default function Header() {
           </Link>
 
           {/* Nav desktop */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1">
             {navItems.map((item) => (
               <div
                 key={item.href}
@@ -84,9 +87,9 @@ export default function Header() {
               >
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-1 px-3.5 py-2 text-[13px] font-medium rounded-lg transition-colors ${openMegaMenu === item.href
-                    ? "bg-accent text-primary"
-                    : "text-foreground/80 hover:text-primary hover:bg-accent/50"
+                  className={`flex items-center gap-1 px-3.5 py-2 text-[20px] font-medium rounded-lg transition-colors whitespace-nowrap ${openMegaMenu === item.href
+                    ? "bg-white/20 text-white"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
                     }`}
                 >
                   {item.label}
@@ -127,14 +130,14 @@ export default function Header() {
               size="icon"
               aria-label="Tìm kiếm"
               onClick={() => setSearchOpen(true)}
-              className="hover:bg-accent rounded-lg w-9 h-9"
+              className="text-white/90 hover:text-white hover:bg-white/10 rounded-lg w-9 h-9"
             >
               <Search className="w-4.5 h-4.5" />
             </Button>
 
             <Link
               href="/gio-hang"
-              className="relative inline-flex items-center justify-center w-9 h-9 rounded-lg hover:bg-accent transition-colors"
+              className="relative inline-flex items-center justify-center w-9 h-9 rounded-lg text-white/90 hover:text-white hover:bg-white/10 transition-colors"
               aria-label="Giỏ hàng"
             >
               <ShoppingCart className="w-4.5 h-4.5" />
@@ -146,16 +149,16 @@ export default function Header() {
             </Link>
 
             <a
-              href={`tel:${CONTACT.phone}`}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+              href={`tel:${contact.phone}`}
+              className="hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 text-white text-xs font-medium hover:bg-white/30 transition-colors"
             >
               <Phone className="w-3 h-3" />
-              {CONTACT.phoneDisplay}
+              {contact.phoneDisplay}
             </a>
 
             {/* Mobile hamburger */}
             <Sheet>
-              <SheetTrigger render={<Button variant="ghost" size="icon" className="lg:hidden rounded-xl" />}>
+              <SheetTrigger render={<Button variant="ghost" size="icon" className="xl:hidden rounded-xl text-white/90 hover:text-white hover:bg-white/10" />}>
                 <Menu className="w-5 h-5" />
               </SheetTrigger>
               <SheetContent side="left" className="w-[300px] overflow-y-auto p-0">
@@ -205,11 +208,11 @@ export default function Header() {
                 </div>
                 <div className="border-t border-border/60 p-4 bg-accent/30">
                   <a
-                    href={`tel:${CONTACT.phone}`}
+                    href={`tel:${contact.phone}`}
                     className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
                   >
                     <Phone className="w-4 h-4" />
-                    {CONTACT.phoneDisplay}
+                    {contact.phoneDisplay}
                   </a>
                 </div>
               </SheetContent>

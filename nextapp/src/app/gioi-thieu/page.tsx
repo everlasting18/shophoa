@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MapPin, Phone, Mail, Clock, Award, Truck, Heart, Home, ChevronRight, Flower2 } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Award, Truck, Heart, Home, ChevronRight, Flower2, ShoppingBag } from "lucide-react";
 import { SITE_NAME } from "@/config";
 import { getSiteSettings } from "@/services/settings";
 
 export const metadata: Metadata = {
-  title: `Giới Thiệu | ${SITE_NAME}`,
-  description: "Vườn Hoa Tươi – Shop hoa tươi uy tín tại TPHCM. Chuyên hoa sinh nhật, khai trương, tình yêu. Giao hỏa tốc 60 phút trong nội thành.",
+  title: "Giới Thiệu",
+  description: `${SITE_NAME} – Shop hoa tươi uy tín tại TPHCM. Chuyên hoa sinh nhật, khai trương, tình yêu. Giao hỏa tốc 60 phút trong nội thành.`,
   alternates: { canonical: "/gioi-thieu" },
 };
 
@@ -29,18 +29,32 @@ export default async function AboutPage() {
         <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-5">
           <Flower2 className="w-8 h-8 text-primary" />
         </div>
-        <h1 className="font-heading text-3xl sm:text-4xl font-bold mb-3 tracking-tight">Vườn Hoa Tươi</h1>
-        <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
-          Chuyên cung cấp hoa tươi cao cấp, phong cách <em>Garden Mix Vintage</em> hiện đại tại TPHCM.
-          Mỗi bó hoa là một tác phẩm nghệ thuật được chăm chút tỉ mỉ.
+        <h1 className="font-heading text-3xl sm:text-4xl font-bold mb-3 tracking-tight">{SITE_NAME}</h1>
+        <p className="text-xs font-semibold text-primary/70 uppercase tracking-widest mb-5">
+          Cửa hàng hoa hoạt động 24/24
         </p>
+        <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed mb-6">
+          Mỗi bó hoa đều được chăm chút kỹ từ màu sắc, kiểu dáng đến cách gói —
+          để khi nhận được, ai cũng sẽ mím cười thật xinh 🌷
+        </p>
+        <div className="inline-flex flex-col gap-2 text-left mb-7 text-sm text-muted-foreground">
+          {["Hoa tươi mỗi ngày", "Thiết kế theo yêu cầu", "Giao hoa nhanh – hình thật như mẫu", "Nhận cắm hoa sự kiện, hoa quà tặng, hoa decor"].map((item) => (
+            <span key={item} className="flex items-center gap-2">
+              <span className="w-5 shrink-0 text-center text-base leading-none">✨</span>
+              <span>{item}</span>
+            </span>
+          ))}
+        </div>
+        <blockquote className="inline-block max-w-sm text-center italic text-muted-foreground text-sm leading-relaxed border-t border-b border-primary/20 py-3 px-4">
+          "Có những điều khó nói thành lời… hãy để hoa thay bạn gửi gắm." 💐
+        </blockquote>
       </div>
 
       {/* Values */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-14">
         {[
-          { icon: <Truck className="w-5 h-5" />, title: "Giao Hỏa Tốc", desc: "60 phút tới tay bạn trong nội thành TPHCM" },
-          { icon: <Award className="w-5 h-5" />, title: "Hoa Giống Mẫu 100%", desc: "Cam kết hoa y chang ảnh, hoàn tiền nếu không đúng" },
+          { icon: <Truck className="w-5 h-5" />, title: "Giao Hỏa Tốc", desc: "Giao tận nơi trong 2h nội thành TP.HCM" },
+          { icon: <Award className="w-5 h-5" />, title: "Hoa Thiết Kế Theo Yêu Cầu", desc: "Nhận cover theo yêu cầu.<br/>Trang trí hoa sinh nhật, gia tiên" },
           { icon: <Heart className="w-5 h-5" />, title: "Thiệp Miễn Phí", desc: "Kèm thiệp tay viết theo yêu cầu, không tính phí" },
         ].map((item) => (
           <div key={item.title} className="text-center p-6 rounded-2xl bg-white border border-border/60 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300">
@@ -48,29 +62,29 @@ export default async function AboutPage() {
               <span className="text-primary">{item.icon}</span>
             </div>
             <h3 className="font-heading font-semibold mb-1.5 text-[15px]">{item.title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: item.desc }} />
           </div>
         ))}
       </div>
-
-      {/* Story */}
-      <div className="prose prose-sm max-w-none mb-14">
-        <h2 className="font-heading text-2xl font-bold mb-5 tracking-tight">Câu Chuyện Của Chúng Mình</h2>
-        <p className="text-muted-foreground leading-relaxed mb-4">
-          Vườn Hoa Tươi được thành lập với tình yêu dành cho những loài hoa tươi và nghệ thuật cắm hoa.
-          Chúng mình mang đến những bó hoa mang phong cách <strong className="text-foreground">Garden Mix Vintage</strong> — sự kết hợp
-          tinh tế giữa các loài hoa nhập khẩu và hoa nội địa được chăm chọn kỹ lưỡng.
-        </p>
-        <p className="text-muted-foreground leading-relaxed mb-4">
-          Đội ngũ của chúng mình gồm những nghệ nhân cắm hoa với nhiều năm kinh nghiệm, luôn theo dõi
-          xu hướng hoa mới nhất để mang đến những mẫu hoa đẹp nhất cho khách hàng.
-        </p>
-        <p className="text-muted-foreground leading-relaxed">
-          Với 2 cửa hàng tại Quận 3 và khu vực Vườn Lài, chúng mình phục vụ giao hoa toàn TPHCM
-          với dịch vụ hỏa tốc 60 phút, đảm bảo hoa luôn tươi tắn khi đến tay ngườinhận.
-        </p>
+      {/* GrabMart callout */}
+      <div className="flex items-center gap-4 bg-[#00B14F]/10 border border-[#00B14F]/20 rounded-2xl px-5 py-4 mb-14">
+        <div className="w-10 h-10 rounded-xl bg-[#00B14F] flex items-center justify-center shrink-0">
+          <ShoppingBag className="w-5 h-5 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground">Có mặt trên GrabMart</p>
+          <p className="text-xs text-muted-foreground">Đặt hoa ngay trên ứng dụng Grab — giao nhanh tận nơi</p>
+        </div>
+        <a
+          href="https://app.grab.com/s/3mI7RZnm?sourceID=20260523_162334_526E7D43F340453EAD0063A2CDC0723C_MEXMPS"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 px-4 py-2 rounded-full bg-[#00B14F] text-white text-xs font-semibold hover:bg-[#009940] transition-colors"
+        >
+          Mở Grab
+        </a>
       </div>
-
+     
       {/* Contact Info */}
       <div className="bg-white rounded-2xl p-6 sm:p-8 border border-border/60 mb-10">
         <h2 className="font-heading text-xl font-bold mb-6">Thông Tin Liên Hệ</h2>
@@ -108,13 +122,22 @@ export default async function AboutPage() {
         </div>
       </div>
 
-      <div className="text-center">
+      <div className="flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/"
           className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors shadow-lg shadow-primary/15"
         >
           Xem Sản Phẩm Ngay
         </Link>
+        <a
+          href="https://app.grab.com/s/3mI7RZnm?sourceID=20260523_162334_526E7D43F340453EAD0063A2CDC0723C_MEXMPS"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#00B14F] text-white font-semibold text-sm hover:bg-[#009940] transition-colors shadow-lg shadow-[#00B14F]/20"
+        >
+          <ShoppingBag className="w-4 h-4" />
+          Đặt trên GrabMart
+        </a>
       </div>
     </div>
   );

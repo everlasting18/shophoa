@@ -11,14 +11,11 @@ import { useCartStore } from "@/stores/cart-store";
 import { useToast } from "@/components/ui/toast";
 import pb from "@/services/pocketbase";
 import { checkoutSchema, type CheckoutForm } from "@/schema";
-import { FALLBACK_ZONES, buildDistrictMap } from "@/config/shipping";
-import type { ShippingZone } from "@/schema";
 import { todayISO, isoToDisplay } from "@/lib/date-utils";
 import { formatPrice } from "@/lib/utils";
 import ProgressSteps from "@/components/checkout/progress-steps";
 import DeliveryTime from "@/components/checkout/delivery-time";
 import CustomerForms from "@/components/checkout/customer-forms";
-import ShippingZones from "@/components/checkout/shipping-zones";
 import OrderSummary from "@/components/checkout/order-summary";
 import CardSection from "@/components/checkout/card-section";
 import FormError from "@/components/ui/form-error";
@@ -64,40 +61,22 @@ export default function CheckoutPage() {
       recipientName: "",
       recipientPhone: "",
       recipientStreet: "",
-      recipientWard: "",
-      recipientDistrict: "",
       deliveryDate: iso,
       deliveryTime: "",
-      shippingIdx: 0,
       sameAsBuyer: true,
       note: "",
       ...(saved && { ...saved, deliveryDate: saved.deliveryDate || iso }),
     },
   });
 
-  const [zones, setZones] = useState<ShippingZone[]>(FALLBACK_ZONES);
-  const districtZoneMap = useMemo(() => buildDistrictMap(zones), [zones]);
-
-  const shippingIdx = useWatch({ control, name: "shippingIdx" }) as number;
-  const district = useWatch({ control, name: "recipientDistrict" }) as string;
   const allFormValues = useWatch({ control });
-  const shippingFee = zones[shippingIdx]?.fee ?? 0;
   const subtotal = totalPrice();
-  const total = subtotal + shippingFee;
-  const isPickup = zones[shippingIdx]?.fee === 0;
+  const total = subtotal;
 
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const turnstileRef = useRef<TurnstileInstance>(null);
   const turnstileToken = useRef("");
-
-  // Auto map district → shipping zone (skip when pickup is active)
-  useEffect(() => {
-    if (isPickup) return;
-    if (district && district in districtZoneMap) {
-      setValue("shippingIdx", districtZoneMap[district]);
-    }
-  }, [district, isPickup, setValue, districtZoneMap]);
 
   // Save form to sessionStorage on every change (debounced)
   useEffect(() => {
@@ -106,14 +85,6 @@ export default function CheckoutPage() {
     }, 500);
     return () => clearTimeout(timer);
   }, [allFormValues]);
-
-  // Fetch shipping zones from admin
-  useEffect(() => {
-    fetch("/api/shipping-zones")
-      .then((r) => r.json())
-      .then((z: ShippingZone[]) => { if (Array.isArray(z) && z.length > 0) setZones(z); })
-      .catch(() => {});
-  }, []);
 
   // Scroll to first error on validation fail
   const prevErrorCount = useRef(0);
@@ -137,7 +108,6 @@ export default function CheckoutPage() {
     setLoading(true);
     setSubmitError("");
     try {
-      // Verify Turnstile token (skipped in dev when key not set)
       if (TURNSTILE_SITE_KEY) {
         if (!turnstileToken.current) {
           setSubmitError("Đang xác thực bảo mật, vui lòng thử lại.");
@@ -160,11 +130,7 @@ export default function CheckoutPage() {
       }
       const finalName = data.sameAsBuyer ? data.customerName : data.recipientName;
       const finalPhone = data.sameAsBuyer ? data.customerPhone : data.recipientPhone;
-      const finalAddress = isPickup
-        ? "Lấy tại cửa hàng"
-        : [data.recipientStreet, data.recipientWard, data.recipientDistrict]
-            .filter(Boolean)
-            .join(", ");
+      const finalAddress = data.recipientStreet.trim();
 
       const orderItems = items.map(({ product, quantity }) => ({
         product_id: product.id,
@@ -173,6 +139,7 @@ export default function CheckoutPage() {
         quantity,
         thumbnail: product.thumbnail ?? "",
         collectionId: product.collectionId ?? "",
+        slug: product.slug ?? "",
       }));
 
       const orderCode = `VHT${Date.now().toString(36).slice(-6).toUpperCase()}`;
@@ -189,7 +156,7 @@ export default function CheckoutPage() {
         items: orderItems,
         subtotal,
         total,
-        note: `[Ship: ${zones[data.shippingIdx]?.label ?? ""}] ${data.note}`.trim(),
+        note: data.note,
         status: "pending",
         payment_method: "bank_transfer",
       });
@@ -231,7 +198,7 @@ export default function CheckoutPage() {
     } finally {
       setLoading(false);
     }
-  }, [isPickup, items, subtotal, total, clearCart, addToast, router]);
+  }, [items, subtotal, total, clearCart, addToast, router]);
 
   if (items.length === 0) {
     return (
@@ -259,7 +226,7 @@ export default function CheckoutPage() {
           <ChevronLeft className="w-4 h-4" /> Giỏ hàng
         </Link>
 
-        <div className="flex gap-3 bg-emerald-50 border border-emerald-100 rounded-xl p-4 mb-6 text-sm text-emerald-800">
+        {/* <div className="flex gap-3 bg-emerald-50 border border-emerald-100 rounded-xl p-4 mb-6 text-sm text-emerald-800">
           <Info className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
           <div>
             <p className="font-semibold">Tiệm hoa nhà tình giao hoa tận nơi tại TP. Hồ Chí Minh.</p>
@@ -267,8 +234,9 @@ export default function CheckoutPage() {
               Sau khi thanh toán thành công hãy nhắn đơn bạn đến Zalo để chúng mình check đơn nhanh nhất nhé!
             </p>
           </div>
-        </div>
+        </div> */}
 
+        {/* eslint-disable-next-line react-hooks/refs */}
         <form ref={formRef} onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5">
             {/* LEFT */}
@@ -285,14 +253,12 @@ export default function CheckoutPage() {
               {errors.deliveryDate && <FormError msg={errors.deliveryDate.message!} />}
               {errors.deliveryTime && <FormError msg={errors.deliveryTime.message!} />}
 
-              <CustomerForms register={register} setValue={setValue} watch={watch} isPickup={isPickup} zones={zones} districtZoneMap={districtZoneMap} />
+              <CustomerForms register={register} setValue={setValue} watch={watch} />
               {errors.customerName && <FormError msg={errors.customerName.message!} />}
               {errors.customerPhone && <FormError msg={errors.customerPhone.message!} />}
               {errors.recipientName && <FormError msg={errors.recipientName.message!} />}
               {errors.recipientPhone && <FormError msg={errors.recipientPhone.message!} />}
               {errors.recipientStreet && <FormError msg={errors.recipientStreet.message!} />}
-
-              <ShippingZones zones={zones} shippingIdx={shippingIdx} setValue={setValue} />
 
               {/* Note */}
               <CardSection icon={<CreditCard className="w-4 h-4" />} title="Nội Dung Thiệp / Decal (tuỳ chọn)">
@@ -318,7 +284,6 @@ export default function CheckoutPage() {
             <div className="lg:sticky lg:top-6 lg:self-start">
               <OrderSummary
                 items={items}
-                shippingFee={shippingFee}
                 total={total}
                 subtotal={subtotal}
                 loading={loading}
