@@ -125,6 +125,20 @@ export default async function ContactPage() {
         </div>
       </div>
 
+      {/* Google Maps */}
+      <div className="rounded-2xl border border-border/60 overflow-hidden mb-10">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4439.747086508634!2d106.6973445!3d10.794070800000002!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317529d72eb55cef%3A0x2a3b739b07b18400!2zVGnhu4dtIEhvYSBOaMOgIFTDrG5oIC0gQ-G7rWEgSMOhbmcgSG9hIDI0LzI0!5e1!3m2!1svi!2s!4v1779620327478!5m2!1svi!2s"
+          width="100%"
+          height="400"
+          style={{ border: 0 }}
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          title="Bản đồ Tiệm Hoa Nhà Tình"
+        />
+      </div>
+
       <div className="text-center">
         <a
           href={contact.zalo}

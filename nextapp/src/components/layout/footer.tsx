@@ -42,19 +42,22 @@ export default async function Footer() {
   return (
     <footer className="relative bg-gradient-to-b from-[#A8B774] to-[#8A9A61] text-white/80 overflow-hidden">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
-      <div className="container relative mx-auto px-4 pt-14 pb-8">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-12 gap-6 sm:gap-10 mb-12">
-          {/* Brand col */}
-          <div className="col-span-2 sm:col-span-1 lg:col-span-4 flex flex-col items-center sm:items-start">
-            <Link href="/" className="inline-block mb-6 group">
+
+      {/* ── Row 1: Brand + Navigation ── */}
+      <div className="container relative mx-auto px-4 pt-14 pb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+
+          {/* Brand */}
+          <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex flex-col items-center lg:items-start">
+            <Link href="/" className="inline-block mb-5 group">
               <img
                 src="/images/LO1.png"
                 alt={SITE_NAME}
                 className="h-12 w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
               />
             </Link>
-            <p className="text-sm leading-relaxed text-white/60 mb-6 max-w-sm text-center sm:text-left">
-              Shop hoa tươi TPHCM, giao hoa nhanh trong ngày, mẫu mã đa dạng, giá cả phải chăng.
+            <p className="text-sm leading-relaxed text-white/60 mb-6 max-w-xs text-center lg:text-left">
+              Shop hoa tươi TPHCM — giao hoa nhanh trong ngày, mẫu mã đa dạng, giá cả phải chăng.
             </p>
             <div className="flex gap-2.5">
               {socialLinks.map((s) => (
@@ -73,17 +76,14 @@ export default async function Footer() {
           </div>
 
           {/* Danh mục */}
-          <div className="lg:col-span-3">
-            <h3 className="font-heading font-semibold text-white mb-5 text-sm uppercase tracking-wider">
+          <div>
+            <h3 className="font-heading font-semibold text-white mb-5 text-xs uppercase tracking-widest">
               Danh Mục
             </h3>
-            <ul className="space-y-2.5">
+            <ul className="space-y-3">
               {navItems.slice(0, 6).map((item) => (
                 <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-white/55 hover:text-white transition-colors"
-                  >
+                  <Link href={item.href} className="text-sm text-white/55 hover:text-white transition-colors">
                     {item.label}
                   </Link>
                 </li>
@@ -91,12 +91,12 @@ export default async function Footer() {
             </ul>
           </div>
 
-          {/* Chính sách */}
-          <div className="lg:col-span-2">
-            <h3 className="font-heading font-semibold text-white mb-5 text-sm uppercase tracking-wider">
+          {/* Hỗ trợ */}
+          <div>
+            <h3 className="font-heading font-semibold text-white mb-5 text-xs uppercase tracking-widest">
               Hỗ Trợ
             </h3>
-            <ul className="space-y-2.5">
+            <ul className="space-y-3">
               {[
                 { label: `Về ${SITE_NAME}`, href: "/gioi-thieu" },
                 { label: "Chính sách bảo mật", href: "/chinh-sach-bao-mat" },
@@ -113,44 +113,71 @@ export default async function Footer() {
             </ul>
           </div>
 
-          {/* Liên hệ */}
-          <div className="col-span-2 sm:col-span-1 lg:col-span-3">
-            <h3 className="font-heading font-semibold text-white mb-5 text-sm uppercase tracking-wider">
-              Liên Hệ
-            </h3>
-            <ul className="space-y-3.5">
-              {contact.addresses.map((addr, i) => (
-                <li key={i} className="flex gap-2.5 text-sm text-white/60">
-                  <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-[#C8B89A]" />
-                  <span>{addr}</span>
+        </div>
+      </div>
+
+      {/* ── Row 2: Map + Liên hệ ── */}
+      <div className="relative border-t border-white/10">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-5">
+
+            {/* Liên hệ — hiện trước trên mobile, phải trên desktop */}
+            <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col justify-center gap-5 py-8 lg:px-10 border-b border-white/10 lg:border-b-0">
+              <h3 className="font-heading font-semibold text-white text-xs uppercase tracking-widest">
+                Liên Hệ
+              </h3>
+              <ul className="space-y-4">
+                {contact.addresses.map((addr, i) => (
+                  <li key={i} className="flex gap-3 text-sm text-white/70">
+                    <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-[#C8B89A]" />
+                    <span className="leading-relaxed">{addr}</span>
+                  </li>
+                ))}
+                <li>
+                  <a href={`tel:${contact.phone}`} className="flex gap-3 text-sm text-white/70 hover:text-white transition-colors">
+                    <Phone className="w-4 h-4 shrink-0 text-[#C8B89A]" />
+                    {contact.phoneDisplay}
+                  </a>
                 </li>
-              ))}
-              <li>
-                <a
-                  href={`tel:${contact.phone}`}
-                  className="flex gap-2.5 text-sm text-white/60 hover:text-white transition-colors"
-                >
-                  <Phone className="w-4 h-4 shrink-0 text-[#C8B89A]" />
-                  {contact.phoneDisplay}
-                </a>
-              </li>
-              <li>
-                <a
-                  href={`mailto:${contact.email}`}
-                  className="flex gap-2.5 text-sm text-white/60 hover:text-white transition-colors"
-                >
-                  <Mail className="w-4 h-4 shrink-0 text-[#C8B89A]" />
-                  {contact.email}
-                </a>
-              </li>
-              <li className="flex gap-2.5 text-sm text-white/60">
-                <Clock className="w-4 h-4 shrink-0 text-[#C8B89A]" />
-                <span>{contact.openingHours}</span>
-              </li>
-            </ul>
+                <li>
+                  <a href={`mailto:${contact.email}`} className="flex gap-3 text-sm text-white/70 hover:text-white transition-colors">
+                    <Mail className="w-4 h-4 shrink-0 text-[#C8B89A]" />
+                    {contact.email}
+                  </a>
+                </li>
+                <li className="flex gap-3 text-sm text-white/70">
+                  <Clock className="w-4 h-4 shrink-0 text-[#C8B89A]" />
+                  <span>{contact.openingHours}</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Map — full-bleed mobile, trái desktop */}
+            <div className="order-2 lg:order-1 lg:col-span-3 -mx-4 lg:mx-0 h-[220px] lg:h-auto lg:min-h-[280px]">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4439.747086508634!2d106.6973445!3d10.794070800000002!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317529d72eb55cef%3A0x2a3b739b07b18400!2zVGnhu4dtIEhvYSBOaMOgIFTDrG5oIC0gQ-G7rWEgSMOhbmcgSG9hIDI0LzI0!5e1!3m2!1svi!2s!4v1779620327478!5m2!1svi!2s"
+                width="100%"
+                height="100%"
+                style={{ border: 0, display: "block" }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Bản đồ Tiệm Hoa Nhà Tình"
+              />
+            </div>
+
           </div>
         </div>
       </div>
+
+      {/* ── Copyright ── */}
+      <div className="relative border-t border-white/10 bg-black/10">
+        <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-white/35">
+          <span>© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</span>
+          <span>Thiết kế bởi <span className="text-white/55">Tiệm hoa nhà tình</span></span>
+        </div>
+      </div>
+
     </footer>
   );
 }
