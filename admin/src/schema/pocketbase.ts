@@ -83,3 +83,17 @@ export interface Settings {
   key: string;
   value: string;
 }
+
+export interface CheckinVoucher {
+  id: string;
+  user_name: string;
+  user_phone: string;
+  screenshot: string;
+  qr_token: string;
+  status: "pending" | "redeemed";
+  redeemed_at: string | null;
+  redeemed_by: string | null;
+  created: string;
+  collectionId: string;
+  collectionName: string;
+}

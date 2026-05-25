@@ -2,6 +2,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import {
   LayoutDashboard, ShoppingBag, Package,
   FolderOpen, Image, Settings, LogOut, LayoutGrid, X, ChevronLeft,
+  QrCode, ScanLine,
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -23,6 +24,8 @@ const SIDEBAR_NAV: NavItem[] = [
   { to: "/",           label: "Dashboard",  icon: LayoutDashboard, exact: true },
   { to: "/orders",     label: "Đơn hàng",   icon: ShoppingBag, badge: true },
   { to: "/products",   label: "Sản phẩm",   icon: Package },
+  { to: "/checkin-vouchers", label: "Voucher Check-in", icon: QrCode },
+  { to: "/qr-scanner",       label: "Quét QR",          icon: ScanLine },
   { to: "/categories", label: "Danh mục",   icon: FolderOpen, ownerOnly: true },
   { to: "/banners",    label: "Banners",     icon: Image,      ownerOnly: true },
   { to: "/settings",   label: "Cài đặt",    icon: Settings,   ownerOnly: true },
@@ -35,6 +38,8 @@ const BOTTOM_TABS: NavItem[] = [
 ];
 
 const MORE_ITEMS: NavItem[] = [
+  { to: "/checkin-vouchers", label: "Voucher Check-in", icon: QrCode },
+  { to: "/qr-scanner",       label: "Quét QR",          icon: ScanLine },
   { to: "/categories", label: "Danh mục", icon: FolderOpen, ownerOnly: true },
   { to: "/banners",    label: "Banners",  icon: Image,      ownerOnly: true },
   { to: "/settings",   label: "Cài đặt", icon: Settings,   ownerOnly: true },
@@ -61,6 +66,8 @@ const MOBILE_TITLES: Record<string, string> = {
   "/categories": "Danh mục",
   "/banners": "Banners",
   "/settings": "Cài đặt",
+  "/checkin-vouchers": "Voucher Check-in",
+  "/qr-scanner": "Quét QR",
 };
 
 function getMobileTitle(path: string) {

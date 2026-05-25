@@ -30,6 +30,8 @@ export const GRABMART_URL = "https://app.grab.com/s/3mI7RZnm?sourceID=20260523_1
 export const googleMapsLink = (address: string) =>
   `https://maps.google.com/?q=${encodeURIComponent(address)}`;
 
+export const GMAPS_CHECKIN_URL = "https://maps.app.goo.gl/KodYdF37hcyaFxML6";
+
 // --- Provinces Open API ---
 export const PROVINCES_API = "https://provinces.open-api.vn/api";
 export const HCMC_CODE = 79;

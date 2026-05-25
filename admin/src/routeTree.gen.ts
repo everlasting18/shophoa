@@ -13,6 +13,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AuthIndexRouteImport } from './routes/_auth/index'
 import { Route as AuthSettingsRouteImport } from './routes/_auth/settings'
+import { Route as AuthQrScannerRouteImport } from './routes/_auth/qr-scanner'
+import { Route as AuthCheckinVouchersRouteImport } from './routes/_auth/checkin-vouchers'
 import { Route as AuthCategoriesRouteImport } from './routes/_auth/categories'
 import { Route as AuthBannersRouteImport } from './routes/_auth/banners'
 import { Route as AuthProductsIndexRouteImport } from './routes/_auth/products/index'
@@ -37,6 +39,16 @@ const AuthIndexRoute = AuthIndexRouteImport.update({
 const AuthSettingsRoute = AuthSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthQrScannerRoute = AuthQrScannerRouteImport.update({
+  id: '/qr-scanner',
+  path: '/qr-scanner',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthCheckinVouchersRoute = AuthCheckinVouchersRouteImport.update({
+  id: '/checkin-vouchers',
+  path: '/checkin-vouchers',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthCategoriesRoute = AuthCategoriesRouteImport.update({
@@ -75,6 +87,8 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/banners': typeof AuthBannersRoute
   '/categories': typeof AuthCategoriesRoute
+  '/checkin-vouchers': typeof AuthCheckinVouchersRoute
+  '/qr-scanner': typeof AuthQrScannerRoute
   '/settings': typeof AuthSettingsRoute
   '/orders/$id': typeof AuthOrdersIdRoute
   '/products/$id': typeof AuthProductsIdRoute
@@ -85,6 +99,8 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/banners': typeof AuthBannersRoute
   '/categories': typeof AuthCategoriesRoute
+  '/checkin-vouchers': typeof AuthCheckinVouchersRoute
+  '/qr-scanner': typeof AuthQrScannerRoute
   '/settings': typeof AuthSettingsRoute
   '/': typeof AuthIndexRoute
   '/orders/$id': typeof AuthOrdersIdRoute
@@ -98,6 +114,8 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_auth/banners': typeof AuthBannersRoute
   '/_auth/categories': typeof AuthCategoriesRoute
+  '/_auth/checkin-vouchers': typeof AuthCheckinVouchersRoute
+  '/_auth/qr-scanner': typeof AuthQrScannerRoute
   '/_auth/settings': typeof AuthSettingsRoute
   '/_auth/': typeof AuthIndexRoute
   '/_auth/orders/$id': typeof AuthOrdersIdRoute
@@ -112,6 +130,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/banners'
     | '/categories'
+    | '/checkin-vouchers'
+    | '/qr-scanner'
     | '/settings'
     | '/orders/$id'
     | '/products/$id'
@@ -122,6 +142,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/banners'
     | '/categories'
+    | '/checkin-vouchers'
+    | '/qr-scanner'
     | '/settings'
     | '/'
     | '/orders/$id'
@@ -134,6 +156,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/_auth/banners'
     | '/_auth/categories'
+    | '/_auth/checkin-vouchers'
+    | '/_auth/qr-scanner'
     | '/_auth/settings'
     | '/_auth/'
     | '/_auth/orders/$id'
@@ -175,6 +199,20 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthSettingsRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/qr-scanner': {
+      id: '/_auth/qr-scanner'
+      path: '/qr-scanner'
+      fullPath: '/qr-scanner'
+      preLoaderRoute: typeof AuthQrScannerRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/checkin-vouchers': {
+      id: '/_auth/checkin-vouchers'
+      path: '/checkin-vouchers'
+      fullPath: '/checkin-vouchers'
+      preLoaderRoute: typeof AuthCheckinVouchersRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/categories': {
@@ -225,6 +263,8 @@ declare module '@tanstack/react-router' {
 interface AuthRouteChildren {
   AuthBannersRoute: typeof AuthBannersRoute
   AuthCategoriesRoute: typeof AuthCategoriesRoute
+  AuthCheckinVouchersRoute: typeof AuthCheckinVouchersRoute
+  AuthQrScannerRoute: typeof AuthQrScannerRoute
   AuthSettingsRoute: typeof AuthSettingsRoute
   AuthIndexRoute: typeof AuthIndexRoute
   AuthOrdersIdRoute: typeof AuthOrdersIdRoute
@@ -236,6 +276,8 @@ interface AuthRouteChildren {
 const AuthRouteChildren: AuthRouteChildren = {
   AuthBannersRoute: AuthBannersRoute,
   AuthCategoriesRoute: AuthCategoriesRoute,
+  AuthCheckinVouchersRoute: AuthCheckinVouchersRoute,
+  AuthQrScannerRoute: AuthQrScannerRoute,
   AuthSettingsRoute: AuthSettingsRoute,
   AuthIndexRoute: AuthIndexRoute,
   AuthOrdersIdRoute: AuthOrdersIdRoute,
