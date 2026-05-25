@@ -7,6 +7,7 @@ export {
   zaloLink,
   SOCIAL,
   googleMapsLink,
+  GMAPS_CHECKIN_URL,
   PROVINCES_API,
   HCMC_CODE,
   SITE_URL,

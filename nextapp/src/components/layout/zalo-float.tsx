@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Phone, MessageCircle, Tag, X } from "lucide-react";
+import { Phone, MessageCircle, Tag, X, Gift } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
 
 export default function ZaloFloat() {
@@ -24,11 +24,25 @@ export default function ZaloFloat() {
 
   if (pathname?.startsWith("/dat-hoa")) return null;
 
+  const showMiniGame = !pathname?.startsWith("/checkin");
+
   const isProductDetail = /^\/san-pham\/.+/.test(pathname ?? "");
   const hasTwo = !!contact.phone2;
 
   return (
     <div className={`fixed ${isProductDetail ? "bottom-[76px] md:bottom-5" : "bottom-5"} right-4 z-50 flex flex-col gap-3 items-end`}>
+      {/* Mini game button */}
+      {showMiniGame && (
+        <a href="/checkin" className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-white bg-rose-500 px-4 py-2 rounded-full shadow-lg whitespace-nowrap hover:bg-rose-600 transition-colors active:scale-95">
+            Mini game
+          </span>
+          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-rose-500 text-white shadow-lg shadow-rose-500/30 transition-transform hover:scale-110 active:scale-95">
+            <Gift className="w-5 h-5" />
+          </span>
+        </a>
+      )}
+
       {/* Báo giá button */}
       {contact.zaloGroup && (
         <a
