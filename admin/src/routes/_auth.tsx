@@ -8,8 +8,11 @@ export const Route = createFileRoute("/_auth")({
     const { isLoggedIn, token } = useAuthStore.getState();
     if (!isLoggedIn || !token) throw redirect({ to: "/login" });
     // Restore pb.authStore from persisted Zustand token on every page load/navigation
+    pb.authStore.save(token, null);
+    // If token is expired, pb.authStore.isValid will be false after save
     if (!pb.authStore.isValid) {
-      pb.authStore.save(token, null);
+      useAuthStore.getState().logout();
+      throw redirect({ to: "/login" });
     }
   },
   component: () => (

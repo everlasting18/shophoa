@@ -26,14 +26,31 @@ const CompositeCanvas = forwardRef<CompositeCanvasRef, Props>(
       download() {
         const canvas = canvasRef.current;
         if (!canvas) return;
-        canvas.toBlob((blob) => {
+        canvas.toBlob(async (blob) => {
           if (!blob) return;
+
+          const file = new File([blob], "voucher-hoaxinh.png", { type: "image/png" });
+
+          // Web Share API — works on iOS/Android (opens system share sheet → Save to Photos)
+          if (navigator.canShare?.({ files: [file] })) {
+            try {
+              await navigator.share({ files: [file], title: "Voucher Tiệm Hoa Nhà Tình" });
+              return;
+            } catch {
+              // User cancelled share — do nothing
+              return;
+            }
+          }
+
+          // Desktop fallback: trigger <a download>
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
           a.download = "voucher-hoaxinh.png";
+          document.body.appendChild(a);
           a.click();
-          URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
         }, "image/png");
       },
     }));

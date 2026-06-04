@@ -296,7 +296,7 @@ function Step4({
           onClick={handleDownload}
           className="w-full h-13 min-h-[52px] bg-rose-500 text-white font-semibold rounded-xl hover:bg-rose-600 transition-colors text-base flex items-center justify-center gap-2"
         >
-          ⬇️ Tải về máy
+          ⬇️ Lưu ảnh voucher
         </button>
         <p className="text-xs text-center text-stone-400">
           hoặc chụp màn hình để lưu voucher này
