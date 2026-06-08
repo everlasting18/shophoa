@@ -55,3 +55,13 @@ export function getImageUrl(collectionId: string, recordId: string, filename: st
   const raw = `${PHOTO_BASE}/${collectionId}/${recordId}/${filename}`;
   return withOptimized(raw, width);
 }
+
+/**
+ * URL ảnh Open Graph chuẩn 1200×630 (tỉ lệ 1.91:1), crop `fit=cover` qua Cloudflare.
+ * Ảnh sản phẩm thường vuông/dọc → ép về khung ngang để Facebook/Zalo không tự crop lệch.
+ * Dev (OPTIMIZE=false) trả URL gốc — OG chỉ thực sự cần ở production.
+ */
+export function getOgImageUrl(collectionId: string, recordId: string, filename: string): string {
+  const raw = `${PHOTO_BASE}/${collectionId}/${recordId}/${filename}`;
+  return cfImage(raw, { width: 1200, height: 630, fit: "cover", format: "auto" });
+}

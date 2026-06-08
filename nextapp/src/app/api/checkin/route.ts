@@ -64,6 +64,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "user_phone required" }, { status: 400 });
     }
 
+    // ── Validate ảnh (không tin client) ────────────────────────────────────
+    const MAX_SCREENSHOT_BYTES = 5 * 1024 * 1024; // 5MB (client đã nén ~<1MB)
+    if (!screenshot) {
+      return NextResponse.json({ error: "screenshot required" }, { status: 400 });
+    }
+    if (!screenshot.type.startsWith("image/")) {
+      return NextResponse.json(
+        { error: "invalid_type", message: "File tải lên phải là ảnh." },
+        { status: 400 }
+      );
+    }
+    if (screenshot.size > MAX_SCREENSHOT_BYTES) {
+      return NextResponse.json(
+        { error: "too_large", message: "Ảnh quá lớn, vui lòng thử lại." },
+        { status: 413 }
+      );
+    }
+
     // ── Chống gian lận ─────────────────────────────────────────────────────
 
     // 1. Trùng SĐT
@@ -76,16 +94,13 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Trùng ảnh (hash SHA-256)
-    let hash = "";
-    if (screenshot) {
-      hash = await fileHash(screenshot);
-      const hashCount = await pbCount(`screenshot_hash='${hash}'`);
-      if (hashCount > 0) {
-        return NextResponse.json(
-          { error: "duplicate_image", message: "Ảnh check-in này đã được sử dụng rồi." },
-          { status: 409 }
-        );
-      }
+    const hash = await fileHash(screenshot);
+    const hashCount = await pbCount(`screenshot_hash='${hash}'`);
+    if (hashCount > 0) {
+      return NextResponse.json(
+        { error: "duplicate_image", message: "Ảnh check-in này đã được sử dụng rồi." },
+        { status: 409 }
+      );
     }
 
     // ── Lưu vào PocketBase ─────────────────────────────────────────────────

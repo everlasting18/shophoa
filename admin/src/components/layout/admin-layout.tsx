@@ -208,24 +208,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             ))}
 
-            {/* More tab — owner only */}
-            {isOwner ? (
-              <button
-                onClick={() => setMoreOpen(true)}
-                className="flex-1 flex flex-col items-center justify-center gap-1 text-stone-500 hover:text-stone-300 transition-colors"
-              >
-                <LayoutGrid className="w-[22px] h-[22px]" />
-                <span className="text-[10px] font-medium leading-none">Thêm</span>
-              </button>
-            ) : (
-              <button
-                onClick={handleLogout}
-                className="flex-1 flex flex-col items-center justify-center gap-1 text-stone-500 hover:text-red-400 transition-colors"
-              >
-                <LogOut className="w-[22px] h-[22px]" />
-                <span className="text-[10px] font-medium leading-none">Đăng xuất</span>
-              </button>
-            )}
+            {/* More tab — mọi role (staff: Voucher + Quét QR; owner: thêm Danh mục/Banner/Cài đặt) */}
+            <button
+              onClick={() => setMoreOpen(true)}
+              className="flex-1 flex flex-col items-center justify-center gap-1 text-stone-500 hover:text-stone-300 transition-colors"
+            >
+              <LayoutGrid className="w-[22px] h-[22px]" />
+              <span className="text-[10px] font-medium leading-none">Thêm</span>
+            </button>
           </div>
         </nav>
 

@@ -7,6 +7,7 @@ import { useCategories } from "@/features/categories/api";
 import { useToast } from "@/lib/toast";
 import { formatPrice, generateSlug } from "@/lib/utils";
 import { getThumbUrl, getImageUrl } from "@/lib/media";
+import { compressImage, compressImages } from "@/lib/image";
 import type { Product } from "@/schema/pocketbase";
 
 export const Route = createFileRoute("/_auth/products/$id")({
@@ -297,10 +298,13 @@ function ProductForm({
                 )}
               </div>
               <input type="file" accept="image/*" className="hidden"
-                onChange={(e) => {
+                onChange={async (e) => {
                   const f = e.target.files?.[0];
-                  if (f) { setThumbnailFile(f); setThumbnailPreview(URL.createObjectURL(f)); }
                   e.target.value = "";
+                  if (!f) return;
+                  const c = await compressImage(f, { maxWidthOrHeight: 800 });
+                  setThumbnailFile(c);
+                  setThumbnailPreview(URL.createObjectURL(c));
                 }} />
             </label>
           </Section>
@@ -334,12 +338,13 @@ function ProductForm({
                     <span className="text-[10px]">Thêm ảnh</span>
                   </div>
                   <input type="file" accept="image/*" multiple className="hidden"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const slots = 4 - totalGallery;
-                      const files = Array.from(e.target.files || []).slice(0, slots);
+                      const picked = Array.from(e.target.files || []).slice(0, slots);
+                      e.target.value = "";
+                      const files = await compressImages(picked);
                       setGalleryFiles((p) => [...p, ...files]);
                       setGalleryPreviews((p) => [...p, ...files.map((f) => URL.createObjectURL(f))]);
-                      e.target.value = "";
                     }} />
                 </label>
               )}

@@ -33,3 +33,6 @@ yarn-error.log*
 
 # Wrangler
 .wrangler/
+
+# Tài liệu nội bộ (Obsidian vault) — không đẩy lên git
+docs/

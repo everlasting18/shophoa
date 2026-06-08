@@ -8,9 +8,9 @@ import AddToCartButton from "@/components/product/add-to-cart-button";
 import ProductGrid from "@/components/product/product-grid";
 import PriceDisplay from "@/components/product/price-display";
 import { productSchema, breadcrumbSchema } from "@/services/seo";
-import { getImageUrl } from "@/lib/media";
+import { getImageUrl, getOgImageUrl } from "@/lib/media";
 import { sanitizeHtml, stripHtml } from "@/lib/sanitize";
-import { SITE_NAME, PHOTO_BASE } from "@/config";
+import { SITE_NAME } from "@/config";
 import { getSiteSettings } from "@/services/settings";
 import { Home, ChevronRight, Truck, ShieldCheck, Gift, Clock, Phone } from "lucide-react";
 
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${product.name} – Mua Tại ${SITE_NAME} TPHCM`;
   const description = stripHtml(product.short_description || product.description || "").slice(0, 155);
   const image = product.thumbnail
-    ? `${PHOTO_BASE}/${product.collectionId}/${product.id}/${product.thumbnail}`
+    ? getOgImageUrl(product.collectionId, product.id, product.thumbnail)
     : undefined;
 
   return {
@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: `/san-pham/${slug}`,
-      images: image ? [{ url: image, width: 800, height: 800, alt: product.name }] : undefined,
+      images: image ? [{ url: image, width: 1200, height: 630, alt: product.name }] : undefined,
     },
     twitter: {
       card: "summary_large_image",

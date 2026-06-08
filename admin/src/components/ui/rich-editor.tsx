@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import pb from "@/lib/pb";
 import { PHOTO_BASE } from "@/lib/config";
+import { compressImage } from "@/lib/image";
 
 interface Props {
   value: string;
@@ -55,8 +56,9 @@ export default function RichEditor({ value, onChange, className = "" }: Props) {
     setUploading(true);
     setUploadError("");
     try {
+      const compressed = await compressImage(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressed);
       const record = await pb.collection("media").create(formData);
       const url = `${PHOTO_BASE}/${record.collectionId}/${record.id}/${record.file}`;
       editor.chain().focus().setImage({ src: url }).run();

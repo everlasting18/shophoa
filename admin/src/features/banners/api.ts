@@ -30,14 +30,18 @@ export function useCreateBanner() {
 export function useUpdateBanner() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, link, mobile_image, removeMobileImage, currentMobileImage }: {
+    mutationFn: ({ id, link, image, mobile_image, removeMobileImage, currentMobileImage }: {
       id: string;
       link: string;
+      image?: File;
       mobile_image?: File;
       removeMobileImage?: boolean;
       currentMobileImage?: string;
     }) => {
       const data: Record<string, unknown> = { link };
+      if (image) {
+        data.image = image;
+      }
       if (mobile_image) {
         data.mobile_image = mobile_image;
       } else if (removeMobileImage && currentMobileImage) {

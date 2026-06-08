@@ -8,7 +8,8 @@ import Pagination from "@/components/category/pagination";
 import SortSelect from "@/components/category/sort-select";
 import FilterSidebar from "@/components/category/filter-sidebar";
 import { breadcrumbSchema, categoryItemListSchema } from "@/services/seo";
-import { SITE_NAME, PHOTO_BASE } from "@/config";
+import { getOgImageUrl } from "@/lib/media";
+import { SITE_NAME } from "@/config";
 import { Home, ChevronRight, Flower2 } from "lucide-react";
 
 export const revalidate = 3600;
@@ -90,7 +91,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     category.description ||
     `Mua ${category.name} tươi đẹp tại ${SITE_NAME} TPHCM. Giao hỏa tốc 60 phút, hoa giống mẫu 100%.`;
   const ogImage = category.image
-    ? `${PHOTO_BASE}/${category.collectionId}/${category.id}/${category.image}`
+    ? getOgImageUrl(category.collectionId, category.id, category.image)
     : undefined;
 
   return {

@@ -13,9 +13,11 @@ export const Route = createFileRoute("/_auth/checkin-vouchers")({
 
 type StatusFilter = "all" | "pending" | "redeemed";
 
-function useVouchers(status: StatusFilter, search: string) {
+const PER_PAGE = 20;
+
+function useVouchers(status: StatusFilter, search: string, page: number) {
   return useQuery({
-    queryKey: ["checkin-vouchers", status, search],
+    queryKey: ["checkin-vouchers", status, search, page],
     queryFn: () => {
       const filters: string[] = [];
       if (status !== "all") filters.push(`status='${status}'`);
@@ -26,9 +28,9 @@ function useVouchers(status: StatusFilter, search: string) {
       const filterStr = filters.join(" && ");
       return pb
         .collection("checkin_vouchers")
-        .getList<CheckinVoucher>(1, 50, {
+        .getList<CheckinVoucher>(page, PER_PAGE, {
           ...(filterStr ? { filter: filterStr } : {}),
-          sort: "-id",
+          sort: "-created",
         });
     },
     staleTime: 15_000,
@@ -162,13 +164,15 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 function CheckinVouchersPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<CheckinVoucher | null>(null);
 
-  const { data, isLoading, error } = useVouchers(statusFilter, search);
+  const { data, isLoading, error } = useVouchers(statusFilter, search, page);
   const redeem = useRedeemVoucher();
 
   const vouchers = data?.items ?? [];
   const total = data?.totalItems ?? 0;
+  const totalPages = data?.totalPages ?? 0;
 
   function handleRedeem() {
     if (!selected) return;
@@ -192,7 +196,7 @@ function CheckinVouchersPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500" />
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder="Tên, SĐT..."
             className="w-full pl-9 pr-3 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-sm text-white placeholder:text-stone-500 focus:outline-none focus:border-stone-600"
           />
@@ -201,7 +205,7 @@ function CheckinVouchersPage() {
           {(["all", "pending", "redeemed"] as StatusFilter[]).map((s) => (
             <button
               key={s}
-              onClick={() => setStatusFilter(s)}
+              onClick={() => { setStatusFilter(s); setPage(1); }}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
                 statusFilter === s
                   ? "bg-rose-600 border-rose-600 text-white"
@@ -282,7 +286,7 @@ function CheckinVouchersPage() {
               <tbody className="divide-y divide-stone-800">
                 {vouchers.map((v, i) => (
                   <tr key={v.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-4 py-3 text-stone-500">{i + 1}</td>
+                    <td className="px-4 py-3 text-stone-500">{(page - 1) * PER_PAGE + i + 1}</td>
                     <td className="px-4 py-3 text-white font-medium">{v.user_name}</td>
                     <td className="px-4 py-3 text-stone-400">{v.user_phone || "—"}</td>
                     <td className="px-4 py-3">
@@ -311,6 +315,28 @@ function CheckinVouchersPage() {
             </table>
           </div>
         </>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-1.5">
+          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-stone-800 text-stone-400 hover:text-white disabled:opacity-30 text-sm">‹</button>
+          {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => {
+            let pg: number;
+            if (totalPages <= 10) pg = i + 1;
+            else if (page <= 5) pg = i + 1;
+            else if (page >= totalPages - 4) pg = totalPages - 9 + i;
+            else pg = page - 5 + i;
+            return (
+              <button key={pg} onClick={() => setPage(pg)}
+                className={`w-8 h-8 text-sm rounded-lg border transition-colors ${page === pg ? "bg-rose-600 border-rose-600 text-white" : "bg-stone-900 border-stone-800 text-stone-400 hover:text-white"}`}>
+                {pg}
+              </button>
+            );
+          })}
+          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-stone-800 text-stone-400 hover:text-white disabled:opacity-30 text-sm">›</button>
+        </div>
       )}
 
       {selected && (

@@ -16,7 +16,7 @@ const merriweather = Merriweather({
 
 export const metadata: Metadata = {
   title: {
-    default: `${SITE_NAME} – Shop Hoa Tươi TPHCM & Đặt Hoa Online Uy Tín`,
+    default: `${SITE_NAME} – Shop Hoa Tươi TPHCM 24/24`,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import type { CompositeCanvasRef } from "./CompositeCanvas";
 import { GMAPS_CHECKIN_URL } from "@/config";
+import { compressImage } from "@/lib/compress-image";
 
 const CompositeCanvas = dynamic(() => import("./CompositeCanvas"), { ssr: false });
 
@@ -105,16 +107,30 @@ function Step2({
   onBack: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const previewUrl = file ? URL.createObjectURL(file) : null;
+  const [processing, setProcessing] = useState(false);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  // Tạo object URL theo file; thu hồi ở cleanup để tránh memory leak
+  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  useEffect(() => {
+    if (!previewUrl) return;
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
+  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
     if (f.size > 10 * 1024 * 1024) {
       alert("Ảnh tối đa 10MB");
       return;
     }
-    onFile(f);
+    setProcessing(true);
+    try {
+      // Nén trước khi lưu: preview + upload + hash chống gian lận đều dùng bản đã nén
+      const compressed = await compressImage(f, { maxWidthOrHeight: 1280 });
+      onFile(compressed);
+    } finally {
+      setProcessing(false);
+    }
   }
 
   return (
@@ -146,11 +162,21 @@ function Step2({
       ) : (
         <button
           onClick={() => inputRef.current?.click()}
-          className="h-48 border-2 border-dashed border-stone-300 rounded-2xl bg-stone-50 hover:bg-stone-100 flex flex-col items-center justify-center gap-3 transition-colors mb-4"
+          disabled={processing}
+          className="h-48 border-2 border-dashed border-stone-300 rounded-2xl bg-stone-50 hover:bg-stone-100 flex flex-col items-center justify-center gap-3 transition-colors mb-4 disabled:opacity-60"
         >
-          <div className="text-4xl">📁</div>
-          <p className="text-stone-500 text-sm font-medium">Nhấn để chọn ảnh</p>
-          <p className="text-stone-400 text-xs">hoặc kéo thả vào đây · Tối đa 10MB</p>
+          {processing ? (
+            <>
+              <span className="w-6 h-6 border-2 border-stone-300 border-t-rose-500 rounded-full animate-spin" />
+              <p className="text-stone-500 text-sm font-medium">Đang xử lý ảnh...</p>
+            </>
+          ) : (
+            <>
+              <div className="text-4xl">📁</div>
+              <p className="text-stone-500 text-sm font-medium">Nhấn để chọn ảnh</p>
+              <p className="text-stone-400 text-xs">hoặc kéo thả vào đây · Tối đa 10MB</p>
+            </>
+          )}
         </button>
       )}
 
@@ -302,9 +328,9 @@ function Step4({
           hoặc chụp màn hình để lưu voucher này
         </p>
         <div className="text-center">
-          <a href="/" className="text-sm text-rose-500 hover:text-rose-600 transition-colors">
+          <Link href="/" className="text-sm text-rose-500 hover:text-rose-600 transition-colors">
             Về trang chủ
-          </a>
+          </Link>
         </div>
       </div>
     </div>
