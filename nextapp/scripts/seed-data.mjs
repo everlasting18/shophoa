@@ -156,6 +156,7 @@ const PRODUCT_TEMPLATES = [
 const SETTINGS = [
   { key: "phone", value: "0976491322" },
   { key: "zalo", value: "https://zalo.me/0976491322" },
+  { key: "whatsapp", value: "https://wa.me/84976491322" },
   { key: "email", value: "cskh@tiemhoanhatinh.com" },
   { key: "address_1", value: "183/37 Đường 3 Tháng 2, Phường Vườn Lài, TPHCM" },
   { key: "address_2", value: "704/19 Nguyễn Đình Chiểu, Phường 1, Quận 3, TPHCM" },

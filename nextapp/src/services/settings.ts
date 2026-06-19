@@ -1,6 +1,6 @@
 import { cache } from "react";
 import type { Settings, SiteContact } from "@/schema";
-import { CONTACT } from "@/config";
+import { CONTACT, WHATSAPP_PHONE, whatsappLink } from "@/config";
 
 const FALLBACK: SiteContact = {
   phone: CONTACT.phone,
@@ -9,6 +9,7 @@ const FALLBACK: SiteContact = {
   phone2Display: "",
   zalo: CONTACT.zalo,
   zaloGroup: "",
+  whatsapp: whatsappLink(WHATSAPP_PHONE),
   email: CONTACT.email,
   addresses: CONTACT.addresses,
   openingHours: "08:00 – 21:00 mỗi ngày",
@@ -24,6 +25,14 @@ function mapSettings(records: Settings[]): SiteContact {
   const hotlineDisplay = get("hotline_display") || FALLBACK.phoneDisplay;
   const displayParts = hotlineDisplay.split(/\s*[-–]\s*/).map((s) => s.trim()).filter(Boolean);
 
+  // Cho phép admin nhập số điện thoại hoặc URL wa.me đầy đủ
+  const whatsappRaw = get("whatsapp");
+  const whatsapp = whatsappRaw
+    ? whatsappRaw.startsWith("http")
+      ? whatsappRaw
+      : whatsappLink(whatsappRaw)
+    : FALLBACK.whatsapp;
+
   return {
     phone: get("phone") || FALLBACK.phone,
     phoneDisplay: displayParts[0] || hotlineDisplay,
@@ -31,6 +40,7 @@ function mapSettings(records: Settings[]): SiteContact {
     phone2Display: displayParts[1] || "",
     zalo: get("zalo") || FALLBACK.zalo,
     zaloGroup: get("zalo_group"),
+    whatsapp,
     email: get("email") || FALLBACK.email,
     addresses,
     openingHours: get("opening_hours") || FALLBACK.openingHours,

@@ -14,8 +14,17 @@ export const PHOTO_BASE = "https://photo.tiemhoanhatinh.com";
 
 // --- Zalo ---
 const ZALO_BASE = "https://zalo.me";
-export const ZALO_PHONE = "0976491322";
+export const ZALO_PHONE = "089.990.90.06";
 export const zaloLink = (phone: string) => `${ZALO_BASE}/${phone}`;
+
+// --- WhatsApp ---
+const WHATSAPP_BASE = "https://wa.me";
+export const WHATSAPP_PHONE = ZALO_PHONE;
+// Chuyển số VN (0xxx) sang định dạng quốc tế cho wa.me (84xxx)
+export const whatsappLink = (phone: string) => {
+  const digits = phone.replace(/\D/g, "").replace(/^0/, "84");
+  return `${WHATSAPP_BASE}/${digits}`;
+};
 
 // --- Social Media ---
 export const SOCIAL = {

@@ -5,6 +5,8 @@ export {
   PHOTO_BASE,
   ZALO_PHONE,
   zaloLink,
+  WHATSAPP_PHONE,
+  whatsappLink,
   SOCIAL,
   googleMapsLink,
   GMAPS_CHECKIN_URL,

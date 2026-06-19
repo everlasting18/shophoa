@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { SiteContact } from "@/schema";
-import { CONTACT } from "@/config";
+import { CONTACT, WHATSAPP_PHONE, whatsappLink } from "@/config";
 
 const FALLBACK = {
   phone: CONTACT.phone,
@@ -11,6 +11,7 @@ const FALLBACK = {
   phone2Display: "",
   zalo: CONTACT.zalo,
   zaloGroup: "",
+  whatsapp: whatsappLink(WHATSAPP_PHONE),
 };
 
 export function useSettings() {
@@ -21,6 +22,7 @@ export function useSettings() {
     phone2Display: FALLBACK.phone2Display,
     zalo: FALLBACK.zalo,
     zaloGroup: FALLBACK.zaloGroup,
+    whatsapp: FALLBACK.whatsapp,
   });
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export function useSettings() {
           phone2Display: s.phone2Display || "",
           zalo: s.zalo || FALLBACK.zalo,
           zaloGroup: s.zaloGroup || FALLBACK.zaloGroup,
+          whatsapp: s.whatsapp || FALLBACK.whatsapp,
         });
       })
       .catch(() => {});

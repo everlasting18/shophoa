@@ -16,6 +16,7 @@ const SETTING_LABELS: Record<string, string> = {
   hotline_display: "Hotline hiển thị",
   zalo: "Link Zalo cá nhân",
   zalo_group: "Link nhóm Zalo (Giá hoa mỗi ngày)",
+  whatsapp: "WhatsApp ",
   email: "Email",
   address_1: "Địa chỉ 1",
   address_2: "Địa chỉ 2",

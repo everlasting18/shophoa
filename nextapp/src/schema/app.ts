@@ -24,6 +24,7 @@ export interface SiteContact {
   phone2Display: string;
   zalo: string;
   zaloGroup: string;
+  whatsapp: string;
   email: string;
   addresses: string[];
   openingHours: string;

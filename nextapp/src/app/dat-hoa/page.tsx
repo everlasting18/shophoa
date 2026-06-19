@@ -63,9 +63,10 @@ export default function CheckoutPage() {
       recipientStreet: "",
       deliveryDate: iso,
       deliveryTime: "",
-      sameAsBuyer: true,
       note: "",
       ...(saved && { ...saved, deliveryDate: saved.deliveryDate || iso }),
+      // Luôn mở form "Người nhận hoa" khi vào trang (ghi đè cả nháp đã lưu)
+      sameAsBuyer: false,
     },
   });
 
