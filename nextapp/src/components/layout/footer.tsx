@@ -119,8 +119,6 @@ export default async function Footer() {
               {[
                 { label: `Về ${SITE_NAME}`, href: "/gioi-thieu" },
                 { label: "Chính sách bảo mật", href: "/chinh-sach-bao-mat" },
-                { label: "Chính sách giao hàng", href: "/chinh-sach-giao-hang" },
-                { label: "Chính sách đổi trả", href: "/chinh-sach-doi-tra" },
                 { label: "Liên hệ", href: "/lien-he" },
               ].map((l) => (
                 <li key={l.href}>

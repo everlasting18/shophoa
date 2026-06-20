@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: "/",
+  },
   keywords: [
     "tiệm hoa nhà tình", "shop hoa tươi TPHCM", "đặt hoa online TPHCM",
     "hoa sinh nhật TPHCM", "hoa khai trương", "hoa tốt nghiệp",

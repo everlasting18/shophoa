@@ -6,14 +6,30 @@ export const SITE_DESCRIPTION =
 
 export const CONTACT = {
   phone: ZALO_PHONE,
-  phoneDisplay: "0976.491.322",
+  phoneDisplay: "089.990.90.06",
   zalo: zaloLink(ZALO_PHONE),
   email: "cskh@tiemhoanhatinh.com",
   addresses: [
-    "183/37 Đường 3 Tháng 2, Phường Vườn Lài, TPHCM",
-    "704/19 Nguyễn Đình Chiểu, Phường 1, Quận 3, TPHCM",
+    "152 Trường Sa, Phường 1 , Quận Bình Thạnh, TPHCM",
+   
   ],
 };
+
+// Toạ độ cơ sở chính (Google Business Profile "Cửa Hàng Hoa 24/24")
+export const GEO = { lat: 10.7940708, lng: 106.6973445 };
+
+// Các quận nội thành giao hỏa tốc 60 phút — dùng cho schema.org areaServed & llms.txt
+export const SERVICE_DISTRICTS = [
+  "Quận 1",
+  "Quận 3",
+  "Quận 5",
+  "Quận 10",
+  "Quận 11",
+  "Quận Phú Nhuận",
+  "Quận Bình Thạnh",
+  "Quận Tân Bình",
+  "Quận Gò Vấp",
+];
 
 export const NAV_ITEMS = [
   {

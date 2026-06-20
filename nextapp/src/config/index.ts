@@ -20,4 +20,6 @@ export {
   SITE_DESCRIPTION,
   CONTACT,
   NAV_ITEMS,
+  GEO,
+  SERVICE_DISTRICTS,
 } from "./constants";

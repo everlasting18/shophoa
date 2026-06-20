@@ -9,6 +9,8 @@ export interface Category {
   parent: string;
   sort_order: number;
   is_active: boolean;
+  created: string;
+  updated: string;
   collectionId: string;
   collectionName: string;
 }
