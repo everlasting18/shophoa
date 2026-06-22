@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Phone, MessageCircle, Tag, X, Gift } from "lucide-react";
+import { Phone, MessageCircle, X, Gift } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
 
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -17,9 +17,7 @@ export default function ZaloFloat() {
   const contact = useSettings();
   const pathname = usePathname();
   const [phoneOpen, setPhoneOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
   const phoneRef = useRef<HTMLDivElement>(null);
-  const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!phoneOpen) return;
@@ -31,17 +29,6 @@ export default function ZaloFloat() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [phoneOpen]);
-
-  useEffect(() => {
-    if (!chatOpen) return;
-    function handleClick(e: MouseEvent) {
-      if (chatRef.current && !chatRef.current.contains(e.target as Node)) {
-        setChatOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [chatOpen]);
 
   if (pathname?.startsWith("/dat-hoa")) return null;
 
@@ -64,76 +51,39 @@ export default function ZaloFloat() {
         </a>
       )}
 
-      {/* Báo giá button */}
-      {contact.zaloGroup && (
+      {/* WhatsApp button */}
+      {contact.whatsapp && (
         <a
-          href={contact.zaloGroup}
+          href={contact.whatsapp}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Giá hoa mỗi ngày"
+          aria-label="Chat WhatsApp"
           className="flex items-center gap-2"
         >
-          <span className="text-xs font-semibold text-white bg-primary px-4 py-2 rounded-full shadow-lg whitespace-nowrap hover:bg-primary/90 transition-colors active:scale-95">
-            Giá hoa mỗi ngày
+          <span className="text-xs font-semibold text-white bg-[#25D366] px-4 py-2 rounded-full shadow-lg whitespace-nowrap hover:bg-[#1ebe57] transition-colors active:scale-95">
+            WhatsApp
           </span>
-          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-110 active:scale-95">
-            <Tag className="w-5 h-5" />
+          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-[#25D366] text-white shadow-lg shadow-green-500/30 transition-transform hover:scale-110 active:scale-95">
+            <WhatsAppIcon className="w-6 h-6" />
           </span>
         </a>
       )}
 
-      {/* Chat group — Zalo + WhatsApp, sổ ra khi bấm */}
-      <div ref={chatRef} className="relative flex items-center gap-2">
-        {/* Popup các kênh chat */}
-        {chatOpen && (
-          <div className="absolute bottom-full mb-3 right-0 bg-white rounded-2xl shadow-xl border border-border/50 overflow-hidden w-56 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/40">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Chat ngay</p>
-              <button onClick={() => setChatOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            <a
-              href={contact.zalo}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setChatOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors"
-            >
-              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#0068FF] text-white shrink-0">
-                <MessageCircle className="w-4 h-4" />
-              </span>
-              <span className="text-sm font-medium">Chat Zalo</span>
-            </a>
-            <a
-              href={contact.whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setChatOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors border-t border-border/40"
-            >
-              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#25D366] text-white shrink-0">
-                <WhatsAppIcon className="w-4 h-4" />
-              </span>
-              <span className="text-sm font-medium">Chat WhatsApp</span>
-            </a>
-          </div>
-        )}
-
-        <button
-          onClick={() => setChatOpen((v) => !v)}
-          aria-label="Chat ngay"
-          aria-expanded={chatOpen}
-          className="flex items-center gap-2"
-        >
-          <span className="text-xs font-medium text-foreground bg-white px-3 py-1.5 rounded-full shadow-md border border-border/60 whitespace-nowrap">
-            Chat ngay
-          </span>
-          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-[#0068FF] text-white shadow-lg shadow-blue-500/20 transition-transform hover:scale-110 active:scale-95">
-            <MessageCircle className="w-6 h-6" />
-          </span>
-        </button>
-      </div>
+      {/* Chat ngay — Zalo trực tiếp */}
+      <a
+        href={contact.zalo}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat Zalo"
+        className="flex items-center gap-2"
+      >
+        <span className="text-xs font-medium text-foreground bg-white px-3 py-1.5 rounded-full shadow-md border border-border/60 whitespace-nowrap">
+          Chat ngay
+        </span>
+        <span className="flex items-center justify-center w-12 h-12 rounded-full bg-[#0068FF] text-white shadow-lg shadow-blue-500/20 transition-transform hover:scale-110 active:scale-95">
+          <MessageCircle className="w-6 h-6" />
+        </span>
+      </a>
 
       {/* Hotline button — popup khi có 2 số */}
       <div ref={phoneRef} className="relative flex items-center gap-2">

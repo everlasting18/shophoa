@@ -14,7 +14,7 @@ export default function AddressFields({ register }: Props) {
     <InputIcon icon={<MapPin className="w-4 h-4" />}>
       <input
         {...register("recipientStreet")}
-        placeholder="Số nhà, tên đường, phường/quận *"
+        placeholder="Số nhà, tên đường, phường/quận / House no., street, ward/district *"
         className="w-full bg-transparent outline-none text-sm placeholder:text-muted-foreground/60"
       />
     </InputIcon>

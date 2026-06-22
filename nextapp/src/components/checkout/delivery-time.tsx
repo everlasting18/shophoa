@@ -53,10 +53,10 @@ export default function DeliveryTime({ todayISO, dateMode, setDateMode, customDa
   }
 
   return (
-    <CardSection icon={<Calendar className="w-4 h-4" />} title="Thời gian giao hoa">
+    <CardSection icon={<Calendar className="w-4 h-4" />} title="Thời gian giao hoa / Delivery time">
       <div className="mb-6">
         <p className="text-sm font-medium mb-3">
-          Chọn ngày giao <span className="text-destructive">*</span>
+          Chọn ngày giao <span className="font-normal text-muted-foreground">/ Pick a date</span> <span className="text-destructive">*</span>
         </p>
         <div className="flex gap-2.5">
           {(["today", "tomorrow", "custom"] as const).map((mode) => (
@@ -70,7 +70,7 @@ export default function DeliveryTime({ todayISO, dateMode, setDateMode, customDa
                   : "bg-white border-border hover:border-primary/30"
               }`}
             >
-              {mode === "today" ? "Hôm nay" : mode === "tomorrow" ? "Ngày mai" : "Khác"}
+              {mode === "today" ? "Hôm nay / Today" : mode === "tomorrow" ? "Ngày mai / Tomorrow" : "Khác / Other"}
             </button>
           ))}
         </div>
@@ -98,7 +98,7 @@ export default function DeliveryTime({ todayISO, dateMode, setDateMode, customDa
 
       <div className="mt-6 border-t border-border/60 pt-5">
         <p className="text-sm font-medium mb-3">
-          Chọn giờ giao (Giờ:Phút) <span className="text-destructive">*</span>
+          Chọn giờ giao (Giờ:Phút) <span className="font-normal text-muted-foreground">/ Delivery time (HH:MM)</span> <span className="text-destructive">*</span>
         </p>
         <InputIcon icon={<Clock className="w-4 h-4" />}>
           <input
@@ -112,7 +112,7 @@ export default function DeliveryTime({ todayISO, dateMode, setDateMode, customDa
         </InputIcon>
         {minTime && (
           <p className="text-xs text-muted-foreground mt-2 ml-1">
-            Giao sớm nhất hôm nay: <span className="font-medium text-foreground">{minTime}</span>
+            Giao sớm nhất hôm nay / Earliest today: <span className="font-medium text-foreground">{minTime}</span>
           </p>
         )}
       </div>

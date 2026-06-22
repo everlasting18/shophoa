@@ -207,9 +207,9 @@ export default function CheckoutPage() {
         <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-5">
           <Package className="w-8 h-8 text-muted-foreground/40" />
         </div>
-        <p className="text-muted-foreground mb-4">Giỏ hàng trống</p>
+        <p className="text-muted-foreground mb-4">Giỏ hàng trống / Your cart is empty</p>
         <Link href="/" className="text-primary hover:underline font-medium">
-          ← Về trang chủ
+          ← Về trang chủ / Back to home
         </Link>
       </div>
     );
@@ -224,7 +224,7 @@ export default function CheckoutPage() {
           href="/gio-hang"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-5 transition-colors"
         >
-          <ChevronLeft className="w-4 h-4" /> Giỏ hàng
+          <ChevronLeft className="w-4 h-4" /> Giỏ hàng / Cart
         </Link>
 
         {/* <div className="flex gap-3 bg-emerald-50 border border-emerald-100 rounded-xl p-4 mb-6 text-sm text-emerald-800">
@@ -262,11 +262,11 @@ export default function CheckoutPage() {
               {errors.recipientStreet && <FormError msg={errors.recipientStreet.message!} />}
 
               {/* Note */}
-              <CardSection icon={<CreditCard className="w-4 h-4" />} title="Nội Dung Thiệp / Decal (tuỳ chọn)">
+              <CardSection icon={<CreditCard className="w-4 h-4" />} title="Nội Dung Thiệp / Decal — Card message (tuỳ chọn / optional)">
                 <textarea
                   {...register("note")}
                   rows={4}
-                  placeholder="Thời gian nhận Hoa - Nội dung Thiệp Hoặc Decal."
+                  placeholder="Thời gian nhận Hoa - Nội dung Thiệp Hoặc Decal. / Preferred time & card message."
                   className="w-full px-3.5 py-2.5 text-sm border border-border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/60 resize-none"
                 />
               </CardSection>
@@ -322,7 +322,7 @@ export default function CheckoutPage() {
 
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground">Tổng cộng</p>
+              <p className="text-xs text-muted-foreground">Tổng cộng / Total</p>
               <p className="text-lg font-bold text-primary">{formatPrice(total)}</p>
             </div>
           <button
@@ -332,11 +332,11 @@ export default function CheckoutPage() {
             className="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-semibold active:scale-[0.98] transition-all shadow-lg shadow-primary/15 disabled:opacity-60"
           >
             {loading ? (
-              <span className="animate-pulse">Đang xử lý...</span>
+              <span className="animate-pulse">Đang xử lý... / Processing...</span>
             ) : (
               <>
                 <ShoppingCart className="w-4 h-4" />
-                Đặt Hoa
+                Đặt Hoa / Order
               </>
             )}
           </button>

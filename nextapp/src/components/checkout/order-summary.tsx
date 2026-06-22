@@ -38,7 +38,7 @@ export default function OrderSummary({
   return (
     <div className="space-y-5">
       {/* Products */}
-      <CardSection icon={<Package className="w-4 h-4" />} title="Sản Phẩm">
+      <CardSection icon={<Package className="w-4 h-4" />} title="Sản Phẩm / Items">
         <div className="space-y-4">
           {items.map(({ product, quantity }) => {
             const price = getDisplayPrice(product.price, product.sale_price);
@@ -80,9 +80,9 @@ export default function OrderSummary({
               <p className="flex items-center gap-2 truncate">
                 <span className="text-primary font-medium shrink-0 flex justify-center">👤</span>
                 {recipientName && customerName !== recipientName ? (
-                  <span className="truncate">Đặt: <span className="font-medium text-foreground">{customerName}</span> → Nhận: <span className="font-medium text-foreground">{recipientName}</span></span>
+                  <span className="truncate">Đặt/From: <span className="font-medium text-foreground">{customerName}</span> → Nhận/To: <span className="font-medium text-foreground">{recipientName}</span></span>
                 ) : (
-                  <span className="truncate">Khách hàng: <span className="font-medium text-foreground">{customerName}</span></span>
+                  <span className="truncate">Khách hàng / Customer: <span className="font-medium text-foreground">{customerName}</span></span>
                 )}
               </p>
             )}
@@ -90,8 +90,8 @@ export default function OrderSummary({
               <p className="flex items-center gap-2 truncate">
                 <span className="text-primary font-medium shrink-0 flex justify-center">🕒</span>
                 <span>
-                  Giao: <span className="font-medium text-foreground">{isoToDisplay(deliveryDate)}</span>
-                  {deliveryTime && <span className="font-medium text-foreground"> lúc {deliveryTime}</span>}
+                  Giao/Delivery: <span className="font-medium text-foreground">{isoToDisplay(deliveryDate)}</span>
+                  {deliveryTime && <span className="font-medium text-foreground"> lúc/at {deliveryTime}</span>}
                 </span>
               </p>
             )}
@@ -99,7 +99,7 @@ export default function OrderSummary({
         )}
 
         <div className="flex justify-between items-baseline mb-5">
-          <span className="font-semibold">Tổng cộng</span>
+          <span className="font-semibold">Tổng cộng <span className="font-normal text-muted-foreground text-sm">/ Total</span></span>
           <span className="font-bold text-xl text-primary">{formatPrice(total)}</span>
         </div>
 
@@ -116,11 +116,11 @@ export default function OrderSummary({
           className="hidden lg:flex w-full py-3.5 rounded-full bg-primary text-white font-bold hover:bg-primary/90 disabled:opacity-60 transition-all shadow-lg shadow-primary/15 items-center justify-center gap-2"
         >
           {loading ? (
-            <span className="animate-pulse">Đang xử lý...</span>
+            <span className="animate-pulse">Đang xử lý... / Processing...</span>
           ) : (
             <>
               <CheckCircle2 className="w-4 h-4" />
-              Đặt Hoa
+              Đặt Hoa / Place order
             </>
           )}
         </button>
