@@ -45,7 +45,7 @@ src/routes/
     index.tsx             # Dashboard
     orders/
       index.tsx           # Orders list (validateSearch: { status }); filters: status, search, date range
-      $id.tsx             # Order detail + status update
+      $id.tsx             # Order detail + status update + order QR reprint
     products/
       index.tsx           # Products table: search + active/inactive filter (+ category filter)
       $id.tsx             # Product create/edit form with TipTap rich editor
@@ -118,6 +118,7 @@ Static SPA deployed to Cloudflare Pages at **https://admin.tiemhoanhatinh.com**.
 - **Banners**: support a separate `mobile_image`; `mobile_image-` FormData key removes it. Edit modal can replace the main desktop `image` and the `mobile_image` (add/replace/remove) plus the link. `useReorderBanners` batch-updates `sort_order`.
 - **Settings page**: inputs use local state with server fallback (`values[id] ?? s.value`) — no form library.
 - **Check-in vouchers**: `checkin_vouchers` collection (`user_name`, `user_phone`, `screenshot`, `qr_token`, `status: pending|redeemed`, `redeemed_at`, `redeemed_by`). Redeem sets `status`, `redeemed_at`, `redeemed_by = adminEmail`. List is sorted `-created`, paginated 20/page, with a mobile-card / desktop-table split; dialog shows the check-in screenshot with a download link.
+- **Order QR reprint** (`orders/$id.tsx`, `OrderQRCard`): renders `order.qr_token` via the `qrcode` package (`QRCode.toDataURL`) so staff can look up or reprint the same QR the customer got at checkout on `nextapp`'s `dat-hoa/cam-on` page — **the encoded value must stay identical to what `nextapp` generated**, this component doesn't mint its own token. Orders created before this field existed have no `qr_token`; the card shows a "chưa có mã QR" fallback instead of rendering a blank/broken QR. Unrelated to the `checkin_vouchers` QR system above — two independent `qr_token` concepts living on different collections.
 - **QR scanner** (`qr-scanner.tsx` + `QRReader.tsx`): state machine `idle → scanning → loading → found | not_found | error`. `QRReader` opens the rear camera (`facingMode: "environment"`), scans a canvas frame through jsQR every 200ms, guards against duplicate detection with `detectedRef`, and stops all tracks on unmount/inactive. On detect, looks up `qr_token` via `getFirstListItem`, then redeems.
 - **Dashboard revenue**: uses `getFullList` to sum non-cancelled orders client-side — acceptable for a small shop, will slow with scale.
 

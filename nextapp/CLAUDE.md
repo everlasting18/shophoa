@@ -23,13 +23,22 @@ npx tsc --noEmit   # Type-check only (no test suite)
 NEXT_PUBLIC_POCKETBASE_URL=      # PocketBase backend URL (required)
 DISCORD_WEBHOOK_URL=             # Discord webhook for order notifications (optional)
 DISCORD_ERROR_WEBHOOK_URL=       # Discord webhook for system error alerts (optional)
+LARK_WEBHOOK_URL=                # Lark (Feishu) bot webhook for order notifications (optional)
+LARK_APP_ID=                     # Lark app credentials — needed to attach product images to the card
+LARK_APP_SECRET=                 #   (webhook alone can't upload images; app auth can)
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=  # Cloudflare Turnstile site key (optional, dev: 1x00000000000000000000AA)
 TURNSTILE_SECRET_KEY=            # Cloudflare Turnstile secret key (optional, dev: 1x0000000000000000000000000000000AA)
+PB_ADMIN_EMAIL=                  # PocketBase superuser — used by scripts/*.mjs and /api/checkin (server-side
+PB_ADMIN_PASSWORD=                #   writes that bypass collection API rules)
+HOA_ORDER_PB_URL=                # Separate PocketBase instance for the "hoa-order" staff CRM (different DB)
+HOA_ORDER_SHOP_ID=               # Shop record id in that CRM's DB new orders get attached to
 ```
 
 - `DISCORD_WEBHOOK_URL` absent → dev logs to terminal, prod returns 503, checkout unaffected (fire-and-forget)
 - `DISCORD_ERROR_WEBHOOK_URL` absent → `notifyError()` is a no-op, no alerts sent
+- `LARK_WEBHOOK_URL` absent → Lark notify skipped, same fire-and-forget semantics as Discord
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` absent → Turnstile widget not rendered, verify step skipped entirely
+- `HOA_ORDER_PB_URL`/`HOA_ORDER_SHOP_ID` absent → `pushToHoaOrder()` silently no-ops (not treated as an error); **both** must be set for the CRM push to run
 
 ## Stack
 
@@ -57,15 +66,17 @@ src/app/
   tim-kiem/page.tsx             # Search (force-dynamic, regex filter on PB)
   gio-hang/page.tsx             # Cart
   dat-hoa/page.tsx              # Checkout (client component)
-  dat-hoa/cam-on/page.tsx       # Order confirmation
+  dat-hoa/cam-on/page.tsx       # Order confirmation + order QR code
+  checkin/page.tsx              # Check-in voucher campaign landing page
   api/
     navigation/route.ts         # Navigation tree from PocketBase categories
     settings/route.ts           # Public site settings (contact, hours, etc.)
     shipping-zones/route.ts     # Dynamic shipping zones from PocketBase (falls back to FALLBACK_ZONES)
     revalidate/route.ts         # ISR cache purge: POST { path } or { paths: [] } — always revalidates /sitemap.xml
-    notify/order/route.ts       # Discord notification on new order — 3-retry + exponential backoff + rate limit
+    notify/order/route.ts       # Discord + Lark notification on new order, plus CRM push (see below)
     verify-turnstile/route.ts   # Verify Cloudflare Turnstile token server-side
     alert-error/route.ts        # Forward client-side errors to DISCORD_ERROR_WEBHOOK_URL
+    checkin/route.ts            # Check-in voucher submission (server-side, uses PB superuser token)
 ```
 
 The `(shop)` route group has no layout of its own — category pages inherit the root layout directly.
@@ -78,7 +89,8 @@ The `(shop)` route group has no layout of its own — category pages inherit the
 - `src/services/shipping.ts` — `getShippingZones()` (React `cache()`): always ensures a pickup zone (fee=0) exists
 - `src/schema/` — `pocketbase.ts` (collection types), `checkout.ts` (Zod schema), `app.ts` (app-level types), `index.ts` (re-exports)
 - `src/config/` — `constants.ts` (SITE_NAME, CONTACT, NAV_ITEMS), `third-party.ts` (SITE_URL, PHOTO_BASE, ZALO_PHONE, SOCIAL); all exported from `src/config/index.ts`
-- Main PocketBase collections: `products`, `categories`, `banners`, `orders`, `settings`, `media`, `shipping_zones`
+- Main PocketBase collections: `products`, `categories`, `banners`, `orders`, `settings`, `media`, `shipping_zones`, `checkin_vouchers`
+- This PocketBase instance is **shared with the `hoaxinh` storefront** (a second, separately-deployed brand/domain) — `products`/`categories`/`orders`/etc. are the same underlying collections. `HOA_ORDER_PB_URL` above points to a *different*, unrelated PocketBase (the staff CRM), not this one.
 
 Server pages use `export const revalidate = 3600` for ISR. Purge via `POST /api/revalidate { path }` or `{ paths: [] }`.
 
@@ -102,10 +114,12 @@ Server pages use `export const revalidate = 3600` for ISR. Purge via `POST /api/
 2. On mount: fetches shipping zones from `GET /api/shipping-zones`. `buildDistrictMap(zones)` derives a `Record<districtName, zoneIndex>` for auto-mapping district → shipping fee.
 3. Form persisted to `sessionStorage` key `checkout-form` with 500ms debounce
 4. **Turnstile verify** (if `NEXT_PUBLIC_TURNSTILE_SITE_KEY` set): `POST /api/verify-turnstile { token }` — blocks submit if bot detected
-5. Creates `orders` record directly via PocketBase SDK, then fire-and-forgets `POST /api/notify/order`
-6. Redirects to `/dat-hoa/cam-on?code=<orderCode>`
+5. Generates one `qrToken` (`crypto.randomUUID()`), stores it on the `orders` record as `qr_token`, creates the record directly via PocketBase SDK, then fire-and-forgets `POST /api/notify/order` (payload includes `qrToken`)
+6. Redirects to `/dat-hoa/cam-on?code=<orderCode>&qr=<qrToken>`
 
 **Turnstile widget**: Token stored in `useRef` (not state) to avoid re-renders. Test keys: `1x00000000000000000000AA` (always pass), `2x00000000000000000000AB` (always fail).
+
+**Order QR code**: `dat-hoa/cam-on/page.tsx` renders `components/checkout/OrderQRCode.tsx`, which encodes the raw `qrToken` (not `order_code`) via the `qrcode` package — this is the value staff scan in the `hoa-order` CRM's Scan tab to pull up the order, so it must stay a bare UUID. The page prefers the `qr` search param (available immediately on redirect); if the page is reloaded without it, it falls back to `order.qr_token` fetched from PocketBase by `order_code`. The admin SPA's order detail page renders the same QR from `order.qr_token` for reprinting.
 
 ### Header Contact Sync
 
@@ -115,13 +129,32 @@ Header is a client component that fetches contact info from `/api/settings` on m
 
 `src/components/layout/zalo-float.tsx` — fixed floating buttons (phone + Zalo + optional Báo giá). The "Báo giá" button only renders when `contact.zaloGroup` is set (PocketBase `settings` key: `zalo_group`, stored as full Zalo URL). On product detail pages (`/san-pham/.*`), buttons shift up to avoid overlapping the sticky add-to-cart bar.
 
-### Discord Notification & Error Alerts
+### Order Notifications, Error Alerts & CRM Push
 
-`src/app/api/notify/order/route.ts`:
-- Retries up to 3 times with exponential backoff (1s, 2s); respects Discord `Retry-After` header on 429
-- On final failure: calls `notifyError()`, returns 502 (checkout unaffected — fire-and-forget)
+`src/app/api/notify/order/route.ts` fires three independent, parallel targets via `Promise.allSettled` — one failing must not affect the others or the checkout, which already fire-and-forgot this whole request:
+- **Discord** (`notifyDiscord`) — retries up to 3 times with exponential backoff (1s, 2s); respects Discord `Retry-After` header on 429
+- **Lark/Feishu** (`notifyLark`) — posts an interactive card; needs `LARK_APP_ID`/`LARK_APP_SECRET` (not just the webhook) to attach product images
+- **`pushToHoaOrder()`** (`src/lib/hoa-order.ts`) — see CRM Push below
+
+On Discord final failure: calls `notifyError()`, returns 502. If neither Discord nor Lark is configured, a failed CRM push is still surfaced via `notifyError()`.
 
 `src/lib/notify-error.ts` — always fire-and-forget, never throws. No-op if `DISCORD_ERROR_WEBHOOK_URL` absent.
+
+### CRM Push (`hoa-order`)
+
+`src/lib/hoa-order.ts` `pushToHoaOrder()` creates a record **directly in a second, separate PocketBase instance** (`HOA_ORDER_PB_URL`) belonging to the internal staff CRM app "hoa-order" — a different schema entirely (`code`, `phone`, `address`, `deliver_at`, `pending`, `shop`, …, not this app's `orders` shape). No-ops silently if either `HOA_ORDER_PB_URL` or `HOA_ORDER_SHOP_ID` is unset.
+
+- Generates the CRM's own order code (`genHoaCode()`, format `DHyyMMdd-XXX`) — must match that PB's `code` field pattern; this app's `VHT…` code would not.
+- **Reuses the same `qrToken`** generated at checkout (passed in via `HoaOrderPayload.qrToken`) as the CRM record's `qr_token` — this is what lets the QR code printed/shown to the customer resolve to the right order when scanned in `hoa-order`'s Scan tab. Do not let this drift back to generating its own random token; the two must stay identical.
+- Item photos are stored as absolute `PHOTO_BASE` URLs (not filenames) — the CRM displays external `http(s)` URLs directly instead of resolving them against its own PocketBase file storage.
+- Creates the order as `pending: true` (needs staff approval in the CRM before it's treated as confirmed/deliverable).
+
+### Check-in Voucher Campaign
+
+A separate, unrelated QR feature (promo campaign, not orders): `checkin/page.tsx` + `components/checkin/CheckinFlow.tsx` let a customer submit a screenshot (e.g. of a social share) to claim a voucher.
+- `POST /api/checkin/route.ts` authenticates as the PocketBase **superuser** (`PB_ADMIN_EMAIL`/`PB_ADMIN_PASSWORD`, token cached in-memory for 55 min) and writes directly to the `checkin_vouchers` collection via raw `fetch` (not the SDK) — needed because normal API rules shouldn't allow public creates here.
+- Fraud checks before saving: rejects if `user_phone` already has a voucher, or if the screenshot's SHA-256 hash (`screenshot_hash`) matches one already stored — both are exact-duplicate checks, not perceptual/fuzzy matching.
+- On success, generates its own `qr_token` (independent of the order `qr_token` above) and returns it; the admin SPA's QR scanner redeems it by setting `status: "redeemed"`.
 
 ### SEO
 

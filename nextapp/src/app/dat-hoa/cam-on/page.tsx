@@ -11,6 +11,7 @@ import { formatPrice } from "@/lib/utils";
 import { shortDateISO } from "@/lib/date-utils";
 import { PHOTO_BASE } from "@/config";
 import type { Order } from "@/schema";
+import OrderQRCode from "@/components/checkout/OrderQRCode";
 
 
 
@@ -39,6 +40,7 @@ function ThanksContent() {
   const contact = useSettings();
   const params = useSearchParams();
   const orderCode = params.get("code") ?? "";
+  const qrParam = params.get("qr") ?? "";
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(!!orderCode);
 
@@ -69,6 +71,11 @@ function ThanksContent() {
         </p>
       
       </div>
+
+      {/* QR code */}
+      {orderCode && (qrParam || order?.qr_token) && (
+        <OrderQRCode orderCode={orderCode} qrToken={qrParam || order!.qr_token!} />
+      )}
 
       {/* Order detail */}
       {loading ? (

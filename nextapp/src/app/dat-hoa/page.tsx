@@ -144,9 +144,11 @@ export default function CheckoutPage() {
       }));
 
       const orderCode = `VHT${Date.now().toString(36).slice(-6).toUpperCase()}`;
+      const qrToken = crypto.randomUUID();
 
       await pb.collection("orders").create({
         order_code: orderCode,
+        qr_token: qrToken,
         customer_name: data.customerName,
         customer_phone: data.customerPhone,
         recipient_name: finalName,
@@ -171,6 +173,7 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderCode,
+          qrToken,
           customerName: data.customerName,
           customerPhone: data.customerPhone,
           recipientName: finalName,
@@ -184,7 +187,7 @@ export default function CheckoutPage() {
         }),
       }).catch(console.error);
 
-      router.push(`/dat-hoa/cam-on?code=${encodeURIComponent(orderCode)}`);
+      router.push(`/dat-hoa/cam-on?code=${encodeURIComponent(orderCode)}&qr=${qrToken}`);
     } catch (err) {
       setSubmitError("Có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ Zalo.");
       addToast("Đặt hàng thất bại, vui lòng thử lại", "error");

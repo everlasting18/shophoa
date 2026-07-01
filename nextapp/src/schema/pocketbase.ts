@@ -41,6 +41,7 @@ export interface Product {
 export interface Order {
   id: string;
   order_code: string;
+  qr_token?: string;
   customer_name: string;
   customer_phone: string;
   customer_email?: string;

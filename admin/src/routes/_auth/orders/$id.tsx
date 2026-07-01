@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ChevronLeft, Phone, User, MapPin, Calendar, Clock, Package,
-  FileText, Copy, Check, MessageCircle, Gift, CreditCard,
+  FileText, Copy, Check, MessageCircle, Gift, CreditCard, QrCode,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import QRCodeLib from "qrcode";
 import { useOrder, useUpdateOrderStatus } from "@/features/orders/api";
 import { formatPrice } from "@/lib/utils";
 import { PHOTO_BASE, zaloLink } from "@/lib/config";
@@ -154,6 +155,8 @@ function OrderDetailPage() {
 
       {/* Info grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <OrderQRCard qrToken={order.qr_token} />
+
         <Card>
           <CardTitle icon={<User className="w-3.5 h-3.5" />}>Người đặt</CardTitle>
           <p className="text-white text-sm font-semibold">{order.customer_name}</p>
@@ -263,6 +266,35 @@ function OrderDetailPage() {
 
 function Card({ children }: { children: React.ReactNode }) {
   return <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">{children}</div>;
+}
+
+function OrderQRCard({ qrToken }: { qrToken?: string }) {
+  const [dataUrl, setDataUrl] = useState("");
+
+  useEffect(() => {
+    if (!qrToken) return;
+    QRCodeLib.toDataURL(qrToken, {
+      width: 160,
+      margin: 1,
+      color: { dark: "#1c1917", light: "#ffffff" },
+    }).then(setDataUrl);
+  }, [qrToken]);
+
+  return (
+    <Card>
+      <CardTitle icon={<QrCode className="w-3.5 h-3.5" />}>Mã QR đơn hàng</CardTitle>
+      {!qrToken ? (
+        <p className="text-stone-500 text-sm">Đơn cũ, chưa có mã QR</p>
+      ) : dataUrl ? (
+        <div className="flex flex-col items-center gap-2">
+          <img src={dataUrl} alt="Mã QR đơn hàng" width={140} height={140} className="rounded-lg border border-stone-800" />
+          <button onClick={() => window.print()} className="text-xs text-rose-400 hover:text-rose-300 transition-colors">
+            In phiếu
+          </button>
+        </div>
+      ) : null}
+    </Card>
+  );
 }
 
 function CardTitle({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {

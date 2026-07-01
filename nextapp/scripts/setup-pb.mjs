@@ -148,6 +148,7 @@ async function main() {
     deleteRule: "@request.auth.id != ''",
     fields: [
       { name: "order_code",        type: "text" },
+      { name: "qr_token",          type: "text",   max: 60 },
       { name: "customer_name",     type: "text",   required: true },
       { name: "customer_phone",    type: "text",   required: true },
       { name: "recipient_name",    type: "text" },

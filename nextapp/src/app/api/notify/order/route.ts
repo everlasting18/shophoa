@@ -3,6 +3,7 @@ import { formatPrice } from "@/lib/utils";
 import { shortDateISO } from "@/lib/date-utils";
 import { PHOTO_BASE } from "@/config";
 import { notifyError } from "@/lib/notify-error";
+import { pushToHoaOrder } from "@/lib/hoa-order";
 
 interface OrderItem {
   name: string;
@@ -16,6 +17,7 @@ interface OrderItem {
 
 interface NotifyPayload {
   orderCode: string;
+  qrToken: string;
   customerName: string;
   customerPhone: string;
   recipientName?: string;
@@ -214,18 +216,30 @@ export async function POST(req: NextRequest) {
   const larkUrl = process.env.LARK_WEBHOOK_URL;
   const order: NotifyPayload = await req.json();
 
+  // 3 đích chạy song song, độc lập: Discord, Lark, và đẩy đơn sang hoa-order (CRM).
+  // Mỗi cái lỗi không kéo cái khác — checkout đã fire-and-forget nên không chặn khách.
+  const [discordResult, larkResult, hoaResult] = await Promise.allSettled([
+    discordUrl ? notifyDiscord(discordUrl, order) : Promise.resolve(),
+    larkUrl    ? notifyLark(larkUrl, order)        : Promise.resolve(),
+    pushToHoaOrder(order),
+  ]);
+
+  if (hoaResult.status === "rejected") {
+    const err = hoaResult.reason;
+    console.error("hoa-order push failed:", err);
+    await notifyError(
+      "Đẩy đơn sang hoa-order thất bại",
+      `Đơn **${order.orderCode}** không vào được CRM.\n\`${String(err)}\``
+    );
+  }
+
   if (!discordUrl && !larkUrl) {
     if (process.env.NODE_ENV === "development") {
       console.log("\n[notify - DEV]\n", order, "\n");
-      return NextResponse.json({ ok: true, dev: true });
     }
-    return NextResponse.json({ error: "No webhook configured" }, { status: 503 });
+    // Không có webhook chat, nhưng vẫn coi là OK nếu đẩy hoa-order không lỗi.
+    return NextResponse.json({ ok: hoaResult.status !== "rejected", dev: process.env.NODE_ENV === "development" });
   }
-
-  const [discordResult, larkResult] = await Promise.allSettled([
-    discordUrl ? notifyDiscord(discordUrl, order) : Promise.resolve(),
-    larkUrl    ? notifyLark(larkUrl, order)        : Promise.resolve(),
-  ]);
 
   const discordFailed = discordUrl && discordResult.status === "rejected";
   const larkFailed    = larkUrl    && larkResult.status    === "rejected";
